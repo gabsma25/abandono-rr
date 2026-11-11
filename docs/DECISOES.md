@@ -109,3 +109,48 @@ MANIFEST.
 
 **Retirado:** as tabelas Turma, Matrícula e Docente de 2025 (linhas do MANIFEST e de `src/config.py`).
 Não são zips, mas só serviam à fase 2 do projeto anterior; o pipeline estendido lê só a tabela de escolas.
+
+---
+
+## 2026-11-11 — A Etapa 4 passa a ser regressão com MLPRegressor
+
+**O que estava planejado.** A Etapa 4 do abandono-rr estava planejada, no pedido de criação do projeto
+(11/11/2026), como uma classificação de alto risco (regressão logística, Random Forest e HistGradientBoosting;
+configurações A e B; treino t = 2013–2016, teste t = 2017–2018). **Esse plano nunca virou protocolo escrito nem
+foi executado.**
+
+**A troca (orientação do professor).** Antes disso, por orientação do professor, o novo escopo passou a seguir o
+exemplo "MLPRegressor - House Sales Prediction" (`docs/tese_base/`) e o livro de Silva, Spatti e Flauzino, cap. 5
+(Perceptron multicamadas): regressão da taxa de abandono em t+1 (`abandono_t1`) com MLPRegressor. **A troca
+aconteceu antes de qualquer protocolo ou execução da Etapa 4.**
+
+**Não se confunde com a classificação de 2026-11-10** do projeto anterior, que tem protocolo próprio
+(`abandono-escolar/docs/DECISOES.md`, commit `878930f`), rodou uma vez (Dados-do-Projeto, commit `969fc64`) e
+continua válida no arquivo (`experimentos/classificacao_2013_2018/`). Os resultados dela são citados no
+`docs/BASELINE.md`.
+
+**O que veio do professor e o que veio da pesquisadora.** Do professor: seguir o exemplo e o livro. Da
+pesquisadora, para que o exemplo respeite o `CLAUDE.md`: a divisão temporal, a padronização dentro do `Pipeline`,
+o alvo ÷ 100, as configurações A e B, as 10 sementes, a régua, a B2 e a Ridge, as métricas, o IC por bootstrap,
+o Holm e a regra de leitura. **A validação cruzada para a topologia não foi pedida pelo professor**: veio da leitura
+do livro (5.5.1) pela pesquisadora.
+
+**Decisões tomadas na escrita do protocolo** (todas antes de rodar; texto completo em `docs/PROTOCOLO.md`):
+
+1. **Seleção por redundância entre preditores, não por correlação com o alvo.** O exemplo exibe o mapa de
+   correlação e exclui colunas por pertinência. Aqui, entre duas candidatas com |r| > 0,90 no treino, sai a de menor
+   prioridade na lista pré-declarada. A regra 7 do `CLAUDE.md` fica sem exceção.
+2. **Topologia principal fixada em 50 neurônios, porque segue o exemplo do professor, e não por validação.** A
+   validação cruzada temporal com 10, 25 e 50 neurônios roda no treino e é só relatada: os desfechos de 2016 e
+   2017 são anos de teste já usados, e a regra 10 fica sem exceção.
+3. **Sensibilidade de topologia:** 10 e 25 neurônios também são avaliados no teste, com as mesmas métricas e
+   sementes, e relatados ao lado. Nenhum substitui o resultado de 50, qualquer que seja o resultado.
+4. **Configuração A só com t−1** (`abandono_tm1`, `reprovacao_tm1`, `variacao_abandono_defasada`, mais território,
+   rede e infraestrutura): é a informação disponível no começo de t+1 e a mesma que a régua usa, a mesma escolha do
+   antigo Cenário B. Nenhum dado de t entra em nenhuma configuração.
+5. **A nova configuração B** tem só território, rede e infraestrutura. **Não é a B antiga**, que tinha os lags de
+   rendimento. Comparação obrigatória B × B2.
+6. **O teste (desfechos de 2018 e 2019) já foi visto** na classificação de 2026-11-10. O resultado será relatado como
+   nova leitura de anos já usados, não como avaliação em dados virgens.
+
+**Evidência:** `docs/PROTOCOLO.md` neste branch (`protocolo-novo-escopo`), escrito antes de qualquer execução.
