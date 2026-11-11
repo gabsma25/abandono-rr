@@ -42,3 +42,13 @@ def test_03_comparacao_com_backup_de_outubro():
     rel = (RAIZ / "saida" / "relatorios" / "validacao_pos04.txt").read_text(encoding="utf-8")
     secao = rel.split("I. ANTES x DEPOIS")[1].split("RESUMO")[0]
     assert "❌" not in secao
+
+
+def test_03_confere_2019_2025_com_os_zips_originais():
+    """Seção F do teste 03: os 7 anos de 2019 a 2025 conferem célula a célula com os zips do INEP."""
+    zips = sorted((RAIZ / "dados" / "origem" / "censo").glob("microdados_censo_escolar_*.zip"))
+    if len(zips) < 7:
+        pytest.skip(f"só {len(zips)} dos 7 zips do Censo 2019–2025 estão em dados/origem/censo: a conferência com o "
+                    "original não roda. Obtenha-os com python -m src.aquisicao --origem-local PASTA (ou --baixar)")
+    rel = (RAIZ / "saida" / "relatorios" / "validacao_pos04.txt").read_text(encoding="utf-8")
+    assert "7 anos conferem célula a célula com o microdado ORIGINAL: 2019–2025" in rel
