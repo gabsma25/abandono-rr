@@ -1,5 +1,20 @@
-# Páginas do INEP capturadas: bytes exatos (o sha256 está em capturas.csv).
+# Quebras de linha iguais em todas as máquinas (Windows, Linux, macOS): texto sempre LF no
+# repositório e na pasta de trabalho, mesmo com core.autocrlf=true. Assim o dataset versionado
+# continua idêntico byte a byte ao que o código gera (testes/test_dataset.py).
+* text=auto eol=lf
+
+# Scripts do Windows precisam de CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Bytes exatos: arquivos com sha256 registrado nunca são normalizados
+dados/** -text
 testes/fixtures/** -text
+
 # Binários
 *.parquet binary
 *.zip binary
+*.pdf binary
+*.png binary
+*.xlsx binary
