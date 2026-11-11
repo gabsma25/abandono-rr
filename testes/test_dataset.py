@@ -1,5 +1,7 @@
 """
-Confere dataset/escolas_rr.csv e dataset/DICIONARIO.md (gerados por python -m src.dataset).
+Confere dataset/escolas_rr_v<versão>.csv e dataset/DICIONARIO.md (gerados por python -m src.dataset).
+
+  - regerar o dataset a partir de saida/base_atual.parquet dá exatamente o arquivo versionado
 
   - chave co_entidade + ano + etapa única; anos t de 2007 a 2025; só AF e EM
   - alvos separados: abandono_t1 = ABANDONO_*_T1 da base; nenhuma explicativa é o alvo nem é de t+1
@@ -20,7 +22,10 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src" / "avaliacao"))
 import classificacao as C
 
-P_DATASET = RAIZ / "dataset" / "escolas_rr.csv"
+sys.path.insert(0, str(RAIZ))
+from src import dataset as DS
+
+P_DATASET = DS.DESTINO
 P_DIC = RAIZ / "dataset" / "DICIONARIO.md"
 P_BASE = RAIZ / "saida" / "base_atual.parquet"
 SUF = {"AF": "FUN_AF", "EM": "MED"}
@@ -29,7 +34,7 @@ SUF = {"AF": "FUN_AF", "EM": "MED"}
 @pytest.fixture(scope="module")
 def d():
     if not P_DATASET.exists():
-        pytest.fail("falta dataset/escolas_rr.csv: rode python -m src.dataset")
+        pytest.fail(f"falta {P_DATASET.relative_to(RAIZ)}: rode python -m src.dataset")
     return pd.read_csv(P_DATASET, dtype={"co_entidade": str, "co_municipio": str})
 
 
@@ -89,3 +94,11 @@ def test_dicionario_uma_linha_por_coluna(d):
     dic = _dicionario()
     assert [c for c, _ in dic] == list(d.columns)
     assert {p for _, p in dic} == {"identificação", "alvo", "explicativa"}
+
+
+def test_regerar_da_o_arquivo_versionado(base):
+    """O dataset versionado é exatamente o que o código gera hoje, byte a byte."""
+    regerado = DS.para_csv(DS.montar(base)).encode("utf-8")
+    versionado = P_DATASET.read_bytes()
+    assert regerado == versionado, (f"{P_DATASET.name} difere do que src/dataset.py gera "
+                                    f"({len(regerado)} × {len(versionado)} bytes): regere e versione de novo")

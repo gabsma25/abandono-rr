@@ -1,5 +1,5 @@
 """
-Gera dataset/escolas_rr.csv e dataset/DICIONARIO.md a partir de saida/base_atual.parquet.
+Gera dataset/escolas_rr_v<versão>.csv (versão em src/versao.py) e dataset/DICIONARIO.md a partir de saida/base_atual.parquet.
 
 Uma linha por escola × ano (t) × etapa (AF = anos finais do fundamental, EM = ensino médio), de 2007 a
 2025, no estilo de um dataset tabular comum: identificação, alvos em colunas próprias e variáveis
@@ -23,8 +23,11 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src" / "avaliacao"))
 import classificacao as C
 
+sys.path.insert(0, str(RAIZ))
+from src.versao import VERSAO
+
 P_BASE = RAIZ / "saida" / "base_atual.parquet"
-DESTINO = RAIZ / "dataset" / "escolas_rr.csv"
+DESTINO = RAIZ / "dataset" / f"escolas_rr_v{VERSAO}.csv"
 DICIONARIO = RAIZ / "dataset" / "DICIONARIO.md"
 JANELA = range(2013, 2019)                       # t da janela segura
 SUF = {"AF": "FUN_AF", "EM": "MED"}
@@ -143,7 +146,7 @@ def _anos(serie, anos):
 
 
 def dicionario(d):
-    L = ["# Dicionário de dados — `escolas_rr.csv`", "",
+    L = [f"# Dicionário de dados — `{DESTINO.name}`", "",
          "Gerado por `python -m src.dataset` a partir de `saida/base_atual.parquet` (não edite à mão).", "",
          (f"**Uma linha por escola × ano (t) × etapa.** {_br(len(d))} linhas e {d.shape[1]} colunas; "
          f"{_br(d['co_entidade'].nunique())} escolas; anos t de {int(d['ano'].min())} a {int(d['ano'].max())}. "
@@ -180,11 +183,16 @@ def dicionario(d):
     return "\n".join(L)
 
 
+def para_csv(d):
+    """Texto CSV do dataset, como gravado no arquivo (UTF-8, quebra de linha LF)."""
+    return d.to_csv(index=False, lineterminator="\n")
+
+
 def main():
     base = pd.read_parquet(P_BASE)
     d = montar(base)
     DESTINO.parent.mkdir(parents=True, exist_ok=True)
-    d.to_csv(DESTINO, index=False, encoding="utf-8", lineterminator="\n")
+    DESTINO.write_bytes(para_csv(d).encode("utf-8"))
     DICIONARIO.write_text(dicionario(d), encoding="utf-8", newline="\n")
     print(f"{_br(len(d))} linhas × {d.shape[1]} colunas → {DESTINO}\n→ {DICIONARIO}")
 

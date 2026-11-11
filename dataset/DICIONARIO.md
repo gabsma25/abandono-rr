@@ -1,4 +1,4 @@
-# Dicionário de dados — `escolas_rr.csv`
+# Dicionário de dados — `escolas_rr_v0.1.0.csv`
 
 Gerado por `python -m src.dataset` a partir de `saida/base_atual.parquet` (não edite à mão).
 
