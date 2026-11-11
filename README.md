@@ -15,14 +15,9 @@ exatamente os mesmos números de antes (`testes/test_equivalencia.py`). O que fi
 
 ## Quem é quem
 
-| Pessoa | Papel no projeto |
-|---|---|
-| Gabriela | ferramenta de alerta precoce, avaliação e resultados; manutenção do repositório |
-| João | base de dados e régua (o último abandono conhecido) |
-| Gustavo | pipeline estendido 2007–2025 e índices de infraestrutura |
-| Prof. Bruno Cesar Barreto Figueiredo | orientador |
+Integrantes: **Gabriela**, **João** e **Gustavo** (papéis a definir pelo grupo).
 
-*Papéis a confirmar pelo grupo.*
+Orientador: Prof. Bruno Cesar Barreto Figueiredo.
 
 ## Instalação
 
