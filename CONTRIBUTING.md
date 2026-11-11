@@ -95,3 +95,7 @@ com o grupo antes.
 Quem administra o repositório configura uma vez, em *Settings → Branches → Branch protection rules* para o
 `main`: exigir pull request antes do merge, exigir 1 aprovação, impedir push direto e impedir que o autor aprove
 o próprio pull request.
+
+Se o repositório for privado num plano do GitHub que não aplica proteção de branch, a regra continua valendo
+como combinado do grupo: ninguém faz push direto no `main`, e todo pull request é aprovado por outra pessoa antes
+do merge.
