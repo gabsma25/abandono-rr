@@ -6,6 +6,11 @@ A versão fica em `src/versao.py`, e o dataset leva a versão no nome do arquivo
 
 ## [Não lançado]
 
+### Adicionado
+- `docs/BASELINE.md`, gerado por `python src/relatorios/baseline.py`: a régua, a versão otimista, a B2 e o
+  acaso, com os resultados da Etapa 1 (regerados), da Etapa 2 e da classificação (citados de
+  `docs/projeto_anterior/` e `experimentos/`); `testes/test_baseline.py` exige que esteja em dia.
+
 ### Pendências abertas
 - **Pipeline oficial 2019–2025 (TDI, ATU, IED) fora do núcleo.** Volta por pull request quando a meta M5
   começar, junto com o teste 07 e a comparação com a base v1.0 do orientador (`docs/DECISOES.md`, 2026-11-11).

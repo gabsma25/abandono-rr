@@ -5,6 +5,7 @@ Regera tudo do abandono-rr, na ordem, e roda os testes.
   2. funil e desfecho por ano (src/relatorios/)                     → saida/relatorios/
   3. régua da Etapa 1 e réguas da janela segura (src/avaliacao/)    → saida/avaliacao/
   4. dataset e dicionário (src/dataset.py)                          → dataset/
+     e o docs/BASELINE.md (src/relatorios/baseline.py)
   5. testes (pytest)
 
 Uso: python rodar_tudo.py            (tudo, com testes)
@@ -26,6 +27,7 @@ PASSOS = [
     ("régua da Etapa 1", ["src/avaliacao/01_baselines.py"]),
     ("réguas da janela segura", ["src/avaliacao/reguas.py"]),
     ("dataset", ["-m", "src.dataset"]),
+    ("BASELINE.md", ["src/relatorios/baseline.py"]),
 ]
 
 
