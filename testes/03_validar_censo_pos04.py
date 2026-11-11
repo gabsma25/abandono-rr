@@ -424,7 +424,8 @@ for ano in (2019, 2024):
 secao("I. ANTES x DEPOIS DA CORREÇÃO (04 anterior, em saida/_backup_2026-10-14)")
 # ------------------------------------------------------------------
 if not P_BACKUP.exists():
-    warn("backup do 04 anterior não encontrado — comparação pulada")
+    info("PULADA: o backup do 04 anterior não veio para o abandono-rr; o pytest registra a seção como "
+         "pulada (testes/test_validacoes.py::test_03_comparacao_com_backup_de_outubro)")
 else:
     old = pd.read_parquet(P_BACKUP)
     old["ANO_I"] = old["ANO"].astype(int)

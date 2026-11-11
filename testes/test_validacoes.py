@@ -28,3 +28,17 @@ def test_validacao(script):
                        text=True, encoding="utf-8", env={**__import__("os").environ, "PYTHONIOENCODING": "utf-8"})
     resumo = "\n".join(r.stdout.splitlines()[-15:])
     assert r.returncode == 0, f"{script} falhou (código {r.returncode}):\n{resumo}\n{r.stderr[-2000:]}"
+
+
+P_BACKUP = RAIZ / "saida" / "_backup_2026-10-14" / "etapas" / "04_base_com_censo.parquet"
+
+
+def test_03_comparacao_com_backup_de_outubro():
+    """Seção I do teste 03: base do 04 antes × depois da correção de 14/10/2026."""
+    if not P_BACKUP.exists():
+        pytest.skip("seção I do teste 03 não roda no abandono-rr: o backup de outubro (saida/_backup_2026-10-14) "
+                    "ficou no projeto anterior (Dados-do-Projeto 969fc64), onde a comparação foi feita; "
+                    "ver docs/DECISOES.md")
+    rel = (RAIZ / "saida" / "relatorios" / "validacao_pos04.txt").read_text(encoding="utf-8")
+    secao = rel.split("I. ANTES x DEPOIS")[1].split("RESUMO")[0]
+    assert "❌" not in secao
