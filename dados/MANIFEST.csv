@@ -21,10 +21,7 @@ bruto,inep,2021,escola,bruto/censo/microdados_ed_basica_2021.csv,96c1d0f4637fda8
 bruto,inep,2022,escola,bruto/censo/microdados_ed_basica_2022.csv,dfa3b5e8ce977f4e650c84c19b741e063f4c94fe63841c6cbce60831deb52602,2026-09-09
 bruto,inep,2023,escola,bruto/censo/microdados_ed_basica_2023.csv,b2dd87c32cf25af4af89202adb908d17b0d3fea99e2ea046229aa86a9d69679a,2026-09-09
 bruto,inep,2024,escola,bruto/censo/microdados_ed_basica_2024.csv,3fb4d93c714b7d9303e34430f0287ca102bf984a4769d5abaca21eb4d1453bc9,2026-09-09
-bruto,inep,2025,docente,bruto/censo/Tabela_Docente_2025_V2.csv,058e5fde6280db184759423eab69a4fceb3da399b5c0da835e34ceaec61ffefa,2026-09-09
 bruto,inep,2025,escola,bruto/censo/Tabela_Escola_2025_V2.csv,f737d25dc5e80879e08f868d06d55f2bc1178cbb893dc14589a2123151f5b523,2026-09-09
-bruto,inep,2025,matricula,bruto/censo/Tabela_Matricula_2025_V2.csv,8669605094c7ea797a33cbec8ef1490c57f094f2dc6d8bbb1964a6522adb57f0,2026-09-09
-bruto,inep,2025,turma,bruto/censo/Tabela_Turma_2025_V2.csv,be3832b6af9c1f3717262336c4d764b480cdc063f9ead17467155a7346cb9102,2026-09-09
 cache,gustavo,2007,cache_censo,cache/censo/2007.parquet,21e9f8bb89b3109f753e26149ea125c875b674fd4f4a5064f41200c6d631299a,2026-11-11
 cache,gustavo,2007,cache_censo,cache/censo/2007_nacional.json,c1642b742b466d5b4c91b9f393c698edc25fd22234e75ead153dbfcc920cde1a,2026-11-11
 cache,gustavo,2008,cache_censo,cache/censo/2008.parquet,79ad26a70b3957a685e5ddcc835269cdffaea1aedeb2c01fb01a65581760407c,2026-11-11

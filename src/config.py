@@ -28,7 +28,8 @@ SEP = ";"
 # Tabelas disponíveis por ano:
 #   2019–2024 : "escola"  (microdados_ed_basica_{ano}; 2020 tem extensão .CSV
 #                          em maiúsculas — nome original preservado, regra 1)
-#   2025      : "escola", "turma", "matricula", "docente"
+#   2025      : "escola" (Turma, Matrícula e Docente de 2025 saíram no abandono-rr: só
+#               serviam à fase 2 do projeto anterior; ver docs/DECISOES.md)
 # Nunca monte o caminho por concatenação com o ano: use caminho(ano, tabela).
 ARQUIVOS: dict[tuple[int, str], pathlib.Path] = {
     (2019, "escola"):    BRUTO_CENSO / "microdados_ed_basica_2019.csv",
@@ -38,9 +39,6 @@ ARQUIVOS: dict[tuple[int, str], pathlib.Path] = {
     (2023, "escola"):    BRUTO_CENSO / "microdados_ed_basica_2023.csv",
     (2024, "escola"):    BRUTO_CENSO / "microdados_ed_basica_2024.csv",
     (2025, "escola"):    BRUTO_CENSO / "Tabela_Escola_2025_V2.csv",
-    (2025, "turma"):     BRUTO_CENSO / "Tabela_Turma_2025_V2.csv",
-    (2025, "matricula"): BRUTO_CENSO / "Tabela_Matricula_2025_V2.csv",
-    (2025, "docente"):   BRUTO_CENSO / "Tabela_Docente_2025_V2.csv",
 }
 
 # Indicadores educacionais do INEP (desfechos e contexto): os .zip ficam em
