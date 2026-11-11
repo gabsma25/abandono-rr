@@ -1,0 +1,5 @@
+# Páginas do INEP capturadas: bytes exatos (o sha256 está em capturas.csv).
+testes/fixtures/** -text
+# Binários
+*.parquet binary
+*.zip binary

@@ -1,0 +1,15 @@
+# Ambiente
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Dados: só o MANIFEST e o cache 2007–2025 entram no git (zips do INEP ficam fora; ver CONTRIBUTING)
+dados/*
+!dados/MANIFEST.csv
+!dados/cache/
+
+# Saídas regeneráveis (python rodar_tudo.py)
+saida/
