@@ -56,3 +56,56 @@ ser reverificados aqui: os zips originais desses anos não estão no projeto. A 
 
 **Fica para depois, fora do prazo de 16/11:** variáveis novas para 2007–2018, como matrículas e escola
 indígena (meta M1); a volta do pipeline oficial (meta M5).
+
+---
+
+## 2026-11-11 — Teste 03: a conferência de 2019–2025 com os originais
+
+**O que acontecia.** O teste 03 (`testes/03_validar_censo_pos04.py`, seção F) só lê um zip do Censo
+com a opção `--completo`. Sem ela, confere contra o original apenas os anos com CSV já extraído em
+`dados/bruto/censo/`.
+
+- **No projeto anterior**, desde que o teste existe (Dados-do-Projeto `f524873`, 2026-10-14), os CSVs de
+  2019–2025 estavam extraídos em `abandono-escolar/dados/bruto/censo/`. Então, mesmo sem `--completo`,
+  o teste comparava 2019–2025 célula a célula com o microdado original: o relatório do projeto anterior
+  registra "7 anos conferem célula a célula com o microdado ORIGINAL: 2019–2025". Os anos de 2007–2018
+  nunca foram conferidos por esse teste, com ou sem `--completo`, porque os zips desses anos não estavam
+  na máquina.
+- **No abandono-rr**, a cópia trouxe só os zips, não os CSVs extraídos. Na primeira execução da Etapa 1,
+  sem `--completo`, o teste **não comparou nenhum ano** com o original e passou com um aviso. A lacuna foi
+  criada pela migração, não existia antes.
+
+**Decisão.** O teste 03 roda sempre com `--completo` (`testes/test_validacoes.py`). Com isso, 2019–2025
+conferem célula a célula com os zips originais em `dados/origem/censo/`, como no projeto anterior. O teste
+de equivalência confirma, além disso, que a base inteira é idêntica à do projeto anterior.
+
+**A comparação com o backup de outubro** (seção I do teste 03: a base do 04 antes × depois da correção de
+14/10/2026) não roda no abandono-rr, porque o backup ficou no projeto anterior. Ela aparece no pytest como
+**pulada**, com o motivo (`test_03_comparacao_com_backup_de_outubro`), e não como aprovada.
+
+---
+
+## 2026-11-11 — Os zips de 2019–2025 e o que cada um alimenta
+
+Os 14 zips ficam em `dados/origem/`, **fora do git**; o `dados/MANIFEST.csv` guarda o sha256 de cada um, e
+`python -m src.aquisicao --origem-local PASTA` (ou `--baixar`) os obtém conferindo o hash.
+
+| Zip | Tamanho | Quem usa |
+|---|---|---|
+| `censo/microdados_censo_escolar_2019.zip` | 25,0 MB | `src/estendida/03` (reconstrução do cache) e teste 03 (`--completo`) |
+| `censo/microdados_censo_escolar_2020.zip` | 24,8 MB | idem |
+| `censo/microdados_censo_escolar_2021.zip` | 24,7 MB | idem; também traz os 2 PDFs de documentação do MANIFEST |
+| `censo/microdados_censo_escolar_2022.zip` | 25,2 MB | idem |
+| `censo/microdados_censo_escolar_2023.zip` | 30,6 MB | idem |
+| `censo/microdados_censo_escolar_2024.zip` | 32,3 MB | idem |
+| `censo/microdados_censo_escolar_2025_.zip` | 512,3 MB | idem (só a tabela de escolas) |
+| `indicadores/tx_rend_escolas_2019.zip` a `_2025.zip` | 58,0 a 69,0 MB cada | `src/estendida/01` (reconstrução do cache de rendimento) |
+
+**Nenhum serve só à base oficial.** Prova: `python src/estendida/99_pipeline.py --force` reconstruiu o cache
+de 2019–2025 a partir dos 14 zips, e o conteúdo dos 14 parquets saiu idêntico ao versionado (só os
+metadados do arquivo mudam, porque o cache original foi gravado com outra versão do pyarrow); a base
+regerada continuou idêntica à do projeto anterior. O cache versionado foi mantido, para valer o sha256 do
+MANIFEST.
+
+**Retirado:** as tabelas Turma, Matrícula e Docente de 2025 (linhas do MANIFEST e de `src/config.py`).
+Não são zips, mas só serviam à fase 2 do projeto anterior; o pipeline estendido lê só a tabela de escolas.
