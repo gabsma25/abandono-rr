@@ -528,6 +528,9 @@ sementes são fixas, os números são idênticos.
 
 **Evidência:** `testes/test_fatores.py` (rótulos da figura com exclusões diferentes, recusa da árvore suja,
 robustez com as categorias da tabela 0, colunas das saídas) e `git check-ignore` na pasta de saídas.
+
+---
+
 ## 2026-11-15 — Revisão do João no PR #9: o que mudou no protocolo antes do merge
 
 **A revisão.** O João revisou o pull request #9 em 2026-11-15: clone limpo, `rodar_tudo.py` verde, leitura do
