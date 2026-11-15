@@ -11,12 +11,17 @@ Alvos (ano t+1):
                   a mesma regra da classificação de 2026-11-10 (classificacao.rotular), aplicada ao
                   mesmo universo: escolas públicas com a taxa da etapa em t−1, t e t+1. Fora dele, vazio.
 
+Dimensões de infraestrutura em proporção (v0.2.0): dim_<d>_prop = itens que a escola tem ÷ itens da dimensão,
+calculada só com a própria linha (sem média, desvio ou disponibilidade de outras escolas); vazia se algum item da
+dimensão estiver vazio. iie_prop = média simples das 4. As colunas *_zano e iie_zano continuam como estavam.
+
 Nenhum número é digitado: os anos disponíveis do dicionário são contados aqui.
 Uso: python -m src.dataset
 """
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -42,6 +47,9 @@ ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheir
          "IEP_computador", "IEP_impressora", "IEP_projetor", "IEP_internet"]
 DESC_ITEM = {"IIB": "infraestrutura básica", "IDA": "dependência administrativa",
              "IDP": "dependência pedagógica", "IEP": "equipamento pedagógico"}
+F_PROP = "calculada pelo projeto (src/dataset.py), só com a própria linha"
+# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/05_indices_infra.DIMENSOES)
+DIM_ITENS = {d: [i.lower() for i in ITENS if i.startswith(d)] for d in DESC_ITEM}
 
 # (coluna, papel, significado, unidade, fonte)
 COLUNAS = [
@@ -70,6 +78,12 @@ COLUNAS = [
     ("dim_idp_zano", "explicativa", "dimensão de dependências pedagógicas, padronizada dentro do ano", "desvios-padrão", F_PROJETO),
     ("dim_iep_zano", "explicativa", "dimensão de equipamentos pedagógicos, padronizada dentro do ano", "desvios-padrão", F_PROJETO),
     ("iie_zano", "explicativa", "índice de infraestrutura escolar (1ª componente principal das 4 dimensões, por ano)", "desvios-padrão", F_PROJETO),
+] + [(f"dim_{d.lower()}_prop", "explicativa",
+      f"dimensão de {DESC_ITEM[d]}: proporção dos {len(DIM_ITENS[d])} itens que a escola tem; vazia se algum item estiver vazio",
+      "proporção (0 a 1)", F_PROP) for d in DESC_ITEM] + [
+    ("iie_prop", "explicativa",
+     "índice geral de infraestrutura: média simples das 4 dimensões `dim_*_prop` (não é a componente principal do `iie_zano`); vazio se alguma dimensão estiver vazia",
+     "proporção (0 a 1)", F_PROP),
     ("infra_itens_completos", "explicativa", "1 se os 18 itens de infraestrutura estão preenchidos no ano", "0/1", F_PROJETO),
     ("infra_fonte_artigo", "explicativa", "1 se todos os itens vieram das colunas do artigo de referência (Almeida & Mussato, 2023)", "0/1", F_PROJETO),
 ]
@@ -98,6 +112,22 @@ def _taxas(base, s):
     return t.drop(columns="reprovacao_tm2")
 
 
+def proporcoes(d):
+    """dim_<d>_prop e iie_prop, linha a linha: nenhuma conta usa outra linha (escola, ano ou etapa).
+
+    Proporção = soma dos itens ÷ número de itens da dimensão; vazia se algum item da dimensão estiver vazio
+    (ausente estrutural nunca vira 0, CLAUDE.md regra 8). iie_prop = média simples das 4, vazia se faltar uma.
+    """
+    out = {}
+    for dim, cols in DIM_ITENS.items():
+        x = d[cols].astype("float64").to_numpy()
+        valores = np.where(np.isnan(x).any(axis=1), np.nan, x.sum(axis=1) / len(cols))
+        out[f"dim_{dim.lower()}_prop"] = valores
+    m = np.column_stack(list(out.values()))
+    out["iie_prop"] = np.where(np.isnan(m).any(axis=1), np.nan, m.mean(axis=1))
+    return pd.DataFrame({c: pd.array(v, dtype="Float64") for c, v in out.items()}, index=d.index)
+
+
 def montar(base):
     partes = []
     for etapa, s in SUF.items():
@@ -111,6 +141,7 @@ def montar(base):
         for c in [c for c in d.columns if c.startswith(("abandono_", "aprovacao_", "reprovacao_"))]:
             d[c] = d[c].astype("Float64")
         d["variacao_abandono_defasada"] = d["abandono_tm1"] - d["abandono_tm2"]
+        d = d.join(proporcoes(d), how="left", validate="1:1")
         univ = ((d["rede_publica"] == 1) & d["abandono_t1"].notna() & d["abandono_t"].notna()
                 & d["abandono_tm1"].notna()).fillna(False).astype(bool)
         d["alto_risco_t1"] = pd.array([pd.NA] * len(d), dtype="Int8")
@@ -176,6 +207,15 @@ def dicionario(d):
     L += ["", ("Essas justificativas são dos estudos de previsão do ano seguinte (t → t+1). No estudo de nível (as "
                "características e o abandono do mesmo ano t), o motivo da janela fica no `docs/PROTOCOLO.md`."), "",
           "Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.", "",
+          "## Infraestrutura: `_zano` × `_prop`", "",
+          (f"As duas versões resumem os mesmos {len(ITENS)} itens em {len(DIM_ITENS)} dimensões e um índice geral. As colunas `dim_*_zano` e "
+          "`iie_zano` são padronizadas dentro do ano com **todas as escolas** daquele ano (média, desvio e "
+          "componente principal). As colunas `dim_*_prop` e `iie_prop` usam **só a própria linha**: a fração dos "
+          "itens da dimensão que a escola tem, e a média simples das 4 frações. Por isso as `_prop` podem ser "
+          "padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, "
+          "regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece "
+          f"em {_anos(d.loc[d['iie_prop'].isna(), 'ano'], d.loc[d['iie_prop'].isna(), 'ano'])} "
+          "(o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens."), "",
           "## Ressalva sobre a procedência", "",
           ("Os dados de 2007 a 2018 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
           "Eles foram conferidos contra a fonte do INEP uma vez, em 14/10/2026, na máquina do Gustavo "
