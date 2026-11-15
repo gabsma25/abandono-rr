@@ -399,12 +399,20 @@ def c10_media_por_escola(u, n_boot=N_BOOT, semente=SEMENTE):
     return pd.DataFrame(linhas)
 
 
-def c10_janela_2012_2019(d, etapa, n_boot=N_BOOT, semente=SEMENTE):
+def c10_janela_2012_2019(d, etapa, categorias, n_boot=N_BOOT, semente=SEMENTE):
     """C.10 (b): a mesma análise com t = 2012–2019 (2012 porque dim_ida_prop e dim_idp_prop começam em
-    2012; 2019 porque o desfecho é do próprio ano). Sem Holm e sem veredito."""
-    u, _ = universo_pronto(d, etapa, JANELA_ROBUSTEZ)
+    2012; 2019 porque o desfecho é do próprio ano). Sem Holm e sem veredito.
+
+    `categorias` são as de dependencia que ficaram na tabela 0 da janela principal: a regra dos 30 NÃO é
+    reaplicada aqui (C.13: a tabela 0 é o único lugar), para o modelo ter os mesmos fatores do principal.
+    As linhas retiradas (preditor vazio; categoria fora da tabela 0) vão como colunas da tabela."""
+    u, vazios = c2_universo(d, etapa, JANELA_ROBUSTEZ)
+    fora = ~u["dependencia"].isin(set(categorias))
+    u = u[~fora]
     tab = c6_inferencia(u, anos=JANELA_ROBUSTEZ, n_boot=n_boot, semente=semente, com_vereditos=False)
     tab.insert(0, "analise", "janela_2012_2019")
+    tab["linhas_preditor_vazio"] = vazios
+    tab["linhas_categoria_fora_da_tabela_0"] = int(fora.sum())
     return tab
 
 
@@ -552,7 +560,8 @@ def executar(d, pasta, caminho_dataset=DATASET, n_boot=N_BOOT, modelos=MODELOS_Q
         gravar(por_etapa(lambda e, u: c8_permutacao(u, sementes, n_repeticoes=n_repeticoes)),
                pasta / "06_permutacao.csv", cab)
     robustez = pd.concat([por_etapa(lambda e, u: c10_media_por_escola(u, n_boot)),
-                          pd.concat([c10_janela_2012_2019(d, e, n_boot).assign(etapa=e)
+                          pd.concat([c10_janela_2012_2019(d, e, universos[e]["dependencia"].unique(),
+                                                          n_boot).assign(etapa=e)
                                      for e in ETAPAS], ignore_index=True)], ignore_index=True)
     gravar(robustez, pasta / "08_robustez.csv", cab)
     fig_forest(fatores, pasta / "fig_forest.png")  # todos os fatores com veredito, inclusive o iie_prop

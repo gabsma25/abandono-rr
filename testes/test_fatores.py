@@ -269,6 +269,9 @@ def test_executar_ordem_cabecalho_e_saidas(tmp_path, git_limpo):
             assert f"dataset_sha256={sha}" in primeira
     fatores = pd.read_csv(pasta / "04_fatores.csv", comment="#")
     assert set(fatores["etapa"]) == {"AF", "EM"} and "veredito" in fatores.columns
+    robustez = pd.read_csv(pasta / "08_robustez.csv", comment="#")
+    assert {"media_por_escola", "janela_2012_2019"} == set(robustez["analise"])
+    assert robustez.loc[robustez["analise"] == "janela_2012_2019", "linhas_preditor_vazio"].notna().all()
 
 
 def test_controle_negativo_reprovado_grava_so_o_07(tmp_path, monkeypatch, git_limpo):
@@ -282,6 +285,23 @@ def test_controle_negativo_reprovado_grava_so_o_07(tmp_path, monkeypatch, git_li
                            sementes=(1,))
     assert resultado.startswith("PAROU")
     assert [p.name for p in pasta.iterdir()] == ["07_controle_negativo.csv"]
+
+
+# ------------------------------------------------------------------ robustez (C.10)
+def test_robustez_usa_as_categorias_da_tabela_0():
+    """4 escolas federais: 24 escolas-ano em 2013–2018 (saem pela regra dos 30) e 32 em 2012–2019.
+    A robustez não reaplica a regra: a Federal continua fora, e as linhas retiradas são relatadas."""
+    d = base_sintetica(n_escolas=50, anos=range(2012, 2020), federais=4, anos_federais=8, semente=14)
+    d.loc[(d["co_entidade"] == "E0040") & (d["ano"] == 2012), "dim_iib_prop"] = np.nan   # um preditor vazio
+    principal, registro = F.universo_pronto(d, "AF")
+    assert registro["categorias_excluidas"] == {"Federal": 24}
+    tab = F.c10_janela_2012_2019(d, "AF", principal["dependencia"].unique(), n_boot=30)
+    assert "dependencia=Federal" not in set(tab["fator"])
+    fatores_principal = set(F.c6_inferencia(principal, n_boot=30)["fator"])
+    assert set(tab["fator"]) == fatores_principal, "a robustez tem de ter os mesmos fatores do principal"
+    assert (tab["linhas_categoria_fora_da_tabela_0"] == 32).all()
+    assert (tab["linhas_preditor_vazio"] == 1).all()
+    assert "veredito" not in tab.columns and "p_holm" not in tab.columns
 
 
 # ------------------------------------------------------------------ a figura principal (C.5)
