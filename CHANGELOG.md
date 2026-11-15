@@ -39,6 +39,10 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   relação com o desfecho; ressalva do R²) e 10 (toda decisão registrada; unidade dos anos de teste).
 - `docs/BASELINE.md` (via `src/relatorios/baseline.py`): a régua passa a ser descrita como "quanto se acerta sem
   modelo, com o dado que a secretaria já tem", e o §5 diz que o nulo preditivo é o que responde à Q4.
+- **`docs/PROTOCOLO.md` reescrito** (`docs/DECISOES.md`, 2026-11-15): o registro retroativo da classificação de
+  2026-11-10, o desenho padrão do projeto como regra e o protocolo do estudo de fatores associados, escrito
+  antes de rodar; nada foi executado. O protocolo da Etapa 4, nunca executado, fica guardado inteiro no fim do
+  arquivo.
 - Unidade dos intervalos de anos: anos de DESFECHO na regra 10; a linha de 2022–2023 do `dataset/DICIONARIO.md` e
   uma nota abaixo da tabela da janela; "taxa de abandono por ano civil, 2013–2019" no `docs/DECISOES.md` e aqui.
 
