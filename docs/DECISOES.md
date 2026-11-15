@@ -570,3 +570,23 @@ outras duas notas opcionais do revisor (o rótulo `GUSTAVO:` no cabeçalho do pi
 quem quer reconstruir o cache a partir dos zips) ficam para depois.
 
 **Evidência:** `docs/revisoes/2026-11-15_joao_pr9.md` e os commits de texto do protocolo neste pull request.
+
+---
+
+## 2026-11-15 — Execução do estudo de fatores antes da aprovação formal do PR #9
+
+**Decisão (pesquisadora).** Execução do estudo de fatores no branch `integracao/gabriela`, antes da aprovação
+formal do PR #9 e sem PR do código. O protocolo recebeu a revisão do João, com os comentários aplicados
+(commits `76e2256` a `15181ae`), mas ainda não a aprovação. O código foi conferido pela autora-agente (revisão
+não independente) e por testes com dados sintéticos em Windows (Claude Code) e em Linux (Claude, sessão de
+chat, no commit `9678207`: `rodar_tudo.py` com 109 aprovados e 2 pulados, por falta dos zips do INEP;
+`test_fatores.py` com 21 de 21; `git status` limpo depois de regerar).
+
+**Desvio registrado.** Isso desvia da regra 10 e da seção B.6 do `docs/PROTOCOLO.md` (o protocolo no `main`
+por pull request revisado antes de qualquer execução) e da regra 12.
+
+**Consequência.** A partir desta execução, o protocolo fica congelado: a aprovação do #9 passa a confirmar o
+que rodou, e qualquer mudança pedida depois vira um estudo novo, com protocolo próprio.
+
+**Data pública do protocolo.** O protocolo não foi depositado em repositório externo: ele tem data pública só
+pelo push no GitHub (branches `docs/leva-pilha-ao-main` e `integracao/gabriela`), feito antes da execução.
