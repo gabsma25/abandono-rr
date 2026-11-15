@@ -229,8 +229,10 @@ a lado (é também a figura da Q3); o efeito da amplitude 0→1 fica na tabela.
   classe de modelo também roda **só com as dummies de `ano`** (mesmo pipeline, mesmas dobras; no MLP, as
   mesmas 10 sementes). O **ΔR²** de um modelo é o R² da validação cruzada agrupada dele menos o R² do modelo
   só com o ano da mesma classe.
-- **Pipeline único para os três** (`ColumnTransformer`): `StandardScaler` nas quatro dimensões, `OneHotEncoder`
-  em `localizacao`, `dependencia` e `ano`, tudo ajustado **só na parte de treino de cada dobra** (regra 5).
+- **Pipeline único para os três** (`ColumnTransformer`): `StandardScaler` nas quatro dimensões,
+  `OneHotEncoder(handle_unknown="ignore")` em `localizacao`, `dependencia` e `ano`, tudo ajustado **só na
+  parte de treino de cada dobra** (regra 5). Com `handle_unknown="ignore"`, uma categoria presente na
+  validação e ausente no treino da dobra fica com todas as dummies em zero, em vez de parar a execução.
   Alvo `abandono_t / 100` (domínio conhecido da taxa); as previsões voltam a pp (× 100) antes de qualquer
   métrica, sem corte em [0, 100]; o relatório conta quantas ficaram fora.
 - **Validação cruzada:** `GroupKFold(n_splits=5)` com grupo = `co_entidade`, por etapa; as **mesmas dobras**
