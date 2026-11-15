@@ -67,8 +67,13 @@ CANDIDATOS_ID = (
 # Descoberta dos zips
 # ------------------------------------------------------------------
 def mapear_zips_escola():
+    """{ano: zip de tx_rend por escola} em dados/origem/indicadores/.
+
+    A pasta fica fora do git (regra 2). Sem ela, nenhum ano tem zip e cada ano entra pelo cache versionado em
+    dados/cache/tx_rend/, como já acontecia com qualquer ano sem zip (issue #6)."""
     if not INDICADORES.exists():
-        raise FileNotFoundError(f"Pasta não encontrada: {INDICADORES}")
+        print(f"[aviso] {INDICADORES} não existe: nenhum zip; os anos entram pelo cache ({CACHE}).")
+        return {}
     mapa = {}
     for z in sorted(INDICADORES.glob("*.zip")):
         nome = z.name.lower()

@@ -11,12 +11,18 @@ Alvos (ano t+1):
                   a mesma regra da classificação de 2026-11-10 (classificacao.rotular), aplicada ao
                   mesmo universo: escolas públicas com a taxa da etapa em t−1, t e t+1. Fora dele, vazio.
 
+Dimensões de infraestrutura em proporção (v0.2.0): dim_<d>_prop = itens que a escola tem ÷ itens da dimensão,
+calculada só com a própria linha (sem média, desvio ou disponibilidade de outras escolas); vazia se algum item da
+dimensão estiver vazio. iie_prop = média simples das 4. As colunas *_zano e iie_zano continuam como estavam, gravadas
+com CASAS_ZANO casas decimais (o arquivo é o mesmo em qualquer máquina).
+
 Nenhum número é digitado: os anos disponíveis do dicionário são contados aqui.
 Uso: python -m src.dataset
 """
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -42,6 +48,9 @@ ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheir
          "IEP_computador", "IEP_impressora", "IEP_projetor", "IEP_internet"]
 DESC_ITEM = {"IIB": "infraestrutura básica", "IDA": "dependência administrativa",
              "IDP": "dependência pedagógica", "IEP": "equipamento pedagógico"}
+F_PROP = "calculada pelo projeto (src/dataset.py), só com a própria linha"
+# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/05_indices_infra.DIMENSOES)
+DIM_ITENS = {d: [i.lower() for i in ITENS if i.startswith(d)] for d in DESC_ITEM}
 
 # (coluna, papel, significado, unidade, fonte)
 COLUNAS = [
@@ -70,6 +79,12 @@ COLUNAS = [
     ("dim_idp_zano", "explicativa", "dimensão de dependências pedagógicas, padronizada dentro do ano", "desvios-padrão", F_PROJETO),
     ("dim_iep_zano", "explicativa", "dimensão de equipamentos pedagógicos, padronizada dentro do ano", "desvios-padrão", F_PROJETO),
     ("iie_zano", "explicativa", "índice de infraestrutura escolar (1ª componente principal das 4 dimensões, por ano)", "desvios-padrão", F_PROJETO),
+] + [(f"dim_{d.lower()}_prop", "explicativa",
+      f"dimensão de {DESC_ITEM[d]}: proporção dos {len(DIM_ITENS[d])} itens que a escola tem; vazia se algum item estiver vazio",
+      "proporção (0 a 1)", F_PROP) for d in DESC_ITEM] + [
+    ("iie_prop", "explicativa",
+     "índice geral de infraestrutura: média simples das 4 dimensões `dim_*_prop` (não é a componente principal do `iie_zano`); vazio se alguma dimensão estiver vazia",
+     "proporção (0 a 1)", F_PROP),
     ("infra_itens_completos", "explicativa", "1 se os 18 itens de infraestrutura estão preenchidos no ano", "0/1", F_PROJETO),
     ("infra_fonte_artigo", "explicativa", "1 se todos os itens vieram das colunas do artigo de referência (Almeida & Mussato, 2023)", "0/1", F_PROJETO),
 ]
@@ -80,7 +95,7 @@ FAIXAS = [
     ("2013–2018", "**janela segura**", "um único formato de dados e antes da pandemia; desfechos de 2014 a 2019"),
     ("2019", "fora", "o desfecho seria 2020, ano da pandemia"),
     ("2020–2021", "fora", "pandemia: com as escolas fechadas, o abandono registrado despencou (ver saida/relatorios/desfecho_por_ano.csv)"),
-    ("2022–2023", "fora", "regime pós-pandemia; foram os anos de teste da Etapa 2 do projeto anterior"),
+    ("2022–2023", "fora", "regime pós-pandemia; os desfechos destes anos t (2023 e 2024) foram teste da Etapa 2 do projeto anterior, que testou os anos de desfecho 2021–2024 (em ano t: 2020–2023)"),
     ("2024–2025", "fora", "começa o Pé-de-Meia no ensino médio; o desfecho de 2025 já foi usado em análises e testes de modelos"),
 ]
 
@@ -98,6 +113,22 @@ def _taxas(base, s):
     return t.drop(columns="reprovacao_tm2")
 
 
+def proporcoes(d):
+    """dim_<d>_prop e iie_prop, linha a linha: nenhuma conta usa outra linha (escola, ano ou etapa).
+
+    Proporção = soma dos itens ÷ número de itens da dimensão; vazia se algum item da dimensão estiver vazio
+    (ausente estrutural nunca vira 0, CLAUDE.md regra 8). iie_prop = média simples das 4, vazia se faltar uma.
+    """
+    out = {}
+    for dim, cols in DIM_ITENS.items():
+        x = d[cols].astype("float64").to_numpy()
+        valores = np.where(np.isnan(x).any(axis=1), np.nan, x.sum(axis=1) / len(cols))
+        out[f"dim_{dim.lower()}_prop"] = valores
+    m = np.column_stack(list(out.values()))
+    out["iie_prop"] = np.where(np.isnan(m).any(axis=1), np.nan, m.mean(axis=1))
+    return pd.DataFrame({c: pd.array(v, dtype="Float64") for c, v in out.items()}, index=d.index)
+
+
 def montar(base):
     partes = []
     for etapa, s in SUF.items():
@@ -111,6 +142,7 @@ def montar(base):
         for c in [c for c in d.columns if c.startswith(("abandono_", "aprovacao_", "reprovacao_"))]:
             d[c] = d[c].astype("Float64")
         d["variacao_abandono_defasada"] = d["abandono_tm1"] - d["abandono_tm2"]
+        d = d.join(proporcoes(d), how="left", validate="1:1")
         univ = ((d["rede_publica"] == 1) & d["abandono_t1"].notna() & d["abandono_t"].notna()
                 & d["abandono_tm1"].notna()).fillna(False).astype(bool)
         d["alto_risco_t1"] = pd.array([pd.NA] * len(d), dtype="Int8")
@@ -173,7 +205,20 @@ def dicionario(d):
           "## A janela segura e por que cada faixa de anos fica fora", "",
           "| Anos t | Situação | Motivo |", "|---|---|---|"]
     L += [f"| {a} | {s} | {m} |" for a, s, m in FAIXAS]
-    L += ["", "Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.", "",
+    L += ["", ("Essas justificativas são dos estudos de previsão do ano seguinte (t → t+1). No estudo de nível (as "
+               "características e o abandono do mesmo ano t), o motivo da janela fica no `docs/PROTOCOLO.md`."), "",
+          "Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.", "",
+          "## Infraestrutura: `_zano` × `_prop`", "",
+          (f"As duas versões resumem os mesmos {len(ITENS)} itens em {len(DIM_ITENS)} dimensões e um índice geral. As colunas `dim_*_zano` e "
+          "`iie_zano` são padronizadas dentro do ano com **todas as escolas** daquele ano (média, desvio e "
+          "componente principal). As colunas `dim_*_prop` e `iie_prop` usam **só a própria linha**: a fração dos "
+          "itens da dimensão que a escola tem, e a média simples das 4 frações. Por isso as `_prop` podem ser "
+          "padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, "
+          "regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece "
+          f"em {_anos(d.loc[d['iie_prop'].isna(), 'ano'], d.loc[d['iie_prop'].isna(), 'ano'])} "
+          "(o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens. "
+          f"As `_zano` são gravadas com {CASAS_ZANO} casas decimais, para o arquivo ser o mesmo em qualquer "
+          "máquina: elas vêm de contas do numpy cuja última casa muda entre sistemas operacionais."), "",
           "## Ressalva sobre a procedência", "",
           ("Os dados de 2007 a 2018 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
           "Eles foram conferidos contra a fonte do INEP uma vez, em 14/10/2026, na máquina do Gustavo "
@@ -183,9 +228,31 @@ def dicionario(d):
     return "\n".join(L)
 
 
+# Arredondamento das colunas *_zano (DECISOES, 2026-11-15). Elas vêm de médias, desvios e componente principal
+# calculados pelo numpy/LAPACK, cuja ordem de operações muda entre plataformas: o iie_zano difere até 3e-15
+# entre Windows e Linux. As demais colunas de ponto flutuante vêm de leitura de texto e de contas IEEE simples
+# (diferença, divisão, média de poucos termos), idênticas em qualquer máquina, e não são arredondadas.
+CASAS_ZANO = 9
+RUIDO_PLATAFORMA = 3e-15           # maior diferença medida entre Windows e Linux (iie_zano)
+FOLGA_MINIMA = 10 * RUIDO_PLATAFORMA  # testes/test_dataset.py exige essa distância às fronteiras de arredondamento
+
+
+def colunas_zano(d):
+    return [c for c in d.columns if c.endswith("_zano")]
+
+
+def arredondar(d):
+    """As colunas *_zano com CASAS_ZANO casas decimais; o + 0.0 transforma −0,0 em 0,0."""
+    d = d.copy()
+    for c in colunas_zano(d):
+        v = d[c].astype("float64").to_numpy()
+        d[c] = pd.array(np.round(v, CASAS_ZANO) + 0.0, dtype="Float64")
+    return d
+
+
 def para_csv(d):
-    """Texto CSV do dataset, como gravado no arquivo (UTF-8, quebra de linha LF)."""
-    return d.to_csv(index=False, lineterminator="\n")
+    """Texto CSV do dataset, como gravado no arquivo (UTF-8, quebra de linha LF), com as *_zano arredondadas."""
+    return arredondar(d).to_csv(index=False, lineterminator="\n")
 
 
 def main():
