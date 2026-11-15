@@ -16,3 +16,6 @@ kc_house_data.csv
 
 # Saídas regeneráveis (python rodar_tudo.py)
 saida/
+# Exceção: as saídas da execução única do estudo de fatores entram no git (docs/PROTOCOLO.md, C.13 e D.1).
+# Com a pasta versionada, a trava "recusa se saida/ existe" vale em qualquer clone.
+!experimentos/fatores_2013_2018/saida/
