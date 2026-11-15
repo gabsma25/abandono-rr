@@ -29,7 +29,13 @@ F = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(F)
 
 PROTOCOLO = (RAIZ / "docs" / "PROTOCOLO.md").read_text(encoding="utf-8")
-SEC_C = PROTOCOLO.split("\n## C. Protocolo do estudo")[1].split("\n## Protocolo registrado")[0]
+SEC_C = PROTOCOLO.split("\n## C. Protocolo do estudo")[1].split("\n## D. ")[0]   # só a seção C, antes da D
+
+
+def test_secao_c_recortada_sem_a_d():
+    assert "### C.14" in SEC_C, "o recorte perdeu o fim da seção C"
+    assert "Depois da execução" not in SEC_C and "## Protocolo registrado" not in SEC_C, \
+        "o recorte da seção C invadiu a D ou o protocolo preservado"
 
 
 # ------------------------------------------------------------------ dados sintéticos (nenhum dado real)
