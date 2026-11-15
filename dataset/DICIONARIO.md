@@ -73,7 +73,7 @@ Para cada etapa e cada ano t+1:
 | 2013–2018 | **janela segura** | um único formato de dados e antes da pandemia; desfechos de 2014 a 2019 |
 | 2019 | fora | o desfecho seria 2020, ano da pandemia |
 | 2020–2021 | fora | pandemia: com as escolas fechadas, o abandono registrado despencou (ver saida/relatorios/desfecho_por_ano.csv) |
-| 2022–2023 | fora | regime pós-pandemia; foram os anos de teste da Etapa 2 do projeto anterior |
+| 2022–2023 | fora | regime pós-pandemia; os desfechos destes anos t (2023 e 2024) foram teste da Etapa 2 do projeto anterior, que testou os anos de desfecho 2021–2024 (em ano t: 2020–2023) |
 | 2024–2025 | fora | começa o Pé-de-Meia no ensino médio; o desfecho de 2025 já foi usado em análises e testes de modelos |
 
 Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.
