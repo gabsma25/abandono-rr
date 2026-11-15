@@ -266,3 +266,45 @@ Onde a unidade não era óbvia, o texto passa a dizê-la:
   janela no estudo de nível fica no `docs/PROTOCOLO.md`;
 - a evidência de equivalência da entrada de 2026-11-11 acima: "a taxa de abandono por ano civil, 2013–2019", que é
   o que o `desfecho_por_ano.csv` descreve.
+
+---
+
+## 2026-11-14 — Dimensões de infraestrutura em proporção, linha a linha (dataset v0.2.0)
+
+**Decisão (pesquisadora).** O dataset ganha, para cada uma das 4 dimensões de infraestrutura, a **proporção dos
+itens que a escola tem** (`dim_iib_prop`, `dim_ida_prop`, `dim_idp_prop`, `dim_iep_prop`, de 0 a 1), e um índice
+geral, `iie_prop`, que é a **média simples das quatro**. O estudo de fatores usa essas colunas, padronizadas dentro
+do `Pipeline` com a parte de treino de cada dobra. As colunas `dim_*_zano` e `iie_zano` continuam no dataset, sem
+mudança, mas **não entram no estudo de fatores**. A versão sobe para **0.2.0**.
+
+**Motivo.** As `_zano` são padronizadas dentro do ano com a média e o desvio de **todas as escolas** daquele ano,
+e o `iie_zano` usa a componente principal do ano. Numa validação cruzada agrupada por escola, isso faz a
+padronização de uma escola de treino depender das escolas da dobra de validação, o que a regra 5 proíbe
+("toda transformação é ajustada só na parte de treino de cada dobra"). A proporção não depende de nenhuma outra
+escola, e a padronização passa para dentro do `Pipeline`.
+
+**Definição** (`src/dataset.py`, função `proporcoes`): proporção = soma dos itens ÷ número de itens da dimensão,
+com os itens de `src/estendida/05_indices_infra.DIMENSOES`. **Fica vazia se algum item da dimensão estiver vazio**
+(regra 8). Isso só acontece em 2007–2011, quando o Censo não perguntava alguns itens das dependências
+administrativas e pedagógicas; na janela 2013–2018 não há nenhum vazio (`testes/test_dataset.py`).
+
+**Diferença em relação ao `05_indices_infra.py --com-prop`.** O relatório de procedência 05 (14/10/2026) já tinha
+uma versão "prop", descartada como padrão por trazer a mesma informação que a `_zano` em outra escala. O motivo de
+agora é outro (não usar outras escolas). A versão antiga divide pelos itens **disponíveis no ano**, e um item é
+"disponível" se **alguma escola** respondeu a ele. Isso usa informação de outras escolas, e por isso ela não foi
+reaproveitada como está. Nos anos em que todos os itens existem (2012 em diante), as duas coincidem exatamente
+(teste `test_prop_igual_ao_05_onde_o_ano_tem_todos_os_itens`). Em 2007–2011, a proporção nova é vazia, e a antiga
+usa menos itens.
+
+**Ressalva mantida.** O relatório 05 registra quebras de pergunta no Censo (água e banheiro até 2018, projetor até
+2011, biblioteca em 2007–2008). Na janela 2013–2018, a coluna de origem de cada item é a mesma em todos os anos
+(`infra_fonte_artigo` = 0 em toda a janela: água e banheiro vêm das colunas substitutas), então as quebras não
+caem dentro da janela.
+
+**Alternativa descartada:** recalcular a `_zano` dentro de cada dobra. Exigiria repetir a padronização por ano e a
+componente principal dentro do código do estudo, para chegar a uma escala que o `StandardScaler` do `Pipeline` já
+dá a partir da proporção.
+
+**Evidência:** `testes/test_dataset.py` (proporção da própria linha; nada muda quando metade das escolas sai da
+base; igualdade com o `05_indices_infra.py` de 2012 em diante) e a comparação com a v0.1.0 lida da tag (as 44
+colunas antigas são idênticas valor a valor).

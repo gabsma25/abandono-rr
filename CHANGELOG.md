@@ -6,7 +6,17 @@ A versão fica em `src/versao.py`, e o dataset leva a versão no nome do arquivo
 
 ## [Não lançado]
 
+Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de abandono (`docs/DECISOES.md`,
+2026-11-14). O dataset ganha as dimensões de infraestrutura em proporção; as 44 colunas da v0.1.0 não mudam.
+Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
+
 ### Adicionado
+- **Dataset `v0.2.0`** (`dataset/escolas_rr_v0.2.0.csv`): cinco colunas novas, `dim_iib_prop`, `dim_ida_prop`,
+  `dim_idp_prop`, `dim_iep_prop` (proporção dos itens de cada dimensão que a escola tem, calculada só com a própria
+  linha; vazia se faltar item) e `iie_prop` (média simples das quatro). As 44 colunas da v0.1.0 ficam idênticas,
+  valor a valor. A v0.1.0 continua na tag `v0.1.0`. Testes novos em `testes/test_dataset.py`: a proporção é a da
+  linha, não muda quando outras escolas saem da base e coincide com `05_indices_infra.py --com-prop` nos anos
+  que têm todos os itens.
 - `docs/BASELINE.md`, gerado por `python src/relatorios/baseline.py`: a régua, a versão otimista, a B2 e o
   acaso, com os resultados da Etapa 1 (regerados), da Etapa 2 e da classificação (citados de
   `docs/projeto_anterior/`); `testes/test_baseline.py` exige que esteja em dia.
@@ -16,7 +26,6 @@ A versão fica em `src/versao.py`, e o dataset leva a versão no nome do arquivo
 - `docs/tese_base/`: o exemplo do professor (MLPRegressor, King County House Sales), como referência de forma;
   o `kc_house_data.csv` fica fora do git, e o nbstripout não toca o notebook (`.gitattributes`,
   `testes/test_atributos.py`; instalação com `--attributes .gitattributes`, ver `CONTRIBUTING.md`).
-
 - `docs/ROTEIRO.md`: as metas M1–M12 do projeto anterior, cópia literal do arquivo, todas "a revisar".
 - Registro do desvio da regra 12 (pull requests #1 e #2 mergeados sem revisão) no `docs/DECISOES.md`.
 

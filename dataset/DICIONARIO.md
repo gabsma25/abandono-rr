@@ -1,8 +1,8 @@
-# Dicionário de dados — `escolas_rr_v0.1.0.csv`
+# Dicionário de dados — `escolas_rr_v0.2.0.csv`
 
 Gerado por `python -m src.dataset` a partir de `saida/base_atual.parquet` (não edite à mão).
 
-**Uma linha por escola × ano (t) × etapa.** 7.550 linhas e 44 colunas; 353 escolas; anos t de 2007 a 2025. Entra a escola-ano que tem a taxa de abandono da etapa em t ou em t+1. Chave: `co_entidade` + `ano` + `etapa`. O nome da escola não é incluído.
+**Uma linha por escola × ano (t) × etapa.** 7.550 linhas e 49 colunas; 353 escolas; anos t de 2007 a 2025. Entra a escola-ano que tem a taxa de abandono da etapa em t ou em t+1. Chave: `co_entidade` + `ano` + `etapa`. O nome da escola não é incluído.
 
 **Papéis.** *Alvo*: o que se quer prever, sempre do ano t+1; nunca entra como variável explicativa. *Explicativa*: informação disponível sobre a escola até o ano t. *Identificação*: chave e descrição, não entram em modelo.
 
@@ -50,6 +50,11 @@ Gerado por `python -m src.dataset` a partir de `saida/base_atual.parquet` (não 
 | `dim_idp_zano` | explicativa | dimensão de dependências pedagógicas, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
 | `dim_iep_zano` | explicativa | dimensão de equipamentos pedagógicos, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
 | `iie_zano` | explicativa | índice de infraestrutura escolar (1ª componente principal das 4 dimensões, por ano) | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
+| `dim_iib_prop` | explicativa | dimensão de infraestrutura básica: proporção dos 4 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2007–2025 |
+| `dim_ida_prop` | explicativa | dimensão de dependência administrativa: proporção dos 5 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
+| `dim_idp_prop` | explicativa | dimensão de dependência pedagógica: proporção dos 5 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
+| `dim_iep_prop` | explicativa | dimensão de equipamento pedagógico: proporção dos 4 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2007–2025 |
+| `iie_prop` | explicativa | índice geral de infraestrutura: média simples das 4 dimensões `dim_*_prop` (não é a componente principal do `iie_zano`); vazio se alguma dimensão estiver vazia | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
 | `infra_itens_completos` | explicativa | 1 se os 18 itens de infraestrutura estão preenchidos no ano | 0/1 | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
 | `infra_fonte_artigo` | explicativa | 1 se todos os itens vieram das colunas do artigo de referência (Almeida & Mussato, 2023) | 0/1 | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
 
@@ -79,6 +84,10 @@ Para cada etapa e cada ano t+1:
 Essas justificativas são dos estudos de previsão do ano seguinte (t → t+1). No estudo de nível (as características e o abandono do mesmo ano t), o motivo da janela fica no `docs/PROTOCOLO.md`.
 
 Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.
+
+## Infraestrutura: `_zano` × `_prop`
+
+As duas versões resumem os mesmos 18 itens em 4 dimensões e um índice geral. As colunas `dim_*_zano` e `iie_zano` são padronizadas dentro do ano com **todas as escolas** daquele ano (média, desvio e componente principal). As colunas `dim_*_prop` e `iie_prop` usam **só a própria linha**: a fração dos itens da dimensão que a escola tem, e a média simples das 4 frações. Por isso as `_prop` podem ser padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece em 2007–2011 (o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens.
 
 ## Ressalva sobre a procedência
 
