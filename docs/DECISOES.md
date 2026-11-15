@@ -46,7 +46,8 @@ de outubro (`_backup_2026-10-14`) não veio: o teste avisa e pula.
 
 **Evidência de que nada mudou** (`testes/test_equivalencia.py`, igualdade exata): a `base_atual` 2007–2025
 (12.597 × 55, mesmos tipos), a régua da Etapa 1, as réguas B1R_lag, B2 e acaso da janela (60 linhas × 15
-métricas), o funil (degraus 2 a 7) e o desfecho de 2013–2019 são idênticos aos do projeto anterior. Os
+métricas), o funil (degraus 2 a 7) e a taxa de abandono por ano civil, 2013–2019, são idênticos aos do projeto
+anterior. Os
 testes herdados passam: 01 (45 OK), 02 (41 OK), 03 (2019–2025 conferem célula a célula com os zips
 originais), 04 (46 OK) e 08 (65 OK).
 
@@ -176,3 +177,92 @@ do livro (5.5.1) pela pesquisadora.
    .gitattributes` (`CONTRIBUTING.md`): a instalação padrão grava em `.git/info/attributes`, que tem precedência
    sobre o `.gitattributes` e anularia a exceção (conferido com `git check-attr` num clone de teste, nesta data).
    O `testes/test_atributos.py` acusa a máquina em que isso acontecer.
+
+---
+
+## 2026-11-14 — A pergunta do projeto muda: fatores associados ao nível de abandono
+
+**Decisão (pesquisadora).** O repositório passa a ter um objeto só, a pesquisa PIBIC, e a pergunta passa a ser:
+
+> Quais características estruturais de uma escola pública de Roraima estão associadas ao seu nível de abandono
+> escolar, e quanto delas permite prever esse nível? A unidade é a escola-ano; o projeto não olha alunos.
+> Associação não é causa.
+
+Subperguntas: **Q1**, quanto da diferença de abandono entre escolas essas características explicam; **Q2**, qual o
+peso de cada uma, com que incerteza; **Q3**, se o peso se mantém entre anos finais (AF) e ensino médio (EM);
+**Q4**, se elas antecipam a mudança no ano seguinte. A Q4 já está respondida e vira uma seção do
+`docs/BASELINE.md` (§5), não um experimento novo. O projeto fala em "fatores associados", nunca em "variáveis
+responsáveis" nem em "o que causa o abandono".
+
+**Motivo.** A pergunta antiga (antecipar, com um ano de antecedência, as escolas de abandono alto) foi respondida
+duas vezes, com desenhos diferentes, e a resposta é que nenhum modelo ordenou as escolas melhor do que a régua
+(o último abandono conhecido):
+
+- **Classificação de alto risco na janela segura** (2026-11-10, execução única): **0 GANHO em 36 testes** da
+  família F6 (ferramenta − régua, com Holm). Nos anos finais, todas as comparações de Recall@20% são SEM GANHO
+  PRÁTICO; no ensino médio, a maioria é INCONCLUSIVO.
+- **Etapa 2 do projeto anterior** (desfechos de 2021–2024, inclusive com TDI, ATU e IED): **0 de 32** testes da
+  família F5 (modelo − régua) resistem ao Holm.
+
+**Evidência:** `docs/BASELINE.md`, §3 e §4, gerado por `src/relatorios/baseline.py` a partir de
+`docs/projeto_anterior/02d_testes.csv` e `docs/projeto_anterior/classificacao/03_testes.csv`.
+
+**Alternativa descartada: continuar melhorando o modelo preditivo** (mais modelos, ajuste fino, novas réguas).
+O nulo se repetiu nos dois desenhos e em todos os blocos de informação, e a janela segura não tem as variáveis que
+poderiam mudar isso: TDI, ATU, IED, matrículas, escola indígena, localização diferenciada, INSE e formação docente
+não existem no repositório para 2013–2018 (diagnóstico da Etapa A, nesta data). As metas M1–M12 do projeto
+anterior, quase todas preditivas, ficam em `docs/ROTEIRO.md`, copiadas do arquivo, todas "a revisar".
+
+**O artigo da disciplina de Mineração de Dados sai do repositório.** Não faz parte da pesquisa PIBIC, e não há
+nada a migrar. As menções a ele saem de todos os documentos, exceto da cópia literal do roteiro antigo
+(`docs/ROTEIRO.md`), que fica como foi escrita.
+
+**As regras ficam unificadas.** O `CLAUDE.md` e a seção "As regras que não se quebram" do `CONTRIBUTING.md`
+passam a ter as mesmas 12 regras, na mesma ordem e com os mesmos números; o `CONTRIBUTING.md` diz o mesmo em
+linguagem simples. Mudanças de conteúdo, nos dois:
+
+- **regra 5:** acrescenta o estudo de associação no mesmo ano (nenhum preditor posterior a t nem derivado do
+  desfecho; transformações ajustadas só na parte de treino de cada dobra);
+- **regra 6:** no modelo do nível de abandono da etapa no ano t, nenhuma das três taxas de rendimento daquela etapa
+  e ano entra em X (identidade contábil); o TDI, quando voltar, entra declarado como parcialmente mecânico. A
+  exclusão de todo o rendimento no estudo de fatores é decisão do protocolo, não regra geral;
+- **regra 7:** é proibido escolher (incluir, excluir, recodificar ou transformar) variável pela relação com o
+  desfecho; é permitido e esperado reportar essa relação como resultado, com a lista fixada antes no
+  `docs/PROTOCOLO.md` e todas as variáveis reportadas, inclusive as nulas; ordenar a apresentação pelo efeito é
+  permitido. O R² pode descrever quanto da variação é explicada, mas não escolhe modelo, variável nem limiar;
+- **regra 10:** passa a incluir "toda decisão fica registrada no `docs/DECISOES.md`" (antes, a regra 10 do
+  `CONTRIBUTING.md`) e o relato do resultado nulo, e diz a unidade dos anos de teste já usados: anos de DESFECHO
+  2016–2019 e 2021–2024 (em ano t, 2015–2018 e 2020–2023).
+
+**Consequência.** O `docs/PROTOCOLO.md` que está no `main` (a "Etapa 4", entrada de 2026-11-11) responde à
+pergunta antiga e nunca foi executado. Ele será movido, sem apagar nada, para uma seção "Protocolo registrado, não
+executado, substituído em 2026-11-14", no pull request do protocolo do estudo de fatores.
+
+---
+
+## 2026-11-14 — Desvio da regra 12: dois pull requests entraram no `main` sem revisão
+
+**O que aconteceu.** Os pull requests #1 (`docs/fluxo-do-grupo`, fluxo de trabalho do grupo) e #2
+(`protocolo-novo-escopo`, protocolo da Etapa 4 e esqueleto do notebook) foram mergeados no `main` pela conta
+`gabsma25` em 2026-11-11, **sem nenhuma revisão registrada** no GitHub. Isso fere a regra 12 (`main` só por pull
+request revisado por outra pessoa).
+
+**Alcance.** Os dois só mudaram documentação e um notebook sem saídas. **Nada foi executado a partir deles**: a
+pasta `experimentos/regressao_mlp_2013_2018/`, onde o protocolo da Etapa 4 gravaria as saídas, não existe.
+
+**Decisão.** A partir de agora, nenhum merge entra no `main` sem a aprovação de outro integrante, também quando o
+GitHub não impedir (ver `CONTRIBUTING.md`, "Quando o repositório estiver no GitHub").
+
+---
+
+## 2026-11-14 — Todo intervalo de anos diz a sua unidade
+
+Onde a unidade não era óbvia, o texto passa a dizê-la:
+
+- a regra 10, no `CLAUDE.md` e no `CONTRIBUTING.md`: anos de DESFECHO 2016–2019 e 2021–2024 (em ano t, 2015–2018
+  e 2020–2023);
+- a linha de 2022–2023 da tabela da janela no `dataset/DICIONARIO.md` (gerada por `src/dataset.py`), e uma nota
+  logo abaixo da tabela: as justificativas são dos estudos de previsão do ano seguinte (t → t+1), e o motivo da
+  janela no estudo de nível fica no `docs/PROTOCOLO.md`;
+- a evidência de equivalência da entrada de 2026-11-11 acima: "a taxa de abandono por ano civil, 2013–2019", que é
+  o que o `desfecho_por_ano.csv` descreve.
