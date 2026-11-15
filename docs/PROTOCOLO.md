@@ -307,6 +307,10 @@ formal de diferença, se o grupo quiser, exige protocolo novo antes de rodar.
   de escolas e escolas-ano por etapa saem por código na tabela 0, antes de qualquer modelo (regra 3) — e, com
   menos escolas, os ICs por bootstrap de escola saem largos. Isso repete o padrão da classificação
   (`docs/BASELINE.md`, §4). INCONCLUSIVO no EM será relatado como tal, sem releitura.
+- **Nas dimensões de infraestrutura, muitos INCONCLUSIVO são esperados nas duas etapas**, não só no EM. As
+  dimensões são colineares com a `localizacao` (as escolas rurais têm menos itens em todas elas) e entre si,
+  o que alarga os ICs de cada uma (relações entre preditores, sem o desfecho;
+  `docs/revisoes/2026-11-15_joao_pr9.md`). O VIF da C.4 mostra o quanto.
 - O abandono tem **muitos zeros** e é limitado a [0, 100]; a regressão linear lê diferenças de média, e a
   inferência não depende de normalidade (bootstrap). Fica como limitação conhecida (C.14), não como motivo
   para trocar de modelo depois de ver resultado.
@@ -338,6 +342,11 @@ As saídas entram no git no pull request da execução (política das cópias co
 - **Responde:** quais características estruturais estão **associadas** ao nível de abandono da escola-ano na
   janela, com que peso e com que incerteza (Q2); quanto da variação elas explicam além do nível do ano (Q1);
   e como isso se compara entre AF e EM (Q3).
+- **Como ler cada efeito:** o efeito de um fator é lido **com os outros constantes**. Como a localização e
+  a infraestrutura são colineares (C.12), a divisão do efeito entre "ser rural" e "ter menos infraestrutura"
+  é instável: o que o modelo atribui a uma pode ser da outra. E **"Rural" soma perfis diferentes**: inclui
+  escolas indígenas e de difícil acesso, que ainda não têm marcação no dataset (meta M1,
+  `docs/ROTEIRO.md`); o coeficiente de Rural é a soma desses perfis, não o efeito de um deles.
 - **Não responde:** causa, efeito de intervenção, ou qualquer coisa sobre alunos. Também não melhora a previsão
   do ano seguinte: isso é a Q4, já respondida (`docs/BASELINE.md`, §5).
 - **Limitações declaradas:** desfecho com muitos zeros lido por modelo linear de média; `early_stopping` do MLP
