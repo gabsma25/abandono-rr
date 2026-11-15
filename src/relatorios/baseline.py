@@ -6,7 +6,7 @@ Fontes:
   saida/avaliacao/reguas_janela.csv         réguas da janela segura, REGERADAS (src/avaliacao/reguas.py)
   docs/projeto_anterior/02_walkforward.csv  Etapa 2, citada do projeto anterior (Dados-do-Projeto 969fc64)
   docs/projeto_anterior/02d_testes.csv      Etapa 2, idem
-  experimentos/classificacao_2013_2018/saida/03_classificacao.csv e 03_testes.csv   classificação, idem
+  docs/projeto_anterior/classificacao/03_classificacao.csv e 03_testes.csv   classificação, idem
 
 Uso: python src/relatorios/baseline.py   (o teste testes/test_baseline.py exige que o arquivo esteja em dia)
 """
@@ -19,7 +19,7 @@ P_E1 = RAIZ / "saida" / "avaliacao" / "01_baselines.csv"
 P_REGUAS = RAIZ / "saida" / "avaliacao" / "reguas_janela.csv"
 P_WF = RAIZ / "docs" / "projeto_anterior" / "02_walkforward.csv"
 P_02D = RAIZ / "docs" / "projeto_anterior" / "02d_testes.csv"
-EXP = RAIZ / "experimentos" / "classificacao_2013_2018" / "saida"
+EXP = RAIZ / "docs" / "projeto_anterior" / "classificacao"
 DESTINO = RAIZ / "docs" / "BASELINE.md"
 ULTIMO_ALVO_E1 = 2024          # a transição 2024→2025 fica fora (o desfecho de 2025 já foi usado)
 PERIODO = "2016–2019"
@@ -138,7 +138,7 @@ def texto():
         L.append(f"| {et} | {ano} | {br(row['B1R_lag'])} | {br(row['B1R'])} | {br(row['B2'])} |")
     L += ["", "## 4. A classificação de alto risco na janela segura", "",
           "Fontes: as réguas, em `saida/avaliacao/reguas_janela.csv`, **regeradas** pelo abandono-rr e idênticas às do",
-          f"projeto anterior; a ferramenta e os intervalos, em `experimentos/classificacao_2013_2018/saida/` ({ANT}),",
+          f"projeto anterior; a ferramenta e os intervalos, em `docs/projeto_anterior/classificacao/` ({ANT}),",
           "da execução única de 2026-11-10. Desfechos de 2016 a 2019, quatro anos juntos; IC de 95% por bootstrap",
           "sorteando escolas (5.000 reamostragens).", "",
           "| Etapa | Acaso | B2 | **Régua** [IC 95%] | Ferramenta (regressão logística, bloco 3) [IC 95%] |",

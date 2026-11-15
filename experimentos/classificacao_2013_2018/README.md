@@ -16,12 +16,13 @@ informação) ordena as escolas melhor que a régua (o abandono de t−1), na ja
 |---|---|
 | `03_classificacao.py` | o script da execução única (só os caminhos foram adaptados ao abandono-rr) |
 | `03b_verificacao_classificacao.py` | a verificação de que o modelo foi treinado (reexecução, coeficientes, permutação) |
-| `saida/` | as saídas **da execução de 2026-11-10**, copiadas do projeto anterior, não regeradas |
+| `saida/` | onde o script grava; **fora do git** (`.gitignore`). As saídas da execução de 2026-11-10, copiadas do projeto anterior e não regeradas, estão versionadas em [`docs/projeto_anterior/classificacao/`](../../docs/projeto_anterior/classificacao/), com o sha256 de cada uma |
 
 **Não rode `03_classificacao.py` de novo para obter resultado:** a regra do protocolo é uma execução só. O
 teste `testes/08_validar_classificacao.py` confere as funções sem treinar, e `testes/test_equivalencia.py`
-confere que as réguas regeradas no abandono-rr batem com as de `saida/03_classificacao.csv`.
+confere que as réguas regeradas no abandono-rr batem com as de `docs/projeto_anterior/classificacao/03_classificacao.csv`.
 
 ## O que saiu
 
-O resumo, com os números, está em `saida/03_classificacao.md`; o resultado entra no `docs/BASELINE.md`.
+O resumo, com os números, está em `docs/projeto_anterior/classificacao/03_classificacao.md`; o resultado entra no
+`docs/BASELINE.md`.

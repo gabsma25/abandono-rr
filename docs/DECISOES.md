@@ -154,3 +154,25 @@ do livro (5.5.1) pela pesquisadora.
    nova leitura de anos já usados, não como avaliação em dados virgens.
 
 **Evidência:** `docs/PROTOCOLO.md` neste branch (`protocolo-novo-escopo`), escrito antes de qualquer execução.
+
+---
+
+## 2026-11-14 — Cópias congeladas no git: as saídas da classificação e o exemplo do professor
+
+1. **As saídas da classificação de 2026-11-10 entram no git**, no mesmo padrão da Etapa 2: cópia em
+   `docs/projeto_anterior/classificacao/`, tirada do commit de origem (Dados-do-Projeto `969fc64`,
+   `gustavo/saida/avaliacao/`), com o sha256 de cada arquivo no `docs/projeto_anterior/README.md`, conferido pelo
+   `testes/test_baseline.py`. Antes, elas ficavam em `experimentos/classificacao_2013_2018/saida/`, que o
+   `.gitignore` exclui: o `docs/BASELINE.md` e o `testes/test_equivalencia.py` dependiam de arquivos que quem
+   clonasse não receberia. Os dois passam a ler a cópia versionada. **Alternativa
+   descartada:** abrir uma exceção no `.gitignore` para aquela pasta; assim, todas as cópias congeladas do projeto
+   anterior ficam num só lugar, com o mesmo controle de hash, e o `.gitattributes` as protege de normalização
+   (`docs/projeto_anterior/** -text`).
+2. **O exemplo do professor entra no git** (`docs/tese_base/`), com um README de uma linha: é material de
+   referência de forma, baseado no dataset King County House Sales (Kaggle), e não código do projeto. O notebook
+   entra como foi recebido, com as saídas; o `kc_house_data.csv` fica fora (`.gitignore`).
+3. **O nbstripout nunca toca o exemplo do professor.** O `.gitattributes` declara o filtro para `*.ipynb` e uma
+   exceção para `docs/tese_base/*.ipynb`. A instalação passa a ser `nbstripout --install --attributes
+   .gitattributes` (`CONTRIBUTING.md`): a instalação padrão grava em `.git/info/attributes`, que tem precedência
+   sobre o `.gitattributes` e anularia a exceção (conferido com `git check-attr` num clone de teste, nesta data).
+   O `testes/test_atributos.py` acusa a máquina em que isso acontecer.

@@ -11,5 +11,8 @@ dados/*
 !dados/MANIFEST.csv
 !dados/cache/
 
+# Dataset do exemplo do professor (docs/tese_base/): não é dado do projeto
+kc_house_data.csv
+
 # Saídas regeneráveis (python rodar_tudo.py)
 saida/

@@ -10,4 +10,4 @@ Cópias de saídas do projeto anterior, usadas só para conferência. Não são 
 | `projeto_anterior/desfecho_por_ano.csv` | `Dados-do-Projeto/gustavo/saida/relatorios/desfecho_por_ano.csv` | Dados-do-Projeto `969fc64` |
 | `desfechos_persistencia.csv` | `abandono-escolar/docs/desfechos_persistencia.csv` (código independente, usado pelo teste 04, seção E) | abandono-escolar `878930f` |
 
-As réguas da classificação são comparadas com `experimentos/classificacao_2013_2018/saida/03_classificacao.csv`, cópia das saídas da execução única de 2026-11-10 (Dados-do-Projeto `969fc64`).
+As réguas da classificação são comparadas com `docs/projeto_anterior/classificacao/03_classificacao.csv`, cópia versionada das saídas da execução única de 2026-11-10 (Dados-do-Projeto `969fc64`; sha256 em `docs/projeto_anterior/README.md`).
