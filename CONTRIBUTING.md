@@ -90,7 +90,7 @@ com versões fixadas. Não instale pacotes fora do `requirements.txt`; se precis
 ### 4. Ritmo do grupo
 
 - **Uma conversa curta por semana** para olhar as issues abertas: o que fechou, o que travou, quem pega o quê.
-- **Uma tag de versão a cada marco** (por exemplo, `v0.2.0` quando o novo protocolo rodar), com a entrada
+- **Uma tag de versão a cada marco** (por exemplo, quando um protocolo rodar ou o dataset mudar), com a entrada
   correspondente no `CHANGELOG.md`.
 - **Decisões de método** (o que mudar no protocolo, qual variável entra) são registradas no `docs/DECISOES.md`
   **antes** de rodar, e passam por pull request como qualquer outra mudança.
@@ -148,28 +148,49 @@ não altera nada fora da própria pasta. **O que for adotado passa para `src/` p
 
 ## As regras que não se quebram
 
-São as mesmas do `CLAUDE.md`, em linguagem simples. Se uma mudança precisar quebrar alguma, pare e converse
-com o grupo antes.
+São as mesmas 12 regras do `CLAUDE.md`, com os mesmos números, em linguagem simples. Se uma mudança precisar
+quebrar alguma, pare e converse com o grupo antes.
 
-1. **Os dados de origem não se alteram.** `dados/origem/` e `dados/cache/` são só leitura. Nada renomeia,
-   corrige ou regrava esses arquivos; o sha256 do MANIFEST é o teste.
-2. **Todo número vem de código.** Nenhum número é digitado à mão num documento, notebook ou slide. Se um número
+1. **Os dados de origem não se alteram.** `dados/origem/` e `dados/cache/` são só leitura: nada renomeia, move,
+   corrige ou regrava esses arquivos. Arquivo novo só entra pelo `src/aquisicao.py`, que confere o sha256 do
+   `dados/MANIFEST.csv`; se o hash não bater, é erro.
+2. **Dado bruto não vai para o git.** No git ficam só o `dados/MANIFEST.csv`, o recorte em `dados/cache/` e o
+   dataset versionado em `dataset/` (ver "Dados no git").
+3. **Todo número vem de código.** Nenhum número é digitado à mão num documento, notebook ou slide. Se um número
    aparece, existe um script que o gera.
-3. **Notebooks só mostram.** Uma célula de notebook lê, filtra e desenha. Conta, média, intervalo ou modelo
+4. **Notebooks só mostram.** Uma célula de notebook lê, filtra e desenha. Conta, média, intervalo ou modelo
    ficam em `src/` ou num experimento, e o notebook lê o resultado gravado.
-4. **Nada do futuro entra na previsão.** Para prever o ano t+1, só entra o que se sabia até o ano t. Qualquer
-   ajuste (padronização, preenchimento de vazio, limiar) usa só os anos de treino.
-5. **O alvo nunca entra como variável explicativa**, nem disfarçado: aprovação, reprovação e abandono do mesmo
-   ano somam 100, então duas delas revelam a terceira.
-6. **Não se escolhe variável olhando a correlação com o alvo.** A escolha vem do sentido da variável, da
-   cobertura e da estabilidade, decidida antes de ver o resultado.
-7. **Vazio não é zero.** Escola que não oferece a etapa não tem abandono 0: tem "não se aplica". Na dúvida, deixe
-   vazio e registre.
-8. **Teste se escreve antes de rodar.** A pergunta, a divisão dos anos, os modelos e a regra de leitura ficam no
-   `docs/PROTOCOLO.md` antes da execução, que acontece uma vez. Resultado nulo também é resultado.
-9. **Anos de teste já usados não escolhem nada.** Os anos que já serviram de teste (2016–2019 e 2021–2024) não
-   servem para escolher modelo, variável ou limiar.
-10. **Toda decisão fica registrada** no `docs/DECISOES.md`: o que foi decidido, por quê e onde está a evidência.
+5. **Nada do futuro entra na previsão.** Para prever o ano t+1, só entra o que se sabia até o ano t. Qualquer
+   ajuste (padronização, preenchimento de vazio, quantis, limiar) usa só os dados de treino. Quando a pergunta é
+   sobre o mesmo ano (as características de t e o abandono de t), nenhuma variável pode ser posterior a t nem
+   calculada a partir do desfecho, e todo ajuste usa só a parte de treino de cada dobra.
+6. **O alvo nunca entra como variável explicativa**, nem disfarçado: aprovação, reprovação e abandono do mesmo
+   ano somam 100, então duas delas revelam a terceira. Por isso, quando a pergunta é o nível de abandono de um
+   ano, nenhuma das três taxas daquela etapa e daquele ano serve de explicação. O TDI (distorção idade-série),
+   quando voltar, entra avisado: em parte, ele é consequência da reprovação e do abandono de anos anteriores.
+7. **Não se escolhe variável olhando a relação dela com o desfecho.** Nada entra, sai, é recodificado ou
+   transformado porque a correlação, o coeficiente ou a importância ficou bom ou ruim. A lista vem do sentido de
+   cada variável, da cobertura, da estabilidade e de não repetir outra, e fica escrita no `docs/PROTOCOLO.md`
+   antes de rodar. Depois de rodar, mostrar a relação de cada variável com o desfecho é o próprio resultado:
+   mostram-se todas, inclusive as que não têm relação nenhuma, e a tabela pode vir ordenada pelo tamanho do
+   efeito. Com o R² é igual: dizer quanto da diferença entre escolas o modelo explica é esperado; escolher modelo,
+   variável ou limiar porque o R² ficou maior, não.
+8. **Vazio não é zero.** Escola que não oferece a etapa não tem abandono 0: tem "não se aplica" e sai daquela
+   etapa. O `'--'` do INEP é vazio. Na dúvida, deixe vazio e registre.
+9. **Cada coluna tem o seu tipo.** Os códigos de escola e de município (`CO_ENTIDADE`, `CO_MUNICIPIO`) são texto,
+   não número, para não perder zeros nem virar decimal; indicadores 0/1 são `Int8`; taxas são `Float64` que
+   aceitam vazio. Toda junção de tabelas (`merge`) diz que relação espera (`validate=`) e parte da tabela base
+   (`how="left"`).
+10. **O teste se escreve antes de rodar, roda uma vez, e toda decisão fica registrada.** A pergunta, a divisão
+    dos anos, os modelos e a regra de leitura ficam no `docs/PROTOCOLO.md` e no `docs/DECISOES.md` antes da
+    execução, que acontece uma vez. Toda decisão fica no `docs/DECISOES.md`: o que foi decidido, por quê e onde
+    está a evidência. Os anos de DESFECHO que já serviram de teste (2016–2019 e 2021–2024; em ano t, 2015–2018 e
+    2020–2023) não servem para escolher modelo, variável ou limiar. Resultado nulo também é resultado.
+11. **Não invente nome de coluna nem código.** Confira no arquivo ou no `dataset/DICIONARIO.md`; se não der para
+    conferir, pergunte.
+12. **O `main` só muda por pull request revisado por outra pessoa.** Um branch por tarefa, `python rodar_tudo.py`
+    passando antes do pull request, commits no padrão `tipo: Descrição no presente`, em português (ver "Fluxo de
+    trabalho do grupo" e "Mensagens de commit").
 
 ## Quando o repositório estiver no GitHub
 
