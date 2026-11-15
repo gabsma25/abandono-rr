@@ -28,6 +28,10 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `testes/test_atributos.py`; instalação com `--attributes .gitattributes`, ver `CONTRIBUTING.md`).
 - `docs/ROTEIRO.md`: as metas M1–M12 do projeto anterior, cópia literal do arquivo, todas "a revisar".
 - Registro do desvio da regra 12 (pull requests #1 e #2 mergeados sem revisão) no `docs/DECISOES.md`.
+- `experimentos/fatores_2013_2018/`: o código do estudo de fatores (`docs/PROTOCOLO.md`, seção C), com as travas
+  da execução única e a conferência por dados sintéticos (`testes/test_fatores.py`). **Ainda não executado.**
+  A conferência do código contra o protocolo e as correções estão no `docs/DECISOES.md`, 2026-11-15; a seção D
+  do protocolo ganhou o item da falha técnica no meio da execução.
 
 ### Alterado
 - **A pergunta do projeto muda** (`docs/DECISOES.md`, 2026-11-14): de antecipar as escolas de abandono alto no ano

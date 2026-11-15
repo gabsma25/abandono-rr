@@ -15,7 +15,11 @@ Travas (regra 10 e C.13):
 - sem `--executar`, nada é calculado;
 - com `saida/` existente, o script recusa: a execução é única, e uma nova exigiria decisão registrada
   no `docs/DECISOES.md`;
-- toda saída começa com `# commit=… dataset_sha256=… gerado=…`;
+- com a árvore do git suja (arquivo modificado ou não rastreado), o script recusa: o commit gravado tem de
+  ser o código que rodou;
+- toda saída começa com `# commit=… branch=… dataset_sha256=… gerado=…` (a figura leva o mesmo texto);
+- a pasta `saida/` deste experimento entra no git (exceção no `.gitignore`), então a recusa vale em
+  qualquer clone depois que as saídas forem versionadas;
 - ordem: tabela 0 → controle negativo (C.9) → se passar, o resto; se o controle reprovar, grava **só**
   o `07_controle_negativo.csv` e para.
 
@@ -36,9 +40,10 @@ revisão independente do código contra o protocolo, por outro integrante.
 | C.7 Q1 (ΔR² sobre o modelo só com o ano) | `c7_q1`, `_pipeline_q1`, `dobras_por_escola` | `test_sem_efeito_alem_do_ano`, `test_vazamento_plantado_e_denunciado`, `test_groupkfold…`, `test_c7_e_c8…` |
 | C.8 importância por permutação | `c8_permutacao` | `test_c7_e_c8_rodam_com_o_mlp_em_miniatura` |
 | C.9 controle negativo | `c9_controle_negativo` | `test_sem_efeito_alem_do_ano`, `test_controle_negativo_reprovado_grava_so_o_07` |
-| C.10 robustez | `c10_media_por_escola`, `c10_janela_2012_2019` | coberto por `test_executar_ordem_cabecalho_e_saidas` (08_robustez.csv) |
+| C.10 robustez | `c10_media_por_escola`, `c10_janela_2012_2019` | `test_robustez_usa_as_categorias_da_tabela_0`, `test_executar_ordem_cabecalho_e_saidas` |
 | C.13 tabela 0, itens, correlação, saídas e figura | `c13_tabela0`, `c13_itens`, `c13_correlacao`, `executar`, `gravar`, `cabecalho`, `fig_forest` | `test_executar_ordem_cabecalho_e_saidas`, `test_controle_negativo_reprovado_grava_so_o_07` |
-| travas da execução única | `main` | `test_sem_executar_nada_roda`, `test_executar_recusa_saida_existente` |
+| travas da execução única | `main`, `estado_git`, `executar` | `test_sem_executar_nada_roda`, `test_executar_recusa_saida_existente`, `test_executar_recusa_arvore_suja` |
+| C.5 figura principal | `fig_forest` | `test_forest_cada_painel_com_os_seus_fatores` |
 | valores fixados (sementes, reamostragens, margem, limiares) | constantes do topo | `test_valores_fixados_iguais_aos_do_protocolo` |
 
 Todos os testes usam **dados sintéticos com efeitos conhecidos**; nenhum número do desfecho real é

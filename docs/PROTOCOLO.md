@@ -363,6 +363,9 @@ valer (eles supõem uma análise fixada antes de ver o desfecho). Isto diz o que
 5. **Controle negativo reprovado é a exceção:** ele roda primeiro, com o desfecho embaralhado, e a execução para
    antes de calcular qualquer associação real. Nenhum resultado foi visto, então, corrigida a causa e
    registrada no `docs/DECISOES.md`, a execução pode ser feita de novo; o 07 reprovado fica no git.
+6. **Falha técnica no meio da execução:** as saídas parciais são guardadas numa pasta separada, a falha é
+   registrada no `docs/DECISOES.md` e a execução é refeita com o mesmo commit; como as sementes são fixas, os
+   números são idênticos.
 
 ---
 

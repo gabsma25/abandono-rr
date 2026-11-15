@@ -474,3 +474,57 @@ os anos da etapa) e o `rodar_tudo.py` num clone limpo, sem `dados/origem/`.
   o `testes/test_protocolo.py` confere o texto contra o original (`a56482d`) a cada execução dos testes.
 
 **Evidência:** `testes/test_protocolo.py`.
+
+---
+
+## 2026-11-15 — Conferência do código do estudo de fatores contra o protocolo, e o que foi corrigido
+
+**O que foi feito.** O `experimentos/fatores_2013_2018/fatores.py` foi conferido contra as seções B, C e D do
+`docs/PROTOCOLO.md`, seção por seção, antes de qualquer execução. **Essa conferência não foi independente:** foi
+feita pelo mesmo autor do código (o assistente de programação, na mesma sessão). Ela não substitui a revisão do
+código por outro integrante, que continua sendo condição para a execução.
+
+**Corrigido antes de qualquer execução** (um commit cada, todos com teste em `testes/test_fatores.py`):
+
+1. **As saídas não podiam entrar no git**, porque o `.gitignore` ignorava toda pasta `saida/`. Há agora uma
+   exceção para `experimentos/fatores_2013_2018/saida/`. Com a pasta versionada, a trava "recusa se `saida/`
+   existe" vale em qualquer clone depois que as saídas forem commitadas.
+2. **A figura principal trocava os rótulos** quando o AF e o EM tinham fatores diferentes (a regra dos 30 pode
+   excluir categorias diferentes em cada etapa): os dois painéis compartilhavam o eixo y. Cada painel tem
+   agora o seu eixo.
+3. **O commit do cabeçalho podia não ser o código que rodou.** `executar()` recusa rodar com a árvore do git
+   suja, antes de calcular qualquer coisa, e o cabeçalho leva o commit e o branch.
+4. **A robustez da janela 2012–2019 reaplicava a regra dos 30**, contra o C.13 (a tabela 0 é o único lugar).
+   Ela usa agora as categorias de `dependencia` da tabela 0 da janela principal, e as linhas retiradas vão
+   para o `08_robustez.csv`.
+
+**Corrigido junto, sem efeito em nenhum veredito:** o `07_controle_negativo.csv` ganhou os R² do desfecho
+embaralhado; a tabela 0 ganhou a contagem por ano; o `02_correlacao.csv` passou a incluir as dummies das
+categóricas; a contagem de previsões fora de [0, 100] deixou de truncar a média das sementes e existe também
+dentro da amostra; a figura leva o commit, o branch e o sha256 do dataset.
+
+**Conhecidas, não corrigidas; não mudam vereditos:**
+
+- **A comparação da C.8 não sai pronta num arquivo.** O `06_permutacao.csv` traz as importâncias e o
+  `04_fatores.csv` os efeitos padronizados; pôr as duas ordens lado a lado fica para o relatório, que só
+  reorganiza os dois arquivos (regra 4).
+- **A família de Holm é calculada sobre os p que existem.** Um coeficiente sem nenhuma reamostragem válida
+  sairia da família, e o `n_familia` do 04 ficaria diferente do `familia_f7` da tabela 0. Depois da regra dos
+  30 isso é praticamente impossível; se acontecer, as duas contagens ficam nos arquivos e a diferença é
+  relatada.
+- **O modelo só com o ano passa por outro caminho numérico.** Com só as dummies de ano, o pré-processamento
+  devolve uma matriz esparsa, e a regressão linear e a Ridge usam outro algoritmo para ela. A diferença, medida
+  em dados sintéticos, fica na última casa de ponto flutuante das previsões e não aparece no R².
+- **`executar()` pode ser chamada direto**, sem passar pelo `main()` e pela recusa de `saida/` existente. A
+  recusa da árvore suja vale nos dois caminhos; a de `saida/` existente, só na linha de comando.
+
+**Leituras que o código fez onde o protocolo não é explícito** (ficam registradas; nenhuma muda veredito): do
+modelo secundário só o `iie_prop` é relatado; o IC da importância por permutação junta sementes, dobras e
+repetições; na janela 2012–2019, o ano de referência das dummies é 2012.
+
+**Seção D do protocolo.** Acrescentado o item 6, a falha técnica no meio da execução: as saídas parciais são
+guardadas numa pasta separada, a falha é registrada aqui e a execução é refeita com o mesmo commit; como as
+sementes são fixas, os números são idênticos.
+
+**Evidência:** `testes/test_fatores.py` (rótulos da figura com exclusões diferentes, recusa da árvore suja,
+robustez com as categorias da tabela 0, colunas das saídas) e `git check-ignore` na pasta de saídas.
