@@ -1,17 +1,43 @@
-# abandono-rr — risco de abandono escolar em Roraima
+# abandono-rr — fatores associados ao abandono escolar em Roraima
 
-Projeto de pesquisa (PIBIC/UERR, Edital 35/2026) e artigo da disciplina de Mineração de Dados, orientado
-pelo Prof. Bruno Cesar Barreto Figueiredo.
+Projeto de pesquisa PIBIC (UERR, Edital 35/2026), orientado pelo Prof. Bruno Cesar Barreto Figueiredo.
 
-**A pergunta.** Olhando os dados de uma escola pública de Roraima num ano, dá para saber, com um ano de
-antecedência, quais escolas vão ter abandono alto no ano seguinte? A unidade é a **escola-ano**: o projeto
-não olha alunos. A lista de escolas de maior risco serve para **priorizar diagnóstico e apoio**, nunca para
-ranquear ou punir escolas.
+## A pergunta
+
+> Quais características estruturais de uma escola pública de Roraima estão associadas ao seu nível de abandono
+> escolar, e quanto delas permite prever esse nível? A unidade é a escola-ano; o projeto não olha alunos.
+> Associação não é causa.
+
+- **Q1.** Quanto da diferença de abandono entre escolas essas características explicam?
+- **Q2.** Qual o peso de cada uma, com que incerteza?
+- **Q3.** O peso se mantém entre anos finais (AF) e ensino médio (EM)?
+- **Q4.** Elas antecipam a mudança no ano seguinte? Já respondida (abaixo).
+
+O desenho de cada avaliação fica em [`docs/PROTOCOLO.md`](docs/PROTOCOLO.md), escrito antes de rodar.
+
+## O que já foi respondido
+
+**Não proponha "melhorar o modelo" de previsão do ano seguinte: isso já foi testado.** Na janela segura, uma
+ferramenta de classificação de alto risco (três modelos e três blocos de informação) não ordenou as escolas melhor
+do que a **régua**, que é ordenar pelo último abandono conhecido, sem modelo. Antes dela, os modelos de regressão
+da Etapa 2, inclusive com TDI, ATU e IED, também não. **Nos anos finais, a ferramenta preditiva não supera a régua,
+e o ganho possível é pequeno demais para valer a pena; no ensino médio, o resultado é inconclusivo, porque os
+intervalos são largos demais para decidir.** É isso que responde à Q4. Os números, gerados por código, estão em
+[`docs/BASELINE.md`](docs/BASELINE.md).
+
+## O que o resultado não é
+
+- **Não é uma lista de escolas em risco.** O projeto descreve características associadas ao abandono; não
+  classifica nem ranqueia escolas.
+- **Não é uma afirmação causal.** Uma característica associada a mais abandono não é, por isso, a causa dele: as
+  escolas diferem em muita coisa que o dataset não mede.
+- **Não é uma recomendação de intervenção.** Saber que uma característica está associada ao abandono não diz o que
+  aconteceria se ela mudasse.
 
 **De onde partimos.** O abandono-rr começou em 2026-11-11 como uma cópia aparada de dois repositórios
 anteriores (`abandono-escolar` e `Dados-do-Projeto`), que ficaram congelados. Tudo o que foi copiado gera
-exatamente os mesmos números de antes (`testes/test_equivalencia.py`). O que ficou e o que saiu está em
-[`docs/DECISOES.md`](docs/DECISOES.md).
+exatamente os mesmos números de antes (`testes/test_equivalencia.py`). O que ficou e o que saiu, e por que a
+pergunta mudou em 2026-11-14, está em [`docs/DECISOES.md`](docs/DECISOES.md).
 
 ## Quem é quem
 
@@ -82,7 +108,8 @@ src/
 testes/         pytest; os scripts 0*_validar_*.py vêm do projeto anterior
 experimentos/   uma pasta por ideia em teste; ver experimentos/README.md
 notebooks/      no máximo 2; só exibem o que o código gerou
-docs/           DECISOES, problemas.csv (defeitos dos dados do INEP), procedência; BASELINE e PROTOCOLO a seguir
+docs/           DECISOES, PROTOCOLO, BASELINE (gerado), ROTEIRO, problemas.csv (defeitos dos dados do INEP),
+                procedência, projeto_anterior/ (resultados congelados), tese_base/ (exemplo do professor)
 saida/          gerada por rodar_tudo.py; fora do git
 ```
 
