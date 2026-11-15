@@ -1,3 +1,329 @@
+# Protocolos do abandono-rr
+
+Este arquivo guarda, nesta ordem:
+
+- **A.** o registro **retroativo** da classificação de alto risco de 2026-11-10, escrito depois da execução e
+  marcado assim;
+- **B.** o desenho padrão de avaliação do projeto, que vale como regra para todo estudo novo;
+- **C.** o protocolo do **estudo de fatores associados ao nível de abandono**, escrito **antes** de qualquer
+  execução;
+- no fim, o protocolo da Etapa 4 (regressão do abandono em t+1), registrado em 2026-11-11, **nunca executado**,
+  guardado inteiro na seção "Protocolo registrado, não executado, substituído em 2026-11-14".
+
+As regras que regem este arquivo estão no `CLAUDE.md` (em especial as regras 5, 6, 7 e 10); as decisões e os
+motivos, no `docs/DECISOES.md`. Nenhum número de resultado aparece aqui: resultado fica em arquivo gerado por
+código (regra 3).
+
+---
+
+## A. Registro retroativo — a classificação de alto risco de 2026-11-10
+
+**Este registro foi escrito em 2026-11-15, depois da execução.** Não é um protocolo prévio: é a descrição, para
+consulta neste repositório, do desenho que foi registrado e executado no projeto anterior. O protocolo original,
+escrito antes daquela execução, está no repositório `abandono-escolar` (commit `878930f`, `docs/DECISOES.md`,
+entrada de 2026-11-10). O script está em `experimentos/classificacao_2013_2018/` e as saídas congeladas em
+`docs/projeto_anterior/classificacao/` (sha256 conferidos por `testes/test_baseline.py`).
+
+- **Pergunta:** o rótulo `alto_risco_t1` (os 20% de maior abandono da etapa em t+1, com abandono > 0) pode ser
+  antecipado melhor do que pela régua?
+- **Desenho:** walk-forward na janela segura (t = 2013–2018), com teste nos anos de desfecho 2016–2019; cada
+  transição treina só com os anos anteriores a ela; o valor agrupado é a média simples das quatro transições.
+  AF e EM separados. Universo: escolas públicas com o abandono da etapa em t−1, t e t+1.
+- **Três blocos cumulativos de variáveis** (`src/avaliacao/classificacao.py`):
+  1. abandono e reprovação de t−1 e a variação defasada (`abandono_tm1`, `reprovacao_tm1`,
+     `variacao_abandono_defasada`);
+  2. \+ localização e dependência (one-hot);
+  3. \+ as quatro dimensões `dim_*_zano` e o `iie_zano`.
+- **Três modelos** (hiperparâmetros fixos no código, nenhum ajustado por busca): regressão logística,
+  Random Forest e HistGradientBoosting. Réguas B1R_lag e B2 e o acaso na mesma tabela.
+- **Inferência:** bootstrap agrupado por escola (5.000 reamostragens, semente 20261111), as mesmas reamostragens
+  para todos os comparados; famílias de teste declaradas no script, com Holm; a decisiva é a **F6**
+  (modelo − régua, 2 etapas × 3 modelos × 3 blocos × 2 métricas = 36 testes).
+- **Resultado:** está em `docs/BASELINE.md`, §4, gerado por código a partir das cópias congeladas. É o nulo
+  preditivo que responde à Q4 (`docs/BASELINE.md`, §5).
+- **Consequência para qualquer protocolo novo:** os anos de desfecho 2016–2019 foram olhados como teste. Pela
+  regra 10, nenhuma escolha de protocolo pode depender deles.
+
+---
+
+## B. O desenho padrão do projeto (vale como regra)
+
+Todo estudo novo segue este desenho, e o protocolo específico só diz o que acrescenta ou aperta:
+
+1. **Régua primeiro.** Em estudo preditivo, a comparação obrigatória é a régua **B1R_lag** (o abandono de t−1,
+   o último conhecido na hora da decisão); B2 e acaso aparecem na mesma tabela. Em estudo de associação, o
+   equivalente é relatar o R² ao lado de referências simples declaradas no protocolo.
+2. **Incerteza por bootstrap agrupado por escola** (`co_entidade`): sorteiam-se escolas com reposição, levando
+   todas as linhas da escola sorteada. O número de reamostragens e a semente ficam fixados no protocolo, antes
+   de rodar. As mesmas reamostragens servem para tudo o que se compara: as diferenças são pareadas. IC 95%
+   pelos percentis 2,5 e 97,5; p bilateral por bootstrap (`src/avaliacao/bootstrap.p_bootstrap`).
+3. **Correção de Holm por família declarada antes**, com α = 0,05. A família lista, no protocolo, cada teste
+   que a compõe; nenhum teste entra ou sai depois de visto o resultado.
+4. **Três vereditos, com margem prática fixada antes.** Em estudo preditivo: GANHO / SEM GANHO PRÁTICO /
+   INCONCLUSIVO. Em estudo de associação: ASSOCIADO / SEM ASSOCIAÇÃO PRÁTICA / INCONCLUSIVO (definição na
+   seção C.6). Resultado nulo é relatado como qualquer outro.
+5. **Anos de desfecho já usados como teste: 2016–2019 e 2021–2024** (em ano t: 2015–2018 e 2020–2023). Eles
+   não escolhem variável, modelo, limiar nem janela (regra 10).
+6. **Protocolo antes de rodar, execução única.** O protocolo entra no `main` por pull request revisado por
+   outro integrante **antes** de qualquer execução; a execução acontece uma vez e as saídas são congeladas no
+   git (política das cópias, `docs/DECISOES.md`, 2026-11-14).
+
+---
+
+## C. Protocolo do estudo de fatores associados ao nível de abandono
+
+**Estado: escrito antes de qualquer execução.** Nenhum modelo deste estudo foi treinado, nenhuma associação da
+janela foi olhada para escrever este texto, e nenhuma escolha abaixo depende dos anos de desfecho já usados como
+teste: a lista de preditores é fechada, os hiperparâmetros vêm do exemplo do professor ou são fixados aqui, e a
+margem prática está justificada sem olhar dado. A execução é única e só acontece depois que este protocolo
+entrar no `main` por pull request revisado por outro integrante.
+
+### C.1 Perguntas
+
+- **Q1.** Quanto da diferença de abandono entre escolas essas características explicam?
+- **Q2.** Qual o peso de cada característica, com que incerteza?
+- **Q3.** O peso se mantém entre anos finais (AF) e ensino médio (EM)?
+
+A **Q4** (antecipar a mudança do ano seguinte) já está respondida e fica no `docs/BASELINE.md`, §5; não há
+experimento novo para ela. Este estudo fala em **fatores associados**, nunca em "variáveis responsáveis" nem em
+"o que causa o abandono". **Associação não é causa**, e nada aqui sustenta recomendação de intervenção.
+
+### C.2 Desfecho, universo e janela
+
+- **Desfecho:** `abandono_t`, a taxa de abandono da etapa **no próprio ano t** (o nível, em % de 0 a 100). Não
+  é previsão de t+1.
+- **Unidade:** a escola-ano. **AF e EM sempre separados**, em tudo: universo, modelos, inferência, vereditos.
+- **Universo de cada etapa:** escolas públicas (`rede_publica` = 1) com `abandono_t` da etapa não vazio,
+  t = 2013–2018 (`janela_segura` = 1). Escola sem a etapa no ano está fora (regra 8; nada vira 0). Linha com
+  algum preditor da lista fechada vazio sai da regressão da etapa, com a contagem relatada; na janela não se
+  espera nenhum vazio de infraestrutura (`testes/test_dataset.py`).
+- **Janela t = 2013–2018, e por quê.** A janela segura foi registrada e conferida nos estudos anteriores (um
+  único formato de dados, antes da pandemia) e **não é reaberta**: "janela já registrada e conferida, não
+  reaberta". As justificativas ano a ano da tabela do `dataset/DICIONARIO.md` são dos estudos t → t+1; para o
+  estudo de nível, valem os mesmos motivos de comparabilidade (formato único, sem pandemia), e os anos de 2019
+  em diante continuam fora pelos regimes atípicos (pandemia, pós-pandemia, Pé-de-Meia).
+- **Anos já olhados.** As taxas de abandono de 2016, 2017 e 2018 foram desfecho de teste da classificação
+  (seção A). Nenhuma escolha deste protocolo depende delas: a lista fechada da C.3 e os valores fixados aqui
+  garantem isso, e o relatório da execução repete essa ressalva.
+- **Identidade contábil (regra 6):** aprovação + reprovação + abandono = 100. Nenhuma das três taxas da etapa e
+  ano entra em X — e, por decisão deste protocolo, **nenhuma variável de rendimento de nenhum ano** entra (C.3).
+
+### C.3 A lista fechada de preditores
+
+Fechada aqui, antes de rodar; nenhuma variável entra ou sai depois (regra 7). Nomes conferidos no
+`dataset/DICIONARIO.md` (v0.2.0).
+
+| Papel | Variável | Tipo | Observação |
+|---|---|---|---|
+| fator (território) | `localizacao` | categórica (Urbana, Rural) | referência: **Urbana**, nas duas etapas |
+| fator (rede) | `dependencia` | categórica (Estadual, Municipal, Federal) | referência: **Estadual**, nas duas etapas; regra dos 30 abaixo |
+| fator (infraestrutura) | `dim_iib_prop` | proporção 0–1 | 4 itens de infraestrutura básica |
+| fator (infraestrutura) | `dim_ida_prop` | proporção 0–1 | 5 itens de dependência administrativa |
+| fator (infraestrutura) | `dim_idp_prop` | proporção 0–1 | 5 itens de dependência pedagógica |
+| fator (infraestrutura) | `dim_iep_prop` | proporção 0–1 | 4 itens de equipamento pedagógico |
+| controle | `ano` | dummies por ano, referência 2013 | **não é fator**: absorve o nível do ano; não recebe efeito, IC nem veredito |
+
+- **Referências declaradas, e por quê** (sem olhar associação): Urbana e Estadual são categorias amplas nas
+  duas etapas e são o termo natural da pergunta (o fator de interesse é ser Rural; a rede estadual é a rede de
+  referência da educação básica pública de RR). A referência não muda o ajuste, só a leitura dos coeficientes.
+- **Regra dos 30:** categoria de `dependencia` com **menos de 30 escolas-ano** na etapa (contagem da tabela 0,
+  C.13) sai da regressão daquela etapa, junto com as suas linhas, e aparece no relatório só com a contagem. A
+  regra é mecânica: aplicá-la não é escolher por associação.
+- **O que não entra, e por quê:**
+  - **nenhuma variável de rendimento, de nenhum ano** (`abandono_tm1`, `abandono_tm2`, `reprovacao_tm1`,
+    `variacao_abandono_defasada`, `aprovacao_t`, `reprovacao_t`): decisão deste protocolo, mais apertada que a
+    regra 6. A pergunta é sobre características **estruturais**; a persistência do abandono já foi medida
+    (`docs/BASELINE.md`) e, misturada aos fatores, absorveria o peso deles sem responder a Q2;
+  - `rede_publica`: constante no universo;
+  - `dim_*_zano` e `iie_zano`: padronizadas com todas as escolas do ano — vazariam entre as dobras da validação
+    cruzada agrupada (`docs/DECISOES.md`, 2026-11-14, dimensões em proporção);
+  - `infra_itens_completos`, `infra_fonte_artigo`: qualidade do dado, não característica da escola;
+  - **os 18 itens** `iib_*`, `ida_*`, `idp_*`, `iep_*`: só descrição (prevalência por etapa e ano, C.13), nunca
+    em modelo. Nunca dois níveis da mesma informação (itens, dimensões, índice) no mesmo modelo.
+
+### C.4 Modelos da tabela de fatores (Q2)
+
+- **Modelo principal:** regressão linear (OLS, `LinearRegression`) de `abandono_t` (em pp) sobre os fatores e o
+  controle da C.3, por etapa, nas escolas-ano da janela. Preditores entram na escala original (proporções 0–1 e
+  dummies); sem imputação. É um modelo **descritivo da associação na janela inteira**: não há divisão
+  treino/teste nesta parte, então a cláusula de dobras da regra 5 se aplica à parte preditiva (C.7), não a
+  esta.
+- **Modelo secundário:** o mesmo, com `iie_prop` no lugar das quatro dimensões. Serve para ler o nível agregado
+  da infraestrutura. **Nunca** as quatro dimensões e o índice no mesmo modelo.
+- **Colinearidade relatada, não decisora:** VIF de cada coluna de X do modelo principal (regressões auxiliares
+  entre preditores, VIF = 1/(1−R²); implementado no código do estudo, sem dependência nova). VIF alto alarga os
+  ICs, e os ICs por bootstrap já mostram isso; nenhum VIF exclui variável.
+
+### C.5 Efeitos relatados
+
+Para cada fator, por etapa e modelo:
+
+- **efeito em pp:** o coeficiente. Para categórica, a diferença da categoria para a referência; para dimensão e
+  para o `iie_prop`, o efeito de ir de 0 a 1 na proporção (a amplitude toda);
+- **efeito por item:** o coeficiente da dimensão ÷ número de itens da dimensão — quanto muda o abandono, em pp,
+  associado a **um item a mais**;
+- **efeito padronizado:** pp por +1 desvio-padrão do preditor, com o desvio calculado no universo da etapa
+  (escala de leitura, não transformação do ajuste); só para os contínuos;
+- IC 95%, p, p Holm e o veredito (C.6). **Todos os fatores aparecem, inclusive os nulos**; ordenar a
+  apresentação pelo efeito é permitido (regra 7).
+
+**Figura principal: forest plot** dos efeitos em pp com IC 95%, AF e EM lado a lado (é também a figura da Q3).
+
+### C.6 Inferência, família de Holm, margem prática e vereditos
+
+- **Bootstrap agrupado por escola**, como na regra B: **5.000 reamostragens, semente 20261115**, as mesmas para
+  os dois modelos da etapa. Em cada reamostragem, o modelo é reajustado e os coeficientes guardados. IC 95%
+  pelos percentis; p bilateral por `src/avaliacao/bootstrap.p_bootstrap`.
+- **Reamostragem sem uma categoria:** se uma reamostragem não tiver nenhuma escola-ano de uma categoria do
+  modelo, os coeficientes dessa categoria ficam NA nela; o IC usa as reamostragens válidas e a fração de
+  inválidas é relatada. Se mais de 10% forem inválidas para um coeficiente, o veredito dele é INCONCLUSIVO,
+  por regra.
+- **Família de Holm (uma por etapa): F7-AF e F7-EM.** Cada família contém **todos os coeficientes que recebem
+  veredito na etapa**: as dummies de `localizacao` e `dependencia` e as quatro dimensões, do modelo principal,
+  mais o `iie_prop`, do secundário. As dummies de `ano` ficam fora (controle, sem veredito). O tamanho exato de
+  cada família sai na tabela 0, antes dos modelos, pela regra dos 30.
+- **Margem prática: 1,0 pp**, sobre o efeito em pp da C.5 (diferença de categoria, ou amplitude 0→1 da
+  proporção). Justificativa, fixada sem olhar nenhuma associação: 1 pp de abandono é 1 aluno a cada 100
+  matriculados da etapa deixando a escola no ano — a menor diferença que ainda tem leitura prática para
+  gestão; abaixo disso, mesmo uma associação certa não distingue escolas de forma útil. É o mesmo espírito da
+  margem de ganho prático dos estudos anteriores (traduzir o efeito em alunos e escolas antes de chamá-lo de
+  relevante).
+- **Vereditos**, avaliados nesta ordem:
+  1. **ASSOCIADO:** p Holm ≤ 0,05 **e** |efeito em pp| ≥ 1,0;
+  2. **SEM ASSOCIAÇÃO PRÁTICA:** o IC 95% inteiro dentro de (−1,0; +1,0) pp;
+  3. **INCONCLUSIVO:** qualquer outro caso.
+
+### C.7 Q1 — quanto se explica (R² dentro da amostra e em validação cruzada agrupada)
+
+- **Modelos:** a regressão linear da C.4, `Ridge(alpha=1.0)` (fixo, não ajustado) e o `MLPRegressor` **como no
+  exemplo do professor**, sem nenhum ajuste:
+
+  ```python
+  MLPRegressor(hidden_layer_sizes=(50,), activation="logistic", solver="adam",
+               max_iter=5000, tol=1e-7, momentum=0.8, early_stopping=True, epsilon=1e-08,
+               n_iter_no_change=10, random_state=semente)
+  ```
+
+  (`momentum` não tem efeito com `solver="adam"`; fica como no exemplo.) **Declarado:** o `early_stopping`
+  separa, ao acaso, 10% das **linhas** de treino para decidir quando parar — uma divisão por linha, não por
+  escola; escolas-ano da mesma escola podem cair dos dois lados dessa validação interna. Fica registrado como
+  limitação conhecida; afeta só o ponto de parada do treino.
+- **Pipeline único para os três** (`ColumnTransformer`): `StandardScaler` nas quatro dimensões, `OneHotEncoder`
+  em `localizacao`, `dependencia` e `ano`, tudo ajustado **só na parte de treino de cada dobra** (regra 5).
+  Alvo `abandono_t / 100` (domínio conhecido da taxa); as previsões voltam a pp (× 100) antes de qualquer
+  métrica, sem corte em [0, 100]; o relatório conta quantas ficaram fora.
+- **Validação cruzada:** `GroupKFold(n_splits=5)` com grupo = `co_entidade`, por etapa; as **mesmas dobras**
+  para os três modelos. O R² da validação é calculado sobre as previsões fora-da-dobra **agrupadas** (um valor
+  por semente), não por dobra.
+- **Sementes:** o MLP roda com 10 sementes (`random_state` = 1 a 10); média e desvio-padrão (`ddof=1`) nas
+  sementes; a estimativa pontual é a média. Linear e Ridge são determinísticos nas mesmas dobras.
+- **Métricas:** MAE, RMSE (`sklearn.metrics.root_mean_squared_error`) e R², dentro da amostra e na validação
+  cruzada agrupada, em pp. **Sem MAPE** (o abandono tem muitos zeros).
+- **Leitura declarada antes:** o número que responde à Q1 é o **R² da validação cruzada agrupada do modelo
+  principal (linear)**. Ridge e MLP dizem se flexibilidade acrescenta algo; a diferença é relatada com as
+  métricas, **sem troca de modelo** por R² (regra 7) e sem frase de "supera" — não há família de Holm na C.7.
+  **R² baixo é resposta da Q1, não defeito** (C.12).
+
+### C.8 Importância por permutação (comparada à tabela de fatores)
+
+- Só para o MLP (a tabela da C.5 já lê a linear). Calculada **fora da dobra**: em cada dobra da GroupKFold,
+  permuta-se cada preditor na parte de validação, com `n_repeats = 20` e semente fixa 20261115; a queda de R²
+  é agregada nas dobras e nas 10 sementes, com IC pelos percentis das repetições.
+- **Por variável e por grupo:** território (`localizacao`), rede (dummies de `dependencia` juntas),
+  infraestrutura (as quatro dimensões juntas) e ano (controle, só relatado). Permutação em grupo = as colunas
+  do grupo permutadas com o **mesmo** sorteio de linhas (implementada no código do estudo; preditores
+  correlacionados repartem importância, e o grupo soma o que a divisão esconde).
+- **Leitura:** a ordem das importâncias é **comparada** à ordem dos efeitos padronizados da tabela da C.5,
+  como descrição. Divergência é relatada, não resolvida: nenhum fator muda de veredito por importância.
+
+### C.9 Controle negativo (declarado antes; pode parar a execução)
+
+Dentro de cada etapa e **dentro de cada ano**, o `abandono_t` é embaralhado entre as escolas (semente fixa
+20261115), e o pipeline inteiro da C.7 roda de novo. **Critério, fixado aqui:** o R² da validação cruzada
+agrupada com o desfecho embaralhado deve ficar **abaixo de 0,05** para cada um dos três modelos (no MLP, a
+média das 10 sementes). Se algum chegar a 0,05, **a execução para**, o resultado não é relatado e a causa
+(vazamento no código ou no dado) é investigada e registrada no `docs/DECISOES.md` antes de qualquer nova
+execução.
+
+### C.10 Robustez (declarada antes; nunca substitui o resultado principal)
+
+1. **Média por escola na janela:** cada escola vira uma linha (média dos preditores e do desfecho nos seus
+   anos da janela; `ano` sai), e a regressão principal roda de novo, com bootstrap simples de escolas. Lê se o
+   resultado do painel vem do peso desigual das escolas com mais anos.
+2. **Janela t = 2012–2019:** a mesma análise com dois anos a mais. 2012, e não 2011, porque `dim_ida_prop` e
+   `dim_idp_prop` só existem de 2012 em diante (o Censo não perguntava todos os itens antes); 2019 entra porque
+   o desfecho aqui é do próprio ano (o abandono de 2019 é pré-pandemia; o motivo que tirava 2019 da janela
+   t → t+1 era o desfecho de 2020).
+
+As duas aparecem ao lado do principal, como direção e ordem de grandeza; não têm família de Holm nem veredito,
+e **nenhuma substitui a janela principal, qualquer que seja o resultado**.
+
+### C.11 Q3 — AF × EM, lado a lado
+
+As duas etapas são relatadas lado a lado (tabela da C.5 e o forest plot), como **descrição**: direção, ordem de
+grandeza e veredito de cada fator nas duas etapas. **Não há teste formal da diferença entre etapas**, por
+decisão deste protocolo: o painel do EM é bem menor, um teste de interação teria pouco poder e aumentaria a
+família de Holm, enfraquecendo a Q2 — e a leitura pré-registrada da Q3 é qualitativa. Fica declarado também o
+contrário: **IC que se sobrepõem não mostram igualdade**; onde um fator for ASSOCIADO numa etapa e
+INCONCLUSIVO na outra, a frase é "não dá para afirmar que o peso difere", nunca "o peso é igual". Um teste
+formal de diferença, se o grupo quiser, exige protocolo novo antes de rodar.
+
+### C.12 Expectativas registradas antes de rodar
+
+- **R² baixo é a resposta da Q1, não um defeito.** Os estudos anteriores já mostraram que mesmo a história da
+  própria escola erra muito o valor da taxa (`docs/BASELINE.md`, §2); características estruturais fixas devem
+  explicar ainda menos da variação ano a ano.
+- **No EM, muitos INCONCLUSIVO são esperados.** O painel do EM é bem menor que o do AF — as contagens exatas
+  de escolas e escolas-ano por etapa saem por código na tabela 0, antes de qualquer modelo (regra 3) — e, com
+  menos escolas, os ICs por bootstrap de escola saem largos. Isso repete o padrão da classificação
+  (`docs/BASELINE.md`, §4). INCONCLUSIVO no EM será relatado como tal, sem releitura.
+- O abandono tem **muitos zeros** e é limitado a [0, 100]; a regressão linear lê diferenças de média, e a
+  inferência não depende de normalidade (bootstrap). Fica como limitação conhecida (C.14), não como motivo
+  para trocar de modelo depois de ver resultado.
+
+### C.13 O que a execução grava
+
+Código em `experimentos/fatores_2013_2018/`, lendo `dataset/escolas_rr_v0.2.0.csv` e as funções de `src/`, sem
+escrever fora da própria pasta. A execução é única, na ordem abaixo; a tabela 0 vem **antes** dos modelos e é o
+único lugar onde a regra dos 30 é aplicada (mecanicamente).
+
+| Arquivo | Conteúdo |
+|---|---|
+| `00_universo.csv` | tabela 0: escolas e escolas-ano por etapa, ano e categoria; aplicação da regra dos 30; tamanho das famílias F7 |
+| `01_itens.csv` | os 18 itens: prevalência por etapa e ano (só descrição, nunca modelo) |
+| `02_correlacao.csv` | correlações entre os preditores; o desfecho à parte, marcado "só exibição, não decide" |
+| `03_vif.csv` | VIF das colunas de X do modelo principal, por etapa |
+| `04_fatores.csv` | a tabela de fatores (C.5): modelo principal e secundário × etapa, com efeito em pp, por item, padronizado, IC 95%, p, p Holm, veredito e fração de reamostragens inválidas |
+| `05_r2.csv` | Q1 (C.7): MAE, RMSE e R², dentro da amostra e na validação cruzada, por modelo × etapa (média e desvio nas sementes) |
+| `06_permutacao.csv` | importância por permutação (C.8), por variável e por grupo, com IC |
+| `07_controle_negativo.csv` | o controle da C.9, por modelo × etapa, e o critério passou/parou |
+| `08_robustez.csv` | as duas análises da C.10 |
+| `fig_forest.png` | figura principal: efeitos em pp com IC, AF e EM lado a lado |
+
+As saídas entram no git no pull request da execução (política das cópias congeladas, `docs/DECISOES.md`,
+2026-11-14), e o relatório que as cita só exibe números desses arquivos (regras 3 e 4).
+
+### C.14 O que este estudo responde e o que não responde
+
+- **Responde:** quais características estruturais estão **associadas** ao nível de abandono da escola-ano na
+  janela, com que peso e com que incerteza (Q2); quanto da variação elas explicam (Q1); e como isso se compara
+  entre AF e EM (Q3).
+- **Não responde:** causa, efeito de intervenção, ou qualquer coisa sobre alunos. Também não melhora a previsão
+  do ano seguinte: isso é a Q4, já respondida (`docs/BASELINE.md`, §5).
+- **Limitações declaradas:** desfecho com muitos zeros lido por modelo linear de média; `early_stopping` do MLP
+  com divisão por linha; três dos seis anos de desfecho da janela já tinham sido olhados como teste da
+  classificação (C.2); e a janela principal reusa a janela segura por decisão, não por nova análise.
+
+---
+
+## Protocolo registrado, não executado, substituído em 2026-11-14
+
+O protocolo abaixo (a "Etapa 4": regressão do abandono em t+1 com MLPRegressor) foi registrado em
+2026-11-11 e **nunca foi executado**: a pasta `experimentos/regressao_mlp_2013_2018/` nunca existiu. Com a
+mudança de pergunta do projeto (`docs/DECISOES.md`, 2026-11-14), ele foi substituído pela seção C, que
+aproveita a forma do exemplo do professor para o estudo de nível. O texto segue **inteiro e sem nenhuma
+edição**, inclusive o título original.
+
 # Protocolo da Etapa 4 — regressão do abandono em t+1 com MLPRegressor
 
 **Estado:** escrito **antes** de qualquer execução. Nenhum modelo da Etapa 4 foi treinado, nenhuma métrica foi

@@ -308,3 +308,46 @@ dá a partir da proporção.
 **Evidência:** `testes/test_dataset.py` (proporção da própria linha; nada muda quando metade das escolas sai da
 base; igualdade com o `05_indices_infra.py` de 2012 em diante) e a comparação com a v0.1.0 lida da tag (as 44
 colunas antigas são idênticas valor a valor).
+
+---
+
+## 2026-11-15 — Protocolo do estudo de fatores associados, escrito antes de rodar
+
+**Decisão (pesquisadora).** O `docs/PROTOCOLO.md` é reescrito com três partes: **A**, o registro retroativo da
+classificação de 2026-11-10, marcado como escrito depois da execução; **B**, o desenho padrão do projeto, que
+passa a valer como regra para todo estudo novo; **C**, o protocolo do estudo de fatores associados ao nível de
+abandono, escrito **antes** de qualquer execução. O protocolo da Etapa 4, nunca executado, fica guardado
+inteiro no fim do arquivo, na seção "Protocolo registrado, não executado, substituído em 2026-11-14" (a
+preservação byte a byte foi conferida por código ao gravar). Nada rodou nesta tarefa; a execução só acontece
+depois que o protocolo entrar no `main` por pull request revisado por outro integrante.
+
+**O que o protocolo fixa além do que já estava decidido** — valores que estavam em aberto, todos fixados sem
+olhar nenhuma associação da janela:
+
+- **bootstrap:** 5.000 reamostragens, semente 20261115; reamostragem que perde uma categoria deixa os
+  coeficientes dela NA; mais de 10% de reamostragens inválidas força INCONCLUSIVO, por regra;
+- **família de Holm:** uma por etapa (F7-AF e F7-EM), com as dummies de `localizacao` e `dependencia` e as
+  quatro dimensões do modelo principal, mais o `iie_prop` do secundário; as dummies de `ano` ficam fora
+  (controle, sem veredito);
+- **margem prática: 1,0 pp** sobre o efeito em pp (diferença de categoria, ou amplitude 0→1 da proporção),
+  justificada antes: 1 pp é 1 aluno a cada 100 matriculados da etapa deixando a escola no ano;
+- **categorias de referência:** Urbana e Estadual, nas duas etapas (categorias amplas e termo natural da
+  pergunta; a referência não muda o ajuste, só a leitura);
+- **validação cruzada:** `GroupKFold` de 5 dobras por escola, as mesmas para os três modelos; sementes do MLP
+  de 1 a 10; importância por permutação com 20 repetições, fora da dobra;
+- **controle negativo com critério numérico:** desfecho embaralhado entre escolas dentro de cada ano; R² da
+  validação cruzada abaixo de 0,05 para todo modelo, senão a execução para;
+- **Q3 sem teste formal da diferença entre etapas** (motivo no C.11 do protocolo);
+- **robustez de janela com t = 2012–2019, e não 2011–2019:** `dim_ida_prop` e `dim_idp_prop` só existem de
+  2012 em diante, então 2011 não tem as quatro dimensões completas.
+
+**A contagem de escolas do EM não é digitada (regra 3).** O pedido era declarar, antes de rodar, quantas
+escolas o EM tem e se bastam. Contagem publicada é gerada por código, então o protocolo registra a expectativa
+em palavras (painel bem menor, muitos INCONCLUSIVO esperados) e manda a contagem para a tabela 0
+(`00_universo.csv`), gerada antes de qualquer modelo.
+
+**Alternativa descartada:** um teste formal de interação etapa × fator para a Q3. Com o painel menor do EM o
+teste teria pouco poder, e os testes a mais aumentariam a família de Holm, enfraquecendo a Q2. Se o grupo
+quiser esse teste, é protocolo novo, escrito antes de rodar.
+
+**Evidência:** o próprio `docs/PROTOCOLO.md` (seções A, B e C e a seção final preservada).
