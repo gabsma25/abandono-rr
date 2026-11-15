@@ -46,7 +46,8 @@ de outubro (`_backup_2026-10-14`) não veio: o teste avisa e pula.
 
 **Evidência de que nada mudou** (`testes/test_equivalencia.py`, igualdade exata): a `base_atual` 2007–2025
 (12.597 × 55, mesmos tipos), a régua da Etapa 1, as réguas B1R_lag, B2 e acaso da janela (60 linhas × 15
-métricas), o funil (degraus 2 a 7) e o desfecho de 2013–2019 são idênticos aos do projeto anterior. Os
+métricas), o funil (degraus 2 a 7) e a taxa de abandono por ano civil, 2013–2019, são idênticos aos do projeto
+anterior. Os
 testes herdados passam: 01 (45 OK), 02 (41 OK), 03 (2019–2025 conferem célula a célula com os zips
 originais), 04 (46 OK) e 08 (65 OK).
 
@@ -176,3 +177,134 @@ do livro (5.5.1) pela pesquisadora.
    .gitattributes` (`CONTRIBUTING.md`): a instalação padrão grava em `.git/info/attributes`, que tem precedência
    sobre o `.gitattributes` e anularia a exceção (conferido com `git check-attr` num clone de teste, nesta data).
    O `testes/test_atributos.py` acusa a máquina em que isso acontecer.
+
+---
+
+## 2026-11-14 — A pergunta do projeto muda: fatores associados ao nível de abandono
+
+**Decisão (pesquisadora).** O repositório passa a ter um objeto só, a pesquisa PIBIC, e a pergunta passa a ser:
+
+> Quais características estruturais de uma escola pública de Roraima estão associadas ao seu nível de abandono
+> escolar, e quanto delas permite prever esse nível? A unidade é a escola-ano; o projeto não olha alunos.
+> Associação não é causa.
+
+Subperguntas: **Q1**, quanto da diferença de abandono entre escolas essas características explicam; **Q2**, qual o
+peso de cada uma, com que incerteza; **Q3**, se o peso se mantém entre anos finais (AF) e ensino médio (EM);
+**Q4**, se elas antecipam a mudança no ano seguinte. A Q4 já está respondida e vira uma seção do
+`docs/BASELINE.md` (§5), não um experimento novo. O projeto fala em "fatores associados", nunca em "variáveis
+responsáveis" nem em "o que causa o abandono".
+
+**Motivo.** A pergunta antiga (antecipar, com um ano de antecedência, as escolas de abandono alto) foi respondida
+duas vezes, com desenhos diferentes, e a resposta é que nenhum modelo ordenou as escolas melhor do que a régua
+(o último abandono conhecido):
+
+- **Classificação de alto risco na janela segura** (2026-11-10, execução única): **0 GANHO em 36 testes** da
+  família F6 (ferramenta − régua, com Holm). Nos anos finais, todas as comparações de Recall@20% são SEM GANHO
+  PRÁTICO; no ensino médio, a maioria é INCONCLUSIVO.
+- **Etapa 2 do projeto anterior** (desfechos de 2021–2024, inclusive com TDI, ATU e IED): **0 de 32** testes da
+  família F5 (modelo − régua) resistem ao Holm.
+
+**Evidência:** `docs/BASELINE.md`, §3 e §4, gerado por `src/relatorios/baseline.py` a partir de
+`docs/projeto_anterior/02d_testes.csv` e `docs/projeto_anterior/classificacao/03_testes.csv`.
+
+**Alternativa descartada: continuar melhorando o modelo preditivo** (mais modelos, ajuste fino, novas réguas).
+O nulo se repetiu nos dois desenhos e em todos os blocos de informação, e a janela segura não tem as variáveis que
+poderiam mudar isso: TDI, ATU, IED, matrículas, escola indígena, localização diferenciada, INSE e formação docente
+não existem no repositório para 2013–2018 (diagnóstico da Etapa A, nesta data). As metas M1–M12 do projeto
+anterior, quase todas preditivas, ficam em `docs/ROTEIRO.md`, copiadas do arquivo, todas "a revisar".
+
+**O artigo da disciplina de Mineração de Dados sai do repositório.** Não faz parte da pesquisa PIBIC, e não há
+nada a migrar. As menções a ele saem de todos os documentos, exceto da cópia literal do roteiro antigo
+(`docs/ROTEIRO.md`), que fica como foi escrita.
+
+**As regras ficam unificadas.** O `CLAUDE.md` e a seção "As regras que não se quebram" do `CONTRIBUTING.md`
+passam a ter as mesmas 12 regras, na mesma ordem e com os mesmos números; o `CONTRIBUTING.md` diz o mesmo em
+linguagem simples. Mudanças de conteúdo, nos dois:
+
+- **regra 5:** acrescenta o estudo de associação no mesmo ano (nenhum preditor posterior a t nem derivado do
+  desfecho; transformações ajustadas só na parte de treino de cada dobra);
+- **regra 6:** no modelo do nível de abandono da etapa no ano t, nenhuma das três taxas de rendimento daquela etapa
+  e ano entra em X (identidade contábil); o TDI, quando voltar, entra declarado como parcialmente mecânico. A
+  exclusão de todo o rendimento no estudo de fatores é decisão do protocolo, não regra geral;
+- **regra 7:** é proibido escolher (incluir, excluir, recodificar ou transformar) variável pela relação com o
+  desfecho; é permitido e esperado reportar essa relação como resultado, com a lista fixada antes no
+  `docs/PROTOCOLO.md` e todas as variáveis reportadas, inclusive as nulas; ordenar a apresentação pelo efeito é
+  permitido. O R² pode descrever quanto da variação é explicada, mas não escolhe modelo, variável nem limiar;
+- **regra 10:** passa a incluir "toda decisão fica registrada no `docs/DECISOES.md`" (antes, a regra 10 do
+  `CONTRIBUTING.md`) e o relato do resultado nulo, e diz a unidade dos anos de teste já usados: anos de DESFECHO
+  2016–2019 e 2021–2024 (em ano t, 2015–2018 e 2020–2023).
+
+**Consequência.** O `docs/PROTOCOLO.md` que está no `main` (a "Etapa 4", entrada de 2026-11-11) responde à
+pergunta antiga e nunca foi executado. Ele será movido, sem apagar nada, para uma seção "Protocolo registrado, não
+executado, substituído em 2026-11-14", no pull request do protocolo do estudo de fatores.
+
+---
+
+## 2026-11-14 — Desvio da regra 12: dois pull requests entraram no `main` sem revisão
+
+**O que aconteceu.** Os pull requests #1 (`docs/fluxo-do-grupo`, fluxo de trabalho do grupo) e #2
+(`protocolo-novo-escopo`, protocolo da Etapa 4 e esqueleto do notebook) foram mergeados no `main` pela conta
+`gabsma25` em 2026-11-11, **sem nenhuma revisão registrada** no GitHub. Isso fere a regra 12 (`main` só por pull
+request revisado por outra pessoa).
+
+**Alcance.** Os dois só mudaram documentação e um notebook sem saídas. **Nada foi executado a partir deles**: a
+pasta `experimentos/regressao_mlp_2013_2018/`, onde o protocolo da Etapa 4 gravaria as saídas, não existe.
+
+**Decisão.** A partir de agora, nenhum merge entra no `main` sem a aprovação de outro integrante, também quando o
+GitHub não impedir (ver `CONTRIBUTING.md`, "Quando o repositório estiver no GitHub").
+
+---
+
+## 2026-11-14 — Todo intervalo de anos diz a sua unidade
+
+Onde a unidade não era óbvia, o texto passa a dizê-la:
+
+- a regra 10, no `CLAUDE.md` e no `CONTRIBUTING.md`: anos de DESFECHO 2016–2019 e 2021–2024 (em ano t, 2015–2018
+  e 2020–2023);
+- a linha de 2022–2023 da tabela da janela no `dataset/DICIONARIO.md` (gerada por `src/dataset.py`), e uma nota
+  logo abaixo da tabela: as justificativas são dos estudos de previsão do ano seguinte (t → t+1), e o motivo da
+  janela no estudo de nível fica no `docs/PROTOCOLO.md`;
+- a evidência de equivalência da entrada de 2026-11-11 acima: "a taxa de abandono por ano civil, 2013–2019", que é
+  o que o `desfecho_por_ano.csv` descreve.
+
+---
+
+## 2026-11-14 — Dimensões de infraestrutura em proporção, linha a linha (dataset v0.2.0)
+
+**Decisão (pesquisadora).** O dataset ganha, para cada uma das 4 dimensões de infraestrutura, a **proporção dos
+itens que a escola tem** (`dim_iib_prop`, `dim_ida_prop`, `dim_idp_prop`, `dim_iep_prop`, de 0 a 1), e um índice
+geral, `iie_prop`, que é a **média simples das quatro**. O estudo de fatores usa essas colunas, padronizadas dentro
+do `Pipeline` com a parte de treino de cada dobra. As colunas `dim_*_zano` e `iie_zano` continuam no dataset, sem
+mudança, mas **não entram no estudo de fatores**. A versão sobe para **0.2.0**.
+
+**Motivo.** As `_zano` são padronizadas dentro do ano com a média e o desvio de **todas as escolas** daquele ano,
+e o `iie_zano` usa a componente principal do ano. Numa validação cruzada agrupada por escola, isso faz a
+padronização de uma escola de treino depender das escolas da dobra de validação, o que a regra 5 proíbe
+("toda transformação é ajustada só na parte de treino de cada dobra"). A proporção não depende de nenhuma outra
+escola, e a padronização passa para dentro do `Pipeline`.
+
+**Definição** (`src/dataset.py`, função `proporcoes`): proporção = soma dos itens ÷ número de itens da dimensão,
+com os itens de `src/estendida/05_indices_infra.DIMENSOES`. **Fica vazia se algum item da dimensão estiver vazio**
+(regra 8). Isso só acontece em 2007–2011, quando o Censo não perguntava alguns itens das dependências
+administrativas e pedagógicas; na janela 2013–2018 não há nenhum vazio (`testes/test_dataset.py`).
+
+**Diferença em relação ao `05_indices_infra.py --com-prop`.** O relatório de procedência 05 (14/10/2026) já tinha
+uma versão "prop", descartada como padrão por trazer a mesma informação que a `_zano` em outra escala. O motivo de
+agora é outro (não usar outras escolas). A versão antiga divide pelos itens **disponíveis no ano**, e um item é
+"disponível" se **alguma escola** respondeu a ele. Isso usa informação de outras escolas, e por isso ela não foi
+reaproveitada como está. Nos anos em que todos os itens existem (2012 em diante), as duas coincidem exatamente
+(teste `test_prop_igual_ao_05_onde_o_ano_tem_todos_os_itens`). Em 2007–2011, a proporção nova é vazia, e a antiga
+usa menos itens.
+
+**Ressalva mantida.** O relatório 05 registra quebras de pergunta no Censo (água e banheiro até 2018, projetor até
+2011, biblioteca em 2007–2008). Na janela 2013–2018, a coluna de origem de cada item é a mesma em todos os anos
+(`infra_fonte_artigo` = 0 em toda a janela: água e banheiro vêm das colunas substitutas), então as quebras não
+caem dentro da janela.
+
+**Alternativa descartada:** recalcular a `_zano` dentro de cada dobra. Exigiria repetir a padronização por ano e a
+componente principal dentro do código do estudo, para chegar a uma escala que o `StandardScaler` do `Pipeline` já
+dá a partir da proporção.
+
+**Evidência:** `testes/test_dataset.py` (proporção da própria linha; nada muda quando metade das escolas sai da
+base; igualdade com o `05_indices_infra.py` de 2012 em diante) e a comparação com a v0.1.0 lida da tag (as 44
+colunas antigas são idênticas valor a valor).
