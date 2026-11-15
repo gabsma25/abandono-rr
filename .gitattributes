@@ -10,6 +10,7 @@
 
 # Bytes exatos: arquivos com sha256 registrado nunca são normalizados
 dados/** -text
+docs/projeto_anterior/** -text
 testes/fixtures/** -text
 
 # Binários

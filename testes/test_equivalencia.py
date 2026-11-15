@@ -21,7 +21,7 @@ import pytest
 RAIZ = Path(__file__).resolve().parents[1]
 REF = RAIZ / "testes" / "referencias" / "projeto_anterior"
 SAIDA = RAIZ / "saida"
-REF_CLASSIF = RAIZ / "experimentos" / "classificacao_2013_2018" / "saida" / "03_classificacao.csv"
+REF_CLASSIF = RAIZ / "docs" / "projeto_anterior" / "classificacao" / "03_classificacao.csv"
 ANOS = range(2013, 2020)
 CHAVE_REGUA = ["alvo", "etapa", "modelo", "bloco", "periodo"]
 

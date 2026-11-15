@@ -8,7 +8,7 @@ Réguas da janela segura (t de 2013 a 2018; alvos de teste de 2016 a 2019), sem 
 
 Usa as mesmas funções da classificação (classificacao.montar, metricas_ano,
 baselines.b2_mediana_estrato) e devolve as linhas no formato de
-experimentos/classificacao_2013_2018/saida/03_classificacao.csv, para que o teste de
+docs/projeto_anterior/classificacao/03_classificacao.csv, para que o teste de
 equivalência compare valor a valor. Nenhum modelo é treinado aqui.
 """
 import baselines as B
