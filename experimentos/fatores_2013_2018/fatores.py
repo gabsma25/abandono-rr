@@ -466,12 +466,15 @@ def gravar(df, caminho, cab):
 
 
 def fig_forest(fatores, caminho):
-    """C.5: figura principal — os efeitos que decidem o veredito, com IC 95%, AF e EM lado a lado."""
+    """C.5: figura principal — os efeitos que decidem o veredito, com IC 95%, AF e EM lado a lado.
+
+    Cada painel tem o seu próprio eixo y: a regra dos 30 pode excluir categorias diferentes em cada etapa, e
+    um eixo compartilhado poria os rótulos de uma etapa na outra. Devolve {etapa: rótulos desenhados}."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     etapas = [e for e in ETAPAS if (fatores["etapa"] == e).any()]
-    fig, eixos = plt.subplots(1, max(len(etapas), 1), figsize=(11, 5), sharey=True)
+    fig, eixos = plt.subplots(1, max(len(etapas), 1), figsize=(13, 5), sharey=False)
     eixos = np.atleast_1d(eixos)
     for eixo, etapa in zip(eixos, etapas):
         t = fatores[fatores["etapa"] == etapa]
@@ -487,8 +490,11 @@ def fig_forest(fatores, caminho):
         eixo.set_title(f"{etapa} (efeito que decide, pp; tracejado = margem prática)")
         eixo.set_xlabel("pontos percentuais")
     fig.tight_layout()
+    fig.canvas.draw()
+    rotulos = {etapa: [r.get_text() for r in eixo.get_yticklabels()] for eixo, etapa in zip(eixos, etapas)}
     fig.savefig(caminho, dpi=150)
     plt.close(fig)
+    return rotulos
 
 
 # ------------------------------------------------------------------ a execução única (ordem do C.13)

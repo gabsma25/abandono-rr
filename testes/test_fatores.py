@@ -257,6 +257,25 @@ def test_controle_negativo_reprovado_grava_so_o_07(tmp_path, monkeypatch):
     assert [p.name for p in pasta.iterdir()] == ["07_controle_negativo.csv"]
 
 
+# ------------------------------------------------------------------ a figura principal (C.5)
+def test_forest_cada_painel_com_os_seus_fatores(tmp_path):
+    """AF e EM excluem categorias diferentes pela regra dos 30: cada painel mostra os SEUS fatores."""
+    af = base_sintetica(n_escolas=60, semente=12, etapas=("AF",), frac_municipal=0.4)            # sem Federal
+    em = base_sintetica(n_escolas=60, semente=13, etapas=("EM",), frac_municipal=0.0, federais=10,
+                        anos_federais=6)                                                         # sem Municipal
+    d = pd.concat([af, em], ignore_index=True)
+    partes = []
+    for etapa in F.ETAPAS:
+        u, _ = F.universo_pronto(d, etapa)
+        partes.append(F.c6_inferencia(u, n_boot=30).assign(etapa=etapa))
+    fatores = pd.concat(partes, ignore_index=True)
+    esperado = {e: list(fatores.loc[fatores["etapa"] == e, "fator"]) for e in F.ETAPAS}
+    assert "dependencia=Municipal" in esperado["AF"] and "dependencia=Federal" not in esperado["AF"]
+    assert "dependencia=Federal" in esperado["EM"] and "dependencia=Municipal" not in esperado["EM"]
+    rotulos = F.fig_forest(fatores, tmp_path / "forest.png")
+    assert rotulos == esperado, "os rótulos de um painel foram parar no outro"
+
+
 # ------------------------------------------------------------------ fumaça do MLP e da permutação (C.7, C.8)
 def test_c7_e_c8_rodam_com_o_mlp_em_miniatura():
     u, _ = F.universo_pronto(base_sintetica(n_escolas=25, semente=10), "AF")
