@@ -117,7 +117,7 @@ Fechada aqui, antes de rodar; nenhuma variável entra ou sai depois (regra 7). N
 | Papel | Variável | Tipo | Observação |
 |---|---|---|---|
 | fator (território) | `localizacao` | categórica (Urbana, Rural) | referência: **Urbana**, nas duas etapas |
-| fator (rede) | `dependencia` | categórica (Estadual, Municipal, Federal) | referência: **Estadual**, nas duas etapas; regra dos 30 abaixo |
+| fator (rede) | `dependencia` | categórica (Estadual, Municipal, Federal) | referência: **Estadual**, nas duas etapas; regra dos 30 e das 10 escolas abaixo |
 | fator (infraestrutura) | `dim_iib_prop` | proporção 0–1 | 4 itens de infraestrutura básica |
 | fator (infraestrutura) | `dim_ida_prop` | proporção 0–1 | 5 itens de dependência administrativa |
 | fator (infraestrutura) | `dim_idp_prop` | proporção 0–1 | 5 itens de dependência pedagógica |
@@ -127,9 +127,15 @@ Fechada aqui, antes de rodar; nenhuma variável entra ou sai depois (regra 7). N
 - **Referências declaradas, e por quê** (sem olhar associação): Urbana e Estadual são categorias amplas nas
   duas etapas e são o termo natural da pergunta (o fator de interesse é ser Rural; a rede estadual é a rede de
   referência da educação básica pública de RR). A referência não muda o ajuste, só a leitura dos coeficientes.
-- **Regra dos 30:** categoria de `dependencia` com **menos de 30 escolas-ano** na etapa (contagem da tabela 0,
-  C.13) sai da regressão daquela etapa, junto com as suas linhas, e aparece no relatório só com a contagem. A
-  regra é mecânica: aplicá-la não é escolher por associação.
+- **Regra dos 30 e das 10 escolas:** uma categoria de `dependencia` só entra na regressão da etapa se tiver
+  **pelo menos 30 escolas-ano e pelo menos 10 escolas distintas** na etapa. Com menos de 30 escolas-ano ou
+  menos de 10 escolas distintas, ela sai, junto com as suas linhas, e aparece no relatório só com as duas
+  contagens (tabela 0, C.13). Motivo do mínimo de escolas: o bootstrap sorteia escolas, então a regra conta
+  na unidade da inferência; uma categoria com escolas-ano suficientes, mas de poucas escolas, apoiaria o seu
+  coeficiente em poucas unidades. A regra é mecânica e usa só contagens de preditores: aplicá-la não é
+  escolher por associação. Consequência esperada, pelas contagens do revisor (que só usam preditores;
+  `docs/revisoes/2026-11-15_joao_pr9.md`): no EM, a Federal e a Municipal saem. Nesse caso sobra só a
+  Estadual, e **a rede deixa de ser fator no EM**: aparece só com as contagens.
 - **O que não entra, e por quê:**
   - **nenhuma variável de rendimento, de nenhum ano** (`abandono_tm1`, `abandono_tm2`, `reprovacao_tm1`,
     `variacao_abandono_defasada`, `aprovacao_t`, `reprovacao_t`): decisão deste protocolo, mais apertada que a
@@ -184,7 +190,7 @@ a lado (é também a figura da Q3); o efeito da amplitude 0→1 fica na tabela.
 - **Família de Holm (uma por etapa): F7-AF e F7-EM.** Cada família contém **todos os coeficientes que recebem
   veredito na etapa**: as dummies de `localizacao` e `dependencia` e as quatro dimensões, do modelo principal,
   mais o `iie_prop`, do secundário. As dummies de `ano` ficam fora (controle, sem veredito). O tamanho exato de
-  cada família sai na tabela 0, antes dos modelos, pela regra dos 30.
+  cada família sai na tabela 0, antes dos modelos, pela regra dos 30 e das 10 escolas.
 - **Margem prática: 1,0 pp, sobre o efeito que decide.** O efeito que decide o veredito é: para categórica, a
   diferença da categoria para a referência; para cada dimensão, o **efeito por item a mais** (coeficiente ÷
   número de itens); para o `iie_prop`, o efeito de um passo de **0,25** (coeficiente × 0,25) — no índice, que
@@ -309,11 +315,11 @@ formal de diferença, se o grupo quiser, exige protocolo novo antes de rodar.
 
 Código em `experimentos/fatores_2013_2018/`, lendo `dataset/escolas_rr_v0.2.0.csv` e as funções de `src/`, sem
 escrever fora da própria pasta. A execução é única, na ordem abaixo; a tabela 0 vem **antes** dos modelos e é o
-único lugar onde a regra dos 30 é aplicada (mecanicamente).
+único lugar onde a regra dos 30 e das 10 escolas é aplicada (mecanicamente).
 
 | Arquivo | Conteúdo |
 |---|---|
-| `00_universo.csv` | tabela 0: escolas e escolas-ano por etapa, ano e categoria; aplicação da regra dos 30; tamanho das famílias F7 |
+| `00_universo.csv` | tabela 0: escolas e escolas-ano por etapa, ano e categoria; aplicação da regra dos 30 e das 10 escolas, com as duas contagens de cada categoria; tamanho das famílias F7 |
 | `01_itens.csv` | os 18 itens: prevalência por etapa e ano (só descrição, nunca modelo) |
 | `02_correlacao.csv` | correlações entre os preditores; o desfecho à parte, marcado "só exibição, não decide" |
 | `03_vif.csv` | VIF das colunas de X do modelo principal, por etapa |
