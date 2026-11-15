@@ -173,7 +173,9 @@ def dicionario(d):
           "## A janela segura e por que cada faixa de anos fica fora", "",
           "| Anos t | Situação | Motivo |", "|---|---|---|"]
     L += [f"| {a} | {s} | {m} |" for a, s, m in FAIXAS]
-    L += ["", "Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.", "",
+    L += ["", ("Essas justificativas são dos estudos de previsão do ano seguinte (t → t+1). No estudo de nível (as "
+               "características e o abandono do mesmo ano t), o motivo da janela fica no `docs/PROTOCOLO.md`."), "",
+          "Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.", "",
           "## Ressalva sobre a procedência", "",
           ("Os dados de 2007 a 2018 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
           "Eles foram conferidos contra a fonte do INEP uma vez, em 14/10/2026, na máquina do Gustavo "

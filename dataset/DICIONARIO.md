@@ -76,6 +76,8 @@ Para cada etapa e cada ano t+1:
 | 2022–2023 | fora | regime pós-pandemia; os desfechos destes anos t (2023 e 2024) foram teste da Etapa 2 do projeto anterior, que testou os anos de desfecho 2021–2024 (em ano t: 2020–2023) |
 | 2024–2025 | fora | começa o Pé-de-Meia no ensino médio; o desfecho de 2025 já foi usado em análises e testes de modelos |
 
+Essas justificativas são dos estudos de previsão do ano seguinte (t → t+1). No estudo de nível (as características e o abandono do mesmo ano t), o motivo da janela fica no `docs/PROTOCOLO.md`.
+
 Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análises.
 
 ## Ressalva sobre a procedência
