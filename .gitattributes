@@ -13,6 +13,15 @@ dados/** -text
 docs/projeto_anterior/** -text
 testes/fixtures/** -text
 
+# Notebooks: o nbstripout limpa as saídas no commit (CONTRIBUTING, primeiro dia). As duas linhas de *.ipynb
+# ficam aqui para que `nbstripout --install --attributes .gitattributes` não acrescente nada; a exceção vem
+# depois delas e vale sobre elas. O exemplo do professor é cópia fiel e nunca passa pelo filtro.
+# Não instale com `nbstripout --install` sem `--attributes`: ele grava em .git/info/attributes, que tem
+# precedência sobre este arquivo e anula a exceção (testes/test_atributos.py acusa).
+*.ipynb filter=nbstripout
+*.ipynb diff=ipynb
+docs/tese_base/*.ipynb !filter !diff
+
 # Binários
 *.parquet binary
 *.zip binary

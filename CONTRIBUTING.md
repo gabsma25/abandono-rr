@@ -32,11 +32,15 @@ no `main`, nem para corrigir uma vírgula.
    ```
    Se passar, a sua máquina reproduz exatamente o projeto. **Se falhar, esse é o primeiro problema a resolver**,
    antes de qualquer tarefa. Abra uma issue com a mensagem de erro.
-4. Instale o limpador de notebooks (ver o item 3 desta seção):
+4. Instale o limpador de notebooks (ver o item 3 desta seção), com o `.venv` ativo:
    ```bash
-   pip install nbstripout
-   nbstripout --install
+   pip install nbstripout==0.8.1
+   nbstripout --install --attributes .gitattributes
    ```
+   O `--attributes .gitattributes` é obrigatório: sem ele, o nbstripout grava a regra em `.git/info/attributes`,
+   que vale mais que o `.gitattributes`, e passa a limpar também o exemplo do professor (`docs/tese_base/`), que
+   tem de continuar idêntico ao recebido. O `git status` não deve mostrar mudança no `.gitattributes` depois do
+   comando; o `testes/test_atributos.py` confere.
 
 ### 2. O ciclo de cada tarefa
 
