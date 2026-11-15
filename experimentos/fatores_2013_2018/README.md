@@ -1,0 +1,45 @@
+# Estudo de fatores associados ao nível de abandono (t = 2013–2018)
+
+Implementação da **seção C do `docs/PROTOCOLO.md`**. Lê só `dataset/escolas_rr_v0.2.0.csv` e as funções
+de `src/`; escreve só em `saida/` (fora do git até o pull request da execução). **Ainda não foi
+executado com o desfecho real.**
+
+## Como rodar (uma única vez, e ainda não)
+
+```
+python experimentos/fatores_2013_2018/fatores.py --executar
+```
+
+Travas (regra 10 e C.13):
+
+- sem `--executar`, nada é calculado;
+- com `saida/` existente, o script recusa: a execução é única, e uma nova exigiria decisão registrada
+  no `docs/DECISOES.md`;
+- toda saída começa com `# commit=… dataset_sha256=… gerado=…`;
+- ordem: tabela 0 → controle negativo (C.9) → se passar, o resto; se o controle reprovar, grava **só**
+  o `07_controle_negativo.csv` e para.
+
+A execução real só acontece depois que o código entrar no `main` por pull request revisado **e** de uma
+revisão independente do código contra o protocolo, por outro integrante.
+
+## Seção do protocolo → função → teste
+
+| Protocolo | Função em `fatores.py` | Teste em `testes/test_fatores.py` |
+|---|---|---|
+| C.2 universo e janela | `c2_universo` | `test_recupera_efeitos…` (universo), `test_valores_fixados…` (janela) |
+| C.3 lista fechada e referências | constantes `CATEGORICAS`, `DIMENSOES`, `INDICE`, `CONTROLE` | `test_lista_de_preditores_igual_ao_protocolo` |
+| C.3 regra dos 30 | `c3_regra_dos_30` | `test_regra_dos_30_exclui_categoria_rara_com_contagem` |
+| C.4 modelos e matriz | `matriz_x`, `_ols` | `test_recupera_efeitos…`, `test_reamostragem_sem_a_categoria…` |
+| C.4 VIF | `c4_vif` | coberto por `test_executar_ordem_cabecalho_e_saidas` (03_vif.csv) |
+| C.5 efeitos relatados | `c5_efeitos`, `_escala_decide` | `test_recupera_efeitos…` (escala pp × decide) |
+| C.6 bootstrap por escola, Holm, margem, vereditos | `c6_inferencia`, `c6_veredito`, `_sorteios_escolas`, `_coef_reamostra` | `test_recupera_efeitos…`, `test_vereditos_na_ordem_do_protocolo`, `test_reamostragem_sem_a_categoria…` |
+| C.7 Q1 (ΔR² sobre o modelo só com o ano) | `c7_q1`, `_pipeline_q1`, `dobras_por_escola` | `test_sem_efeito_alem_do_ano`, `test_vazamento_plantado_e_denunciado`, `test_groupkfold…`, `test_c7_e_c8…` |
+| C.8 importância por permutação | `c8_permutacao` | `test_c7_e_c8_rodam_com_o_mlp_em_miniatura` |
+| C.9 controle negativo | `c9_controle_negativo` | `test_sem_efeito_alem_do_ano`, `test_controle_negativo_reprovado_grava_so_o_07` |
+| C.10 robustez | `c10_media_por_escola`, `c10_janela_2012_2019` | coberto por `test_executar_ordem_cabecalho_e_saidas` (08_robustez.csv) |
+| C.13 tabela 0, itens, correlação, saídas e figura | `c13_tabela0`, `c13_itens`, `c13_correlacao`, `executar`, `gravar`, `cabecalho`, `fig_forest` | `test_executar_ordem_cabecalho_e_saidas`, `test_controle_negativo_reprovado_grava_so_o_07` |
+| travas da execução única | `main` | `test_sem_executar_nada_roda`, `test_executar_recusa_saida_existente` |
+| valores fixados (sementes, reamostragens, margem, limiares) | constantes do topo | `test_valores_fixados_iguais_aos_do_protocolo` |
+
+Todos os testes usam **dados sintéticos com efeitos conhecidos**; nenhum número do desfecho real é
+calculado antes da execução única.
