@@ -269,6 +269,14 @@ def test_executar_ordem_cabecalho_e_saidas(tmp_path, git_limpo):
             assert f"dataset_sha256={sha}" in primeira
     fatores = pd.read_csv(pasta / "04_fatores.csv", comment="#")
     assert set(fatores["etapa"]) == {"AF", "EM"} and "veredito" in fatores.columns
+    controle = pd.read_csv(pasta / "07_controle_negativo.csv", comment="#")
+    assert {"r2_cv_embaralhado", "r2_cv_so_ano_embaralhado", "delta_r2_cv_embaralhado", "passou"} <= set(controle.columns)
+    universo = pd.read_csv(pasta / "00_universo.csv", comment="#")
+    assert universo["chave"].str.startswith("escolas_ano:ano=").sum() == 2 * 6          # 2 etapas × 6 anos
+    correlacao = pd.read_csv(pasta / "02_correlacao.csv", comment="#")
+    assert "localizacao=Rural" in set(correlacao["variavel"]) and "iie_prop" in set(correlacao["variavel"])
+    r2 = pd.read_csv(pasta / "05_r2.csv", comment="#")
+    assert {"fora_de_0_100_dentro", "fora_de_0_100_cv"} <= set(r2.columns)
     robustez = pd.read_csv(pasta / "08_robustez.csv", comment="#")
     assert {"media_por_escola", "janela_2012_2019"} == set(robustez["analise"])
     assert robustez.loc[robustez["analise"] == "janela_2012_2019", "linhas_preditor_vazio"].notna().all()

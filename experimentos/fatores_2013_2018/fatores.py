@@ -299,7 +299,8 @@ def _rodada_q1(u, modelo, so_ano, semente, dobras):
         p.fit(ent.iloc[tr], y[tr] / 100.0)
         fora[va] = p.predict(ent.iloc[va]) * 100.0
     return {"dentro": _metricas(y, dentro), "cv": _metricas(y, fora),
-            "fora_de_0_100": int(((fora < 0) | (fora > 100)).sum())}
+            "fora_de_0_100_dentro": int(((dentro < 0) | (dentro > 100)).sum()),
+            "fora_de_0_100_cv": int(((fora < 0) | (fora > 100)).sum())}
 
 
 def c7_q1(u, modelos=MODELOS_Q1, sementes=SEMENTES_MLP, n_dobras=N_DOBRAS):
@@ -315,7 +316,9 @@ def c7_q1(u, modelos=MODELOS_Q1, sementes=SEMENTES_MLP, n_dobras=N_DOBRAS):
             rs = rodadas[so_ano]
             linha = {"modelo": modelo, "variaveis": "so_ano" if so_ano else "completo",
                      "n_sementes": len(rs),
-                     "fora_de_0_100": int(np.mean([r["fora_de_0_100"] for r in rs]))}
+                     # nº de previsões fora de [0, 100]; no MLP, a média das sementes (sem truncar)
+                     "fora_de_0_100_dentro": float(np.mean([r["fora_de_0_100_dentro"] for r in rs])),
+                     "fora_de_0_100_cv": float(np.mean([r["fora_de_0_100_cv"] for r in rs]))}
             for onde in ("dentro", "cv"):
                 for met in ("mae", "rmse", "r2"):
                     v = [r[onde][met] for r in rs]
@@ -370,8 +373,12 @@ def c9_controle_negativo(u, modelos=MODELOS_Q1, sementes=SEMENTES_MLP, n_dobras=
     for _, g in emb.groupby(CONTROLE):
         emb.loc[g.index, DESFECHO] = g[DESFECHO].to_numpy()[rng.permutation(len(g))]
     q1 = c7_q1(emb, modelos, sementes, n_dobras)
-    deltas = q1[q1["variaveis"] == "completo"].set_index("modelo")["delta_r2_cv"]
-    tab = pd.DataFrame({"modelo": deltas.index, "delta_r2_cv_embaralhado": deltas.to_numpy()})
+    completo = q1[q1["variaveis"] == "completo"].set_index("modelo")
+    so_ano = q1[q1["variaveis"] == "so_ano"].set_index("modelo").loc[completo.index]
+    tab = pd.DataFrame({"modelo": completo.index,
+                        "r2_cv_embaralhado": completo["r2_cv"].to_numpy(),
+                        "r2_cv_so_ano_embaralhado": so_ano["r2_cv"].to_numpy(),
+                        "delta_r2_cv_embaralhado": completo["delta_r2_cv"].to_numpy()})
     tab["limiar"] = LIMIAR_CONTROLE
     tab["passou"] = tab["delta_r2_cv_embaralhado"] < LIMIAR_CONTROLE
     return tab, bool(tab["passou"].all())
@@ -429,6 +436,8 @@ def c13_tabela0(d, anos=JANELA):
         linhas.append({"etapa": etapa, "chave": "escolas_ano", "valor": len(u)})
         linhas.append({"etapa": etapa, "chave": "linhas_preditor_vazio",
                        "valor": reg["linhas_preditor_vazio"]})
+        for ano, n in u["ano"].value_counts().sort_index().items():
+            linhas.append({"etapa": etapa, "chave": f"escolas_ano:ano={ano}", "valor": int(n)})
         for var in CATEGORICAS:
             for cat, n in u[var].value_counts().items():
                 linhas.append({"etapa": etapa, "chave": f"{var}={cat}", "valor": int(n)})
@@ -448,13 +457,16 @@ def c13_itens(u):
 
 
 def c13_correlacao(u):
-    """C.13: correlações entre os preditores contínuos; o desfecho à parte, marcado 'só exibição'."""
-    cols = list(DIMENSOES) + [INDICE]
-    ent = u[cols].astype("float64").corr().reset_index().melt(
+    """C.13: correlações entre os preditores (dummies das categóricas, dimensões e índice); o desfecho à
+    parte, marcado 'só exibição'."""
+    X, y = matriz_x(u, "principal", com_ano=False)
+    X[INDICE] = u[INDICE].astype("float64").to_numpy()
+    cols = list(X.columns)
+    ent = X.corr().reset_index().melt(
         id_vars="index", var_name="com", value_name="r").rename(columns={"index": "variavel"})
     ent["bloco"] = "entre_preditores"
     des = pd.DataFrame({"variavel": cols, "com": DESFECHO,
-                        "r": [u[c].astype("float64").corr(u[DESFECHO].astype("float64")) for c in cols]})
+                        "r": [X[c].corr(pd.Series(y, index=X.index)) for c in cols]})
     des["bloco"] = "com_o_desfecho (só exibição, não decide)"
     return pd.concat([ent, des], ignore_index=True)
 
@@ -482,7 +494,7 @@ def gravar(df, caminho, cab):
         df.to_csv(f, index=False)
 
 
-def fig_forest(fatores, caminho):
+def fig_forest(fatores, caminho, cab=None):
     """C.5: figura principal — os efeitos que decidem o veredito, com IC 95%, AF e EM lado a lado.
 
     Cada painel tem o seu próprio eixo y: a regra dos 30 pode excluir categorias diferentes em cada etapa, e
@@ -507,6 +519,8 @@ def fig_forest(fatores, caminho):
         eixo.set_title(f"{etapa} (efeito que decide, pp; tracejado = margem prática)")
         eixo.set_xlabel("pontos percentuais")
     fig.tight_layout()
+    if cab:                      # D.1: a figura também leva o commit, o branch e o sha256 do dataset
+        fig.text(0.005, 0.004, cab.lstrip("# "), fontsize=5, ha="left", va="bottom")
     fig.canvas.draw()
     rotulos = {etapa: [r.get_text() for r in eixo.get_yticklabels()] for eixo, etapa in zip(eixos, etapas)}
     fig.savefig(caminho, dpi=150)
@@ -564,7 +578,7 @@ def executar(d, pasta, caminho_dataset=DATASET, n_boot=N_BOOT, modelos=MODELOS_Q
                                                           n_boot).assign(etapa=e)
                                      for e in ETAPAS], ignore_index=True)], ignore_index=True)
     gravar(robustez, pasta / "08_robustez.csv", cab)
-    fig_forest(fatores, pasta / "fig_forest.png")  # todos os fatores com veredito, inclusive o iie_prop
+    fig_forest(fatores, pasta / "fig_forest.png", cab)  # todos os fatores com veredito, inclusive o iie_prop
     return "OK: execução única concluída"
 
 
