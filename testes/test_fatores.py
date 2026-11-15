@@ -217,13 +217,39 @@ def test_executar_recusa_saida_existente(tmp_path, monkeypatch):
     assert not chamadas, "com saida/ existente, o dataset nem pode ser lido"
 
 
+@pytest.fixture
+def git_limpo(monkeypatch):
+    """Os testes de executar() não dependem do estado do repositório de quem roda os testes."""
+    estado = {"commit": "c" * 40, "branch": "branch-de-teste", "limpa": True}
+    monkeypatch.setattr(F, "estado_git", lambda: dict(estado))
+    return estado
+
+
+def test_executar_recusa_arvore_suja(tmp_path, monkeypatch):
+    monkeypatch.setattr(F, "estado_git", lambda: {"commit": "c" * 40, "branch": "x", "limpa": False})
+    def nao_pode(*a, **k):
+        raise AssertionError("calculou alguma coisa com a árvore suja")
+    monkeypatch.setattr(F, "c13_tabela0", nao_pode)
+    pasta = tmp_path / "saida"
+    with pytest.raises(SystemExit) as erro:
+        F.executar(base_sintetica(n_escolas=10), pasta, caminho_dataset=tmp_path / "nao_lido.csv")
+    assert "limpa" in str(erro.value)
+    assert not pasta.exists()
+
+
+def test_estado_git_le_o_repositorio():
+    estado = F.estado_git()
+    assert re.fullmatch(r"[0-9a-f]{40}", estado["commit"]) and estado["branch"]
+    assert isinstance(estado["limpa"], bool)
+
+
 def _csv_sintetico(tmp_path, d):
     caminho = tmp_path / "sintetico.csv"
     d.to_csv(caminho, index=False)
     return caminho
 
 
-def test_executar_ordem_cabecalho_e_saidas(tmp_path):
+def test_executar_ordem_cabecalho_e_saidas(tmp_path, git_limpo):
     d = base_sintetica(n_escolas=40, b_rural=3.0, semente=6, etapas=("AF", "EM"))
     arquivo = _csv_sintetico(tmp_path, d)
     pasta = tmp_path / "saida"
@@ -239,12 +265,13 @@ def test_executar_ordem_cabecalho_e_saidas(tmp_path):
     for nome in esperados:
         if nome.endswith(".csv"):
             primeira = (pasta / nome).read_text(encoding="utf-8").splitlines()[0]
-            assert primeira.startswith("# commit=") and f"dataset_sha256={sha}" in primeira
+            assert primeira.startswith(f"# commit={git_limpo['commit']} branch={git_limpo['branch']} ")
+            assert f"dataset_sha256={sha}" in primeira
     fatores = pd.read_csv(pasta / "04_fatores.csv", comment="#")
     assert set(fatores["etapa"]) == {"AF", "EM"} and "veredito" in fatores.columns
 
 
-def test_controle_negativo_reprovado_grava_so_o_07(tmp_path, monkeypatch):
+def test_controle_negativo_reprovado_grava_so_o_07(tmp_path, monkeypatch, git_limpo):
     d = base_sintetica(n_escolas=30, semente=8, etapas=("AF", "EM"))
     arquivo = _csv_sintetico(tmp_path, d)
     reprovado = pd.DataFrame({"modelo": ["linear"], "delta_r2_cv_embaralhado": [0.5],

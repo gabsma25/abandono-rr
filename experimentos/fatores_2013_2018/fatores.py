@@ -10,7 +10,8 @@ testes/test_fatores.py. Lê só dataset/escolas_rr_v0.2.0.csv e as funções de 
 Travas da execução única (regra 10 e C.13):
   - sem --executar, o script imprime o aviso e sai;
   - com --executar, recusa rodar se a pasta saida/ já existir;
-  - toda saída começa com uma linha de comentário com o commit e o sha256 do dataset;
+  - recusa rodar com a árvore do git suja; toda saída começa com uma linha de comentário com o commit,
+    o branch e o sha256 do dataset;
   - ordem: tabela 0 → controle negativo (C.9) → se passar, o resto; se falhar, grava SÓ o 07 e para.
 """
 import argparse
@@ -450,12 +451,20 @@ def c13_correlacao(u):
     return pd.concat([ent, des], ignore_index=True)
 
 
-def cabecalho(caminho_dataset=DATASET):
-    """C.13 / travas: commit e sha256 do dataset no início de toda saída."""
-    commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
-                            cwd=RAIZ, check=True).stdout.strip()
+def estado_git():
+    """Commit, branch e se a árvore de trabalho está limpa (sem nada modificado nem não rastreado)."""
+    def git(*args):
+        return subprocess.run(["git", *args], capture_output=True, text=True, cwd=RAIZ,
+                              check=True).stdout.strip()
+    return {"commit": git("rev-parse", "HEAD"), "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
+            "limpa": git("status", "--porcelain") == ""}
+
+
+def cabecalho(caminho_dataset, estado):
+    """C.13 / D.1: commit, branch e sha256 do dataset no início de toda saída."""
     sha = hashlib.sha256(Path(caminho_dataset).read_bytes()).hexdigest()
-    return f"# commit={commit} dataset_sha256={sha} gerado={date.today().isoformat()}"
+    return (f"# commit={estado['commit']} branch={estado['branch']} dataset_sha256={sha} "
+            f"gerado={date.today().isoformat()}")
 
 
 def gravar(df, caminho, cab):
@@ -502,9 +511,15 @@ def executar(d, pasta, caminho_dataset=DATASET, n_boot=N_BOOT, modelos=MODELOS_Q
              sementes=SEMENTES_MLP, n_repeticoes=N_REPETICOES_PERM):
     """Ordem do C.13: tabela 0 → controle negativo (C.9) → se passar, o resto.
 
-    Se o controle falhar em qualquer etapa, grava SÓ o 07 e devolve 'PAROU' (C.9)."""
+    Se o controle falhar em qualquer etapa, grava SÓ o 07 e devolve 'PAROU' (C.9).
+    Recusa rodar com a árvore do git suja: o commit do cabeçalho tem de ser o código que rodou (D.1)."""
     pasta = Path(pasta)
-    cab = cabecalho(caminho_dataset)
+    estado = estado_git()
+    if not estado["limpa"]:
+        sys.exit("ERRO: a árvore do git não está limpa (há arquivo modificado ou não rastreado). O commit "
+                 "gravado nas saídas tem de ser exatamente o código que rodou: faça o commit ou desfaça as "
+                 "mudanças antes de executar.")
+    cab = cabecalho(caminho_dataset, estado)
     tabela0, universos = c13_tabela0(d)
     controles = []
     for etapa in ETAPAS:
