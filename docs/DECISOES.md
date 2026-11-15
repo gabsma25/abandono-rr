@@ -164,7 +164,7 @@ do livro (5.5.1) pela pesquisadora.
    `gustavo/saida/avaliacao/`), com o sha256 de cada arquivo no `docs/projeto_anterior/README.md`, conferido pelo
    `testes/test_baseline.py`. Antes, elas ficavam em `experimentos/classificacao_2013_2018/saida/`, que o
    `.gitignore` exclui: o `docs/BASELINE.md` e o `testes/test_equivalencia.py` dependiam de arquivos que quem
-   clonasse não receberia. O `testes/test_equivalencia.py` passa a ler a cópia versionada. **Alternativa
+   clonasse não receberia. Os dois passam a ler a cópia versionada. **Alternativa
    descartada:** abrir uma exceção no `.gitignore` para aquela pasta; assim, todas as cópias congeladas do projeto
    anterior ficam num só lugar, com o mesmo controle de hash, e o `.gitattributes` as protege de normalização
    (`docs/projeto_anterior/** -text`).

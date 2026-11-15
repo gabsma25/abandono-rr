@@ -77,7 +77,7 @@ o território e a rede.
 ## 4. A classificação de alto risco na janela segura
 
 Fontes: as réguas, em `saida/avaliacao/reguas_janela.csv`, **regeradas** pelo abandono-rr e idênticas às do
-projeto anterior; a ferramenta e os intervalos, em `experimentos/classificacao_2013_2018/saida/` (Dados-do-Projeto `969fc64`),
+projeto anterior; a ferramenta e os intervalos, em `docs/projeto_anterior/classificacao/` (Dados-do-Projeto `969fc64`),
 da execução única de 2026-11-10. Desfechos de 2016 a 2019, quatro anos juntos; IC de 95% por bootstrap
 sorteando escolas (5.000 reamostragens).
 

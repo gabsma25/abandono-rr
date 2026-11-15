@@ -12,7 +12,7 @@ A versão fica em `src/versao.py`, e o dataset leva a versão no nome do arquivo
   `docs/projeto_anterior/` e `experimentos/`); `testes/test_baseline.py` exige que esteja em dia.
 - `docs/projeto_anterior/classificacao/`: as saídas da execução única da classificação de 2026-11-10, copiadas do
   commit de origem, com sha256 no README da pasta; `testes/test_baseline.py` confere os hashes de todas as cópias
-  congeladas, e `testes/test_equivalencia.py` passa a ler a cópia versionada.
+  congeladas, e o `docs/BASELINE.md` e o `testes/test_equivalencia.py` passam a ler a cópia versionada.
 - `docs/tese_base/`: o exemplo do professor (MLPRegressor, King County House Sales), como referência de forma;
   o `kc_house_data.csv` fica fora do git, e o nbstripout não toca o notebook (`.gitattributes`,
   `testes/test_atributos.py`; instalação com `--attributes .gitattributes`, ver `CONTRIBUTING.md`).
