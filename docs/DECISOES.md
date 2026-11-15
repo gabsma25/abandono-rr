@@ -474,3 +474,45 @@ os anos da etapa) e o `rodar_tudo.py` num clone limpo, sem `dados/origem/`.
   o `testes/test_protocolo.py` confere o texto contra o original (`a56482d`) a cada execução dos testes.
 
 **Evidência:** `testes/test_protocolo.py`.
+
+---
+
+## 2026-11-15 — Revisão do João no PR #9: o que mudou no protocolo antes do merge
+
+**A revisão.** O João revisou o pull request #9 em 2026-11-15: clone limpo, `rodar_tudo.py` verde, leitura do
+código do dataset e das seções C e D do protocolo. Ele pediu quatro ajustes de texto na seção C antes do
+merge, porque depois dele o desenho do estudo congela. O texto dele está, literal, em
+`docs/revisoes/2026-11-15_joao_pr9.md`. Todos os pedidos usam só contagens e relações entre preditores, sem o
+desfecho (regra 7). Nenhum ajuste exigiu rodar o estudo.
+
+**Decisões (pesquisadora), item por item:**
+
+1. **Regra dos 30 (C.3): opção (a) do revisor.** Uma categoria de `dependencia` só entra na regressão da
+   etapa com pelo menos 30 escolas-ano **e** pelo menos 10 escolas distintas; senão sai, com as duas contagens
+   na tabela 0. Motivo: o bootstrap sorteia escolas, então a regra tem de contar na unidade da inferência; uma
+   categoria que passa nas escolas-ano com poucas escolas apoiaria o coeficiente em poucas unidades.
+   Consequência esperada, pelas contagens do revisor: no EM, a Federal e a Municipal saem, e a rede deixa de
+   ser fator nessa etapa. **Alternativa descartada:** a opção (b), manter a regra e avisar no C.12 que o
+   coeficiente sairia INCONCLUSIVO; ela deixaria na família de Holm um teste que já se sabe sem apoio.
+2. **Referência Urbana (C.3).** O motivo passa a ser só "o fator de interesse é ser rural"; a localização
+   urbana não é a categoria mais ampla. Para Estadual, "categoria ampla" continua valendo. O ajuste do modelo
+   não muda.
+3. **Colinearidade (C.12 e C.14).** Fica registrada antes de rodar a expectativa de muitos INCONCLUSIVO nas
+   dimensões de infraestrutura nas duas etapas, e a leitura: cada efeito vale com os outros constantes; a
+   divisão entre localização e infraestrutura é instável; "Rural" soma escolas indígenas e de difícil acesso,
+   ainda sem marcação no dataset (meta M1).
+4. **`OneHotEncoder(handle_unknown="ignore")` (C.7).** Declarado, para uma categoria ausente no treino de uma
+   dobra não parar a execução única.
+
+**O que o revisor viu antes da execução.** Durante a revisão, o João olhou, por engano, a **média de
+`abandono_t` por etapa × localização na janela 2013–2018** (um comando de conferência que incluiu o desfecho).
+**Nenhuma decisão acima se baseou nisso:** os itens 1 a 4 usam só contagens e relações entre preditores, e a
+escolha da opção (a) no item 1 é sobre a rede, não sobre a localização. Fica registrado no mesmo espírito dos
+"anos já olhados" (C.2): uma pessoa do grupo conhece essas médias antes da execução, e nada no desenho pode
+mudar por causa delas.
+
+**Fora do protocolo.** O `README.md` passa a pedir Python 3.12 ou mais recente (o revisor rodou em 3.14). As
+outras duas notas opcionais do revisor (o rótulo `GUSTAVO:` no cabeçalho do pipeline e o aviso da etapa 01 para
+quem quer reconstruir o cache a partir dos zips) ficam para depois.
+
+**Evidência:** `docs/revisoes/2026-11-15_joao_pr9.md` e os commits de texto do protocolo neste pull request.
