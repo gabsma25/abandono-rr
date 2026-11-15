@@ -329,14 +329,15 @@ olhar nenhuma associação da janela:
 - **família de Holm:** uma por etapa (F7-AF e F7-EM), com as dummies de `localizacao` e `dependencia` e as
   quatro dimensões do modelo principal, mais o `iie_prop` do secundário; as dummies de `ano` ficam fora
   (controle, sem veredito);
-- **margem prática: 1,0 pp** sobre o efeito em pp (diferença de categoria, ou amplitude 0→1 da proporção),
-  justificada antes: 1 pp é 1 aluno a cada 100 matriculados da etapa deixando a escola no ano;
+- **margem prática: 1,0 pp sobre o efeito que decide** (diferença de categoria; efeito por item a mais nas
+  dimensões; passo de 0,25 no `iie_prop`), justificada antes: 1 pp é 1 aluno a cada 100 matriculados da etapa
+  deixando a escola no ano;
 - **categorias de referência:** Urbana e Estadual, nas duas etapas (categorias amplas e termo natural da
   pergunta; a referência não muda o ajuste, só a leitura);
 - **validação cruzada:** `GroupKFold` de 5 dobras por escola, as mesmas para os três modelos; sementes do MLP
   de 1 a 10; importância por permutação com 20 repetições, fora da dobra;
-- **controle negativo com critério numérico:** desfecho embaralhado entre escolas dentro de cada ano; R² da
-  validação cruzada abaixo de 0,05 para todo modelo, senão a execução para;
+- **controle negativo com critério numérico:** desfecho embaralhado entre escolas dentro de cada ano; o ΔR²
+  da validação cruzada sobre o modelo só com o ano abaixo de 0,02 para todo modelo, senão a execução para;
 - **Q3 sem teste formal da diferença entre etapas** (motivo no C.11 do protocolo);
 - **robustez de janela com t = 2012–2019, e não 2011–2019:** `dim_ida_prop` e `dim_idp_prop` só existem de
   2012 em diante, então 2011 não tem as quatro dimensões completas.
@@ -345,6 +346,24 @@ olhar nenhuma associação da janela:
 escolas o EM tem e se bastam. Contagem publicada é gerada por código, então o protocolo registra a expectativa
 em palavras (painel bem menor, muitos INCONCLUSIVO esperados) e manda a contagem para a tabela 0
 (`00_universo.csv`), gerada antes de qualquer modelo.
+
+**Quatro ajustes da revisão da pesquisadora (2026-11-15, antes do pull request), com os motivos:**
+
+1. **A Q1 vira ΔR² sobre um modelo só com o ano** (C.7). O R² de um modelo com as dummies de ano mistura o
+   efeito do ano com o das características; o ganho sobre o modelo só com o ano é o que as características
+   explicam de fato. O R² total e o do modelo só com o ano ficam relatados ao lado, para os três modelos,
+   cada um contra a referência da própria classe.
+2. **O controle negativo passa a olhar o ΔR², com limiar 0,02** (C.9). O embaralhamento dentro de cada ano
+   preserva o nível do ano de propósito, então o R² total pode ficar alto mesmo com o código certo; o que tem
+   de ir a zero é o ganho sobre o modelo só com o ano. O 0,02 é folga pequena para o ruído da validação
+   cruzada e muito menor que o ganho que um vazamento real produziria.
+3. **A margem prática decide no efeito por item** (C.6). O contraste 0→1 extrapola para escolas sem nenhum
+   item ou com todos, que podem nem existir na janela. O veredito usa o efeito por item a mais (coeficiente ÷
+   número de itens) e, no `iie_prop`, um passo de 0,25 — uma dimensão inteira a mais, já que o índice é a
+   média simples das quatro. O efeito 0→1 continua relatado, sem decidir; a figura principal mostra o efeito
+   que decide.
+4. **Os vereditos dizem qual p e qual IC usam** (C.6). ASSOCIADO exige o p com Holm; SEM ASSOCIAÇÃO PRÁTICA
+   usa o IC 95% sem correção, como nas famílias F5 e F6 dos estudos anteriores.
 
 **Alternativa descartada:** um teste formal de interação etapa × fator para a Q3. Com o painel menor do EM o
 teste teria pouco poder, e os testes a mais aumentariam a família de Holm, enfraquecendo a Q2. Se o grupo

@@ -161,13 +161,15 @@ Para cada fator, por etapa e modelo:
 - **efeito em pp:** o coeficiente. Para categórica, a diferença da categoria para a referência; para dimensão e
   para o `iie_prop`, o efeito de ir de 0 a 1 na proporção (a amplitude toda);
 - **efeito por item:** o coeficiente da dimensão ÷ número de itens da dimensão — quanto muda o abandono, em pp,
-  associado a **um item a mais**;
+  associado a **um item a mais**; para o `iie_prop`, o equivalente é o efeito de um passo de 0,25 (coeficiente
+  × 0,25), uma dimensão inteira a mais. É este o **efeito que decide** o veredito (C.6);
 - **efeito padronizado:** pp por +1 desvio-padrão do preditor, com o desvio calculado no universo da etapa
   (escala de leitura, não transformação do ajuste); só para os contínuos;
 - IC 95%, p, p Holm e o veredito (C.6). **Todos os fatores aparecem, inclusive os nulos**; ordenar a
   apresentação pelo efeito é permitido (regra 7).
 
-**Figura principal: forest plot** dos efeitos em pp com IC 95%, AF e EM lado a lado (é também a figura da Q3).
+**Figura principal: forest plot** dos **efeitos que decidem o veredito** (C.6), em pp com IC 95%, AF e EM lado
+a lado (é também a figura da Q3); o efeito da amplitude 0→1 fica na tabela.
 
 ### C.6 Inferência, família de Holm, margem prática e vereditos
 
@@ -182,16 +184,24 @@ Para cada fator, por etapa e modelo:
   veredito na etapa**: as dummies de `localizacao` e `dependencia` e as quatro dimensões, do modelo principal,
   mais o `iie_prop`, do secundário. As dummies de `ano` ficam fora (controle, sem veredito). O tamanho exato de
   cada família sai na tabela 0, antes dos modelos, pela regra dos 30.
-- **Margem prática: 1,0 pp**, sobre o efeito em pp da C.5 (diferença de categoria, ou amplitude 0→1 da
-  proporção). Justificativa, fixada sem olhar nenhuma associação: 1 pp de abandono é 1 aluno a cada 100
-  matriculados da etapa deixando a escola no ano — a menor diferença que ainda tem leitura prática para
-  gestão; abaixo disso, mesmo uma associação certa não distingue escolas de forma útil. É o mesmo espírito da
-  margem de ganho prático dos estudos anteriores (traduzir o efeito em alunos e escolas antes de chamá-lo de
-  relevante).
-- **Vereditos**, avaliados nesta ordem:
-  1. **ASSOCIADO:** p Holm ≤ 0,05 **e** |efeito em pp| ≥ 1,0;
-  2. **SEM ASSOCIAÇÃO PRÁTICA:** o IC 95% inteiro dentro de (−1,0; +1,0) pp;
+- **Margem prática: 1,0 pp, sobre o efeito que decide.** O efeito que decide o veredito é: para categórica, a
+  diferença da categoria para a referência; para cada dimensão, o **efeito por item a mais** (coeficiente ÷
+  número de itens); para o `iie_prop`, o efeito de um passo de **0,25** (coeficiente × 0,25) — no índice, que
+  é a média simples das quatro dimensões, 0,25 é exatamente uma dimensão inteira a mais. O efeito da amplitude
+  0→1 continua relatado, mas **não decide**: ir de 0 a 1 extrapola para escolas sem nenhum item ou com todos
+  os itens, que podem nem existir na janela, sobretudo na infraestrutura básica. Justificativa do 1,0 pp,
+  fixada sem olhar nenhuma associação: 1 pp de abandono é 1 aluno a cada 100 matriculados da etapa deixando a
+  escola no ano — a menor diferença que ainda tem leitura prática para gestão; abaixo disso, mesmo uma
+  associação certa não distingue escolas de forma útil. É o mesmo espírito da margem de ganho prático dos
+  estudos anteriores (traduzir o efeito em alunos e escolas antes de chamá-lo de relevante).
+- **Vereditos**, avaliados nesta ordem, sempre sobre o **efeito que decide**:
+  1. **ASSOCIADO:** p **com Holm** ≤ 0,05 **e** |efeito que decide| ≥ 1,0 pp;
+  2. **SEM ASSOCIAÇÃO PRÁTICA:** o IC 95% **sem correção** do efeito que decide, inteiro dentro de
+     (−1,0; +1,0) pp;
   3. **INCONCLUSIVO:** qualquer outro caso.
+
+  Como nos estudos anteriores do projeto (famílias F5 e F6): a afirmação positiva é a protegida pela correção
+  de Holm; a leitura de ausência prática usa o IC 95% padrão, sem correção; o INCONCLUSIVO cobre o resto.
 
 ### C.7 Q1 — quanto se explica (R² dentro da amostra e em validação cruzada agrupada)
 
@@ -208,6 +218,10 @@ Para cada fator, por etapa e modelo:
   separa, ao acaso, 10% das **linhas** de treino para decidir quando parar — uma divisão por linha, não por
   escola; escolas-ano da mesma escola podem cair dos dois lados dessa validação interna. Fica registrado como
   limitação conhecida; afeta só o ponto de parada do treino.
+- **Modelo de referência só com o ano:** para separar o nível do ano do que as características explicam, cada
+  classe de modelo também roda **só com as dummies de `ano`** (mesmo pipeline, mesmas dobras; no MLP, as
+  mesmas 10 sementes). O **ΔR²** de um modelo é o R² da validação cruzada agrupada dele menos o R² do modelo
+  só com o ano da mesma classe.
 - **Pipeline único para os três** (`ColumnTransformer`): `StandardScaler` nas quatro dimensões, `OneHotEncoder`
   em `localizacao`, `dependencia` e `ano`, tudo ajustado **só na parte de treino de cada dobra** (regra 5).
   Alvo `abandono_t / 100` (domínio conhecido da taxa); as previsões voltam a pp (× 100) antes de qualquer
@@ -219,10 +233,12 @@ Para cada fator, por etapa e modelo:
   sementes; a estimativa pontual é a média. Linear e Ridge são determinísticos nas mesmas dobras.
 - **Métricas:** MAE, RMSE (`sklearn.metrics.root_mean_squared_error`) e R², dentro da amostra e na validação
   cruzada agrupada, em pp. **Sem MAPE** (o abandono tem muitos zeros).
-- **Leitura declarada antes:** o número que responde à Q1 é o **R² da validação cruzada agrupada do modelo
-  principal (linear)**. Ridge e MLP dizem se flexibilidade acrescenta algo; a diferença é relatada com as
-  métricas, **sem troca de modelo** por R² (regra 7) e sem frase de "supera" — não há família de Holm na C.7.
-  **R² baixo é resposta da Q1, não defeito** (C.12).
+- **Leitura declarada antes:** o número que responde à Q1 é o **ΔR² da validação cruzada agrupada da
+  regressão linear** — o ganho sobre o modelo só com o ano, que é o que as características explicam além do
+  nível do ano. O R² total e o R² do modelo só com o ano são relatados ao lado. Ridge e MLP dizem se
+  flexibilidade acrescenta algo (cada um com o seu ΔR²); a diferença é relatada com as métricas, **sem troca
+  de modelo** por R² (regra 7) e sem frase de "supera" — não há família de Holm na C.7. **ΔR² baixo é resposta
+  da Q1, não defeito** (C.12).
 
 ### C.8 Importância por permutação (comparada à tabela de fatores)
 
@@ -239,11 +255,18 @@ Para cada fator, por etapa e modelo:
 ### C.9 Controle negativo (declarado antes; pode parar a execução)
 
 Dentro de cada etapa e **dentro de cada ano**, o `abandono_t` é embaralhado entre as escolas (semente fixa
-20261115), e o pipeline inteiro da C.7 roda de novo. **Critério, fixado aqui:** o R² da validação cruzada
-agrupada com o desfecho embaralhado deve ficar **abaixo de 0,05** para cada um dos três modelos (no MLP, a
-média das 10 sementes). Se algum chegar a 0,05, **a execução para**, o resultado não é relatado e a causa
-(vazamento no código ou no dado) é investigada e registrada no `docs/DECISOES.md` antes de qualquer nova
-execução.
+20261115), e o pipeline inteiro da C.7 roda de novo, inclusive o modelo só com o ano. O embaralhamento dentro
+do ano preserva o nível do ano **de propósito** — por isso o critério é sobre o ganho, não sobre o R² total,
+que pode ficar alto mesmo com o código certo.
+
+**Critério, fixado aqui:** o **ΔR² da validação cruzada agrupada sobre o modelo só com o ano**, no desfecho
+embaralhado, deve ficar **abaixo de 0,02** para cada um dos três modelos (no MLP, a média das 10 sementes).
+Justificativa do 0,02, fixada sem olhar dado: com o desfecho embaralhado entre as escolas, tudo o que as
+características poderiam explicar além do nível do ano foi destruído, então o ganho verdadeiro é zero e o
+estimado só pode ser ruído da validação cruzada; 0,02 (dois centésimos da variância) é folga pequena para esse
+ruído e muito menor do que o ganho que um vazamento real produziria ao reidentificar as escolas. Se algum
+modelo chegar a 0,02, **a execução para**, o resultado não é relatado e a causa (vazamento no código ou no
+dado) é investigada e registrada no `docs/DECISOES.md` antes de qualquer nova execução.
 
 ### C.10 Robustez (declarada antes; nunca substitui o resultado principal)
 
@@ -270,7 +293,7 @@ formal de diferença, se o grupo quiser, exige protocolo novo antes de rodar.
 
 ### C.12 Expectativas registradas antes de rodar
 
-- **R² baixo é a resposta da Q1, não um defeito.** Os estudos anteriores já mostraram que mesmo a história da
+- **ΔR² baixo é a resposta da Q1, não um defeito.** Os estudos anteriores já mostraram que mesmo a história da
   própria escola erra muito o valor da taxa (`docs/BASELINE.md`, §2); características estruturais fixas devem
   explicar ainda menos da variação ano a ano.
 - **No EM, muitos INCONCLUSIVO são esperados.** O painel do EM é bem menor que o do AF — as contagens exatas
@@ -294,9 +317,9 @@ escrever fora da própria pasta. A execução é única, na ordem abaixo; a tabe
 | `02_correlacao.csv` | correlações entre os preditores; o desfecho à parte, marcado "só exibição, não decide" |
 | `03_vif.csv` | VIF das colunas de X do modelo principal, por etapa |
 | `04_fatores.csv` | a tabela de fatores (C.5): modelo principal e secundário × etapa, com efeito em pp, por item, padronizado, IC 95%, p, p Holm, veredito e fração de reamostragens inválidas |
-| `05_r2.csv` | Q1 (C.7): MAE, RMSE e R², dentro da amostra e na validação cruzada, por modelo × etapa (média e desvio nas sementes) |
+| `05_r2.csv` | Q1 (C.7): MAE, RMSE e R², dentro da amostra e na validação cruzada, por modelo × etapa, inclusive o modelo só com o ano e o ΔR² (média e desvio nas sementes) |
 | `06_permutacao.csv` | importância por permutação (C.8), por variável e por grupo, com IC |
-| `07_controle_negativo.csv` | o controle da C.9, por modelo × etapa, e o critério passou/parou |
+| `07_controle_negativo.csv` | o controle da C.9, por modelo × etapa: R², ΔR² sobre o modelo só com o ano e o critério passou/parou |
 | `08_robustez.csv` | as duas análises da C.10 |
 | `fig_forest.png` | figura principal: efeitos em pp com IC, AF e EM lado a lado |
 
@@ -306,8 +329,8 @@ As saídas entram no git no pull request da execução (política das cópias co
 ### C.14 O que este estudo responde e o que não responde
 
 - **Responde:** quais características estruturais estão **associadas** ao nível de abandono da escola-ano na
-  janela, com que peso e com que incerteza (Q2); quanto da variação elas explicam (Q1); e como isso se compara
-  entre AF e EM (Q3).
+  janela, com que peso e com que incerteza (Q2); quanto da variação elas explicam além do nível do ano (Q1);
+  e como isso se compara entre AF e EM (Q3).
 - **Não responde:** causa, efeito de intervenção, ou qualquer coisa sobre alunos. Também não melhora a previsão
   do ano seguinte: isso é a Q4, já respondida (`docs/BASELINE.md`, §5).
 - **Limitações declaradas:** desfecho com muitos zeros lido por modelo linear de média; `early_stopping` do MLP
