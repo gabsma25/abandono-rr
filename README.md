@@ -84,9 +84,11 @@ ficou no projeto anterior.
 
 ## O dataset
 
-[`dataset/escolas_rr_v0.1.0.csv`](dataset/) tem uma linha por escola × ano × etapa (AF = anos finais do
+[`dataset/escolas_rr_v0.2.0.csv`](dataset/) tem uma linha por escola × ano × etapa (AF = anos finais do
 fundamental, EM = ensino médio), de 2007 a 2025, com os alvos em colunas próprias (`abandono_t1` e
-`alto_risco_t1`) e as variáveis explicativas separadas. Cada coluna está descrita em
+`alto_risco_t1`) e as variáveis explicativas separadas. A infraestrutura vem em duas versões: padronizada dentro
+do ano com todas as escolas (`_zano`) e em proporção dos itens, calculada só com a própria linha (`_prop`), que é a
+que o estudo de fatores usa. Cada coluna está descrita em
 [`dataset/DICIONARIO.md`](dataset/DICIONARIO.md). A versão do dataset acompanha a do projeto
 ([`CHANGELOG.md`](CHANGELOG.md)).
 

@@ -142,7 +142,7 @@ não altera nada fora da própria pasta. **O que for adotado passa para `src/` p
 - O número da versão fica em `src/versao.py` e segue [SemVer](https://semver.org/lang/pt-BR/): `0.MENOR.CORREÇÃO`
   enquanto o projeto não tiver um resultado publicado.
 - Toda mudança que altera o dataset muda a versão, e o arquivo de saída leva a versão no nome
-  (`dataset/escolas_rr_v0.1.0.csv`).
+  (`dataset/escolas_rr_v0.2.0.csv`).
 - Cada versão tem uma entrada no [`CHANGELOG.md`](CHANGELOG.md) e uma tag (`v0.1.0`), criada no `main` depois
   do merge.
 
