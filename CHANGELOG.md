@@ -45,6 +45,21 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   arquivo.
 - Unidade dos intervalos de anos: anos de DESFECHO na regra 10; a linha de 2022–2023 do `dataset/DICIONARIO.md` e
   uma nota abaixo da tabela da janela; "taxa de abandono por ano civil, 2013–2019" no `docs/DECISOES.md` e aqui.
+- Registro do segundo desvio da regra 12 (pull requests #5, #7 e #8 mergeados sem revisão e fora do `main`)
+  no `docs/DECISOES.md`, 2026-11-15.
+- `docs/PROTOCOLO.md`, seção D, "Depois da execução": por que a execução é única e o que acontece depois
+  dela (saídas congeladas, relato, correção de erro declarada, estudo novo, controle negativo reprovado).
+
+### Corrigido
+- **O `rodar_tudo.py` funciona num clone limpo, sem `dados/origem/`** (issue #6): a etapa 01 lê cada ano do
+  cache versionado quando não há zips, em vez de parar com `FileNotFoundError`
+  (`testes/test_etapa01_sem_origem.py`).
+- **O dataset é o mesmo arquivo em qualquer máquina:** as colunas `_zano` saem com 9 casas decimais, e o
+  `test_regerar_da_o_arquivo_versionado` deixa de falhar fora da máquina de quem gerou o arquivo
+  (`docs/DECISOES.md`, 2026-11-15). As 39 colunas da v0.1.0 que não são `_zano` continuam idênticas; o
+  `test_base_atual_identica` compara o `IIE_zano` com tolerância de 1e-12.
+- `docs/PROTOCOLO.md`: os títulos do protocolo da Etapa 4 preservado descem dois níveis, sem mudar o texto
+  (`testes/test_protocolo.py` confere contra o original).
 
 ### Pendências abertas
 - **Pipeline oficial 2019–2025 (TDI, ATU, IED) fora do núcleo.** Volta por pull request quando a meta M5

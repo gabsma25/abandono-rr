@@ -370,3 +370,107 @@ teste teria pouco poder, e os testes a mais aumentariam a família de Holm, enfr
 quiser esse teste, é protocolo novo, escrito antes de rodar.
 
 **Evidência:** o próprio `docs/PROTOCOLO.md` (seções A, B e C e a seção final preservada).
+
+---
+
+## 2026-11-15 — Segundo desvio da regra 12: a pilha #5 → #7 → #8 foi mergeada sem revisão, fora do `main`
+
+**O que aconteceu.** Os pull requests #5 (`docs/novo-escopo`), #7 (`feat/dimensoes-proporcao`) e #8
+(`docs/protocolo-fatores`) foram mergeados em 2026-11-15 pela conta `gabsma25`, **sem nenhuma revisão
+registrada** no GitHub. Eles estavam empilhados (a base de cada um era o branch do anterior), e os branches não
+foram apagados depois de cada merge; por isso o GitHub não trocou as bases para o `main`, e cada merge entrou
+no branch do PR anterior. O `main` ficou no #4: a pergunta nova, o dataset v0.2.0 e o protocolo do estudo de
+fatores **não estão no `main`**. Isso fere a regra 12 duas vezes (sem revisão, e o `main` não é o que o grupo
+pensa que é) e repete o desvio registrado em 2026-11-14, apesar da decisão tomada lá.
+
+**Alcance.** Nada foi executado a partir desses pull requests: o estudo de fatores não rodou com o desfecho
+real, e a pasta `experimentos/fatores_2013_2018/saida/` não existe.
+
+**Decisão.**
+
+- O conteúdo completo dos três entra no `main` por **um pull request novo, revisado e aprovado por outro
+  integrante** (este, a partir do topo da pilha). A revisão deste PR vale como a revisão que faltou ao #5, ao
+  #7 e ao #8.
+- **Nada de pull request empilhado daqui em diante** sem que o anterior já esteja no `main`; e o branch é
+  apagado logo depois do merge, para o GitHub trocar a base dos PRs seguintes.
+- O protocolo da seção C só vale como "registrado antes de rodar" depois que este PR entrar no `main`. A
+  execução do estudo de fatores espera por isso **e** pela revisão independente do código contra o protocolo.
+
+**Evidência:** `gh pr view 5 / 7 / 8` (base de cada PR, `mergedBy`, lista de revisões vazia); `git log
+origin/main` termina no merge do #4.
+
+---
+
+## 2026-11-15 — As colunas `_zano` do dataset são gravadas com 9 casas decimais
+
+**Decisão (pesquisadora, com o ajuste de método abaixo).** O `src/dataset.py` grava as cinco colunas `_zano`
+(`dim_iib_zano`, `dim_ida_zano`, `dim_idp_zano`, `dim_iep_zano`, `iie_zano`) arredondadas a 9 casas decimais
+(`CASAS_ZANO`), para o `dataset/escolas_rr_v0.2.0.csv` ser o mesmo arquivo em qualquer máquina. As demais
+colunas de ponto flutuante não são arredondadas. A versão continua 0.2.0 (não lançada).
+
+**Motivo.** O `iie_zano` é a componente principal das quatro dimensões, calculada pelo numpy/LAPACK, e a ordem
+das operações de ponto flutuante muda entre plataformas: ele difere na 15ª casa decimal entre Windows e Linux
+(diferença máxima medida pela pesquisadora, `RUIDO_PLATAFORMA` em `src/dataset.py`). Por isso o
+`test_regerar_da_o_arquivo_versionado` falhava fora da máquina de quem gerou o arquivo, e o `rodar_tudo.py`
+deixava o dataset modificado no `git status`.
+
+**Por que 9 casas, e não 12 algarismos significativos (o pedido original).** Arredondar não garante, sozinho, o
+mesmo arquivo: um valor que esteja mais perto de uma fronteira de arredondamento do que a diferença entre as
+plataformas pode ir para lados diferentes em cada máquina. Medido por código antes da escolha: com 12
+algarismos significativos, e também com 12 casas decimais, há valores do `iie_zano` muito mais perto de uma
+fronteira do que essa diferença; com 9 casas, todos os valores ficam a uma distância bem maior. O
+`testes/test_dataset.py::test_zano_longe_das_fronteiras_de_arredondamento` exige que cada valor fique a pelo
+menos 10 vezes essa diferença de uma fronteira (`FOLGA_MINIMA`). Se um dado novo cair perto de uma fronteira, o
+teste falha antes de o arquivo divergir entre máquinas. A escolha usou só os valores das `_zano`, que nenhum
+estudo do projeto usa, e nenhuma relação com o desfecho.
+
+**Por que só as `_zano`.** As outras colunas de ponto flutuante vêm da leitura de texto do INEP ou de contas
+IEEE simples (diferença, divisão por um inteiro, média de quatro termos), que dão o mesmo resultado em qualquer
+máquina. O teste confere que o arredondamento não as toca.
+
+**Teste de equivalência.** O `testes/test_equivalencia.py::test_base_atual_identica` comparava a base com
+igualdade exata. Agora compara o `IIE_zano` com tolerância absoluta de 1e-12 (`TOLERANCIA_PLATAFORMA`), muito
+acima da diferença entre plataformas e muito abaixo de qualquer diferença com significado. É a única coluna
+com diferença observada; as outras continuam exatas.
+
+**Consequência.** Das 44 colunas da v0.1.0, as 39 que não são `_zano` continuam idênticas valor a valor; as 5
+`_zano` diferem da v0.1.0 só pelo arredondamento (menos de meio passo de 9 casas). O estudo de fatores não usa
+nenhuma `_zano` (`docs/PROTOCOLO.md`, C.3).
+
+**Evidência:** `testes/test_dataset.py` (regeração byte a byte, folga às fronteiras de arredondamento) e
+`testes/test_equivalencia.py`.
+
+---
+
+## 2026-11-15 — A etapa 01 roda num clone limpo, sem `dados/origem/` (issue #6)
+
+**Decisão.** Sem a pasta `dados/origem/indicadores/`, que fica fora do git (regra 2), a etapa 01
+(`src/estendida/01_tx_rend_bruto.py`) não para mais com `FileNotFoundError`. Ela avisa que não há zips e lê
+cada ano do cache versionado em `dados/cache/tx_rend/`, o mesmo caminho que já seguia para qualquer ano sem
+zip. Com isso, o `python rodar_tudo.py` funciona num clone limpo, como o `README.md` diz.
+
+**Alternativa descartada:** criar as pastas vazias automaticamente. Seria escrever em `dados/origem/`, que é
+somente leitura (regra 1), e esconderia o fato de que nenhum zip foi conferido.
+
+**Evidência:** `testes/test_etapa01_sem_origem.py` (sem a pasta, nenhum zip e nenhum erro; o cache cobre todos
+os anos da etapa) e o `rodar_tudo.py` num clone limpo, sem `dados/origem/`.
+
+---
+
+## 2026-11-15 — PROTOCOLO: o que acontece depois da execução, e os títulos do protocolo preservado
+
+**Decisão (pesquisadora).**
+
+- O `docs/PROTOCOLO.md` ganha a **seção D, "Depois da execução"**, que vale para todo estudo. Ela diz por que a
+  execução é única e o que acontece depois: as saídas ficam congeladas; tudo é relatado como saiu; um erro
+  descoberto depois só justifica nova execução se for um defeito em relação ao protocolo, registrado antes, com
+  os dois resultados relatados lado a lado; mudar o desenho depois de ver o resultado é estudo novo; e o controle
+  negativo reprovado é a exceção, porque a execução para antes de qualquer associação real ser vista. Nada no
+  desenho da seção C muda.
+- Os títulos do protocolo da Etapa 4, preservado no fim do arquivo, descem dois níveis (`#` → `###`), para não
+  ficarem no mesmo nível das seções A a D. O texto não muda. A entrada de 2026-11-15 acima (o protocolo do
+  estudo de fatores) dizia que o protocolo antigo estava preservado byte a byte; a partir daqui, ele está
+  preservado **com o texto igual e os títulos rebaixados**, e isso deixa de ser uma conferência feita uma vez:
+  o `testes/test_protocolo.py` confere o texto contra o original (`a56482d`) a cada execução dos testes.
+
+**Evidência:** `testes/test_protocolo.py`.
