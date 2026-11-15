@@ -124,9 +124,9 @@ Fechada aqui, antes de rodar; nenhuma variável entra ou sai depois (regra 7). N
 | fator (infraestrutura) | `dim_iep_prop` | proporção 0–1 | 4 itens de equipamento pedagógico |
 | controle | `ano` | dummies por ano, referência 2013 | **não é fator**: absorve o nível do ano; não recebe efeito, IC nem veredito |
 
-- **Referências declaradas, e por quê** (sem olhar associação): Urbana e Estadual são categorias amplas nas
-  duas etapas e são o termo natural da pergunta (o fator de interesse é ser Rural; a rede estadual é a rede de
-  referência da educação básica pública de RR). A referência não muda o ajuste, só a leitura dos coeficientes.
+- **Referências declaradas, e por quê** (sem olhar associação): Urbana é a referência porque o fator de
+  interesse é ser rural. Estadual é a referência porque é uma categoria ampla nas duas etapas e é a rede de
+  referência da educação básica pública de RR. A referência não muda o ajuste, só a leitura dos coeficientes.
 - **Regra dos 30 e das 10 escolas:** uma categoria de `dependencia` só entra na regressão da etapa se tiver
   **pelo menos 30 escolas-ano e pelo menos 10 escolas distintas** na etapa. Com menos de 30 escolas-ano ou
   menos de 10 escolas distintas, ela sai, junto com as suas linhas, e aparece no relatório só com as duas
