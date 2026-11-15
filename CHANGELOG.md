@@ -6,10 +6,9 @@ A versão fica em `src/versao.py`, e o dataset leva a versão no nome do arquivo
 
 ## [Não lançado]
 
-## [0.2.0] — 2026-11-14
-
 Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de abandono (`docs/DECISOES.md`,
 2026-11-14). O dataset ganha as dimensões de infraestrutura em proporção; as 44 colunas da v0.1.0 não mudam.
+Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
 ### Adicionado
 - **Dataset `v0.2.0`** (`dataset/escolas_rr_v0.2.0.csv`): cinco colunas novas, `dim_iib_prop`, `dim_ida_prop`,
@@ -27,7 +26,6 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 - `docs/tese_base/`: o exemplo do professor (MLPRegressor, King County House Sales), como referência de forma;
   o `kc_house_data.csv` fica fora do git, e o nbstripout não toca o notebook (`.gitattributes`,
   `testes/test_atributos.py`; instalação com `--attributes .gitattributes`, ver `CONTRIBUTING.md`).
-
 - `docs/ROTEIRO.md`: as metas M1–M12 do projeto anterior, cópia literal do arquivo, todas "a revisar".
 - Registro do desvio da regra 12 (pull requests #1 e #2 mergeados sem revisão) no `docs/DECISOES.md`.
 
