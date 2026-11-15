@@ -100,7 +100,12 @@ def test_valores_fixados_iguais_aos_do_protocolo():
     assert "passo de **0,25**" in SEC_C and F.PASSO_IIE == 0.25
     assert f"`GroupKFold(n_splits={F.N_DOBRAS})`" in SEC_C
     assert "10 sementes" in SEC_C and F.SEMENTES_MLP == tuple(range(1, 11))
-    assert f"menos de {F.MIN_CATEGORIA} escolas-ano" in SEC_C
+    assert f"pelo menos {F.MIN_CATEGORIA} escolas-ano e pelo menos {F.MIN_ESCOLAS} escolas distintas" in SEC_C
+    assert (F.MIN_CATEGORIA, F.MIN_ESCOLAS) == (30, 10)
+    assert 'OneHotEncoder(handle_unknown="ignore")' in SEC_C
+    partes = F._pipeline_q1("linear", so_ano=False).named_steps["pre"].transformers
+    codificador = {nome: parte for nome, parte, _ in partes}["cat"]
+    assert codificador.handle_unknown == "ignore"
     assert "mais de 10%" in SEC_C and F.MAX_INVALIDAS == 0.10
     assert f"n_repeats = {F.N_REPETICOES_PERM}" in SEC_C
     assert "t = 2013–2018" in SEC_C and F.JANELA == (2013, 2018)
@@ -169,10 +174,38 @@ def test_regra_dos_30_exclui_categoria_rara_com_contagem():
     d = base_sintetica(federais=4, anos_federais=1, semente=3)    # 4 escolas-ano federais < 30
     u, registro = F.universo_pronto(d, "AF")
     assert "Federal" not in set(u["dependencia"])
-    assert registro["categorias_excluidas"] == {"Federal": 4}
+    assert registro["categorias_excluidas"] == {"Federal": {"escolas_ano": 4, "escolas": 4}}
     tabela0, _ = F.c13_tabela0(d)
     t_af = tabela0[tabela0["etapa"] == "AF"].set_index("chave")["valor"]
-    assert t_af["excluida_regra_30:dependencia=Federal"] == 4
+    assert t_af["excluida:dependencia=Federal:escolas_ano"] == 4
+    assert t_af["excluida:dependencia=Federal:escolas"] == 4
+
+
+def test_categoria_com_escolas_ano_suficientes_e_poucas_escolas_sai():
+    """33 escolas-ano em 6 escolas: passa nas 30 escolas-ano, mas não nas 10 escolas distintas. Sai, e as
+    duas contagens vão para a tabela 0. Uma categoria com 10 escolas e 60 escolas-ano fica."""
+    d = base_sintetica(n_escolas=60, federais=6, anos_federais=6, semente=15)        # 6 escolas × 6 anos = 36
+    federais = d.index[d["dependencia"] == "Federal"]
+    d = d.drop(federais[:3])                                                         # 33 escolas-ano
+    u, registro = F.universo_pronto(d, "AF")
+    assert registro["categorias_excluidas"] == {"Federal": {"escolas_ano": 33, "escolas": 6}}
+    assert "Federal" not in set(u["dependencia"])
+    assert not any("Federal" in c for c in F.matriz_x(u, "principal")[0].columns)
+    t_af = F.c13_tabela0(d)[0].set_index("chave")["valor"]
+    assert t_af["excluida:dependencia=Federal:escolas_ano"] == 33
+    assert t_af["excluida:dependencia=Federal:escolas"] == 6
+    fica = base_sintetica(n_escolas=60, federais=10, anos_federais=6, semente=15)    # 10 escolas, 60 escolas-ano
+    assert F.universo_pronto(fica, "AF")[1]["categorias_excluidas"] == {}
+
+
+def test_etapa_so_com_a_rede_estadual_roda_sem_fator_de_rede():
+    """Consequência esperada no EM: se só a Estadual fica, a rede deixa de ser fator e o resto roda."""
+    d = base_sintetica(n_escolas=40, frac_municipal=0.0, b_rural=3.0, semente=16)
+    u, _ = F.universo_pronto(d, "AF")
+    tab = F.c6_inferencia(u, n_boot=40)
+    assert not any(f.startswith("dependencia=") for f in tab["fator"])
+    assert set(tab["fator"]) == {"localizacao=Rural", *F.DIMENSOES, F.INDICE}
+    assert np.isfinite(F.c7_q1(u, modelos=("linear",)).set_index("variaveis").loc["completo", "delta_r2_cv"])
 
 
 def test_reamostragem_sem_a_categoria_da_coeficiente_na():
@@ -302,7 +335,7 @@ def test_robustez_usa_as_categorias_da_tabela_0():
     d = base_sintetica(n_escolas=50, anos=range(2012, 2020), federais=4, anos_federais=8, semente=14)
     d.loc[(d["co_entidade"] == "E0040") & (d["ano"] == 2012), "dim_iib_prop"] = np.nan   # um preditor vazio
     principal, registro = F.universo_pronto(d, "AF")
-    assert registro["categorias_excluidas"] == {"Federal": 24}
+    assert registro["categorias_excluidas"] == {"Federal": {"escolas_ano": 24, "escolas": 4}}
     tab = F.c10_janela_2012_2019(d, "AF", principal["dependencia"].unique(), n_boot=30)
     assert "dependencia=Federal" not in set(tab["fator"])
     fatores_principal = set(F.c6_inferencia(principal, n_boot=30)["fator"])

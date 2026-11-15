@@ -32,7 +32,7 @@ revisão independente do código contra o protocolo, por outro integrante.
 |---|---|---|
 | C.2 universo e janela | `c2_universo` | `test_recupera_efeitos…` (universo), `test_valores_fixados…` (janela) |
 | C.3 lista fechada e referências | constantes `CATEGORICAS`, `DIMENSOES`, `INDICE`, `CONTROLE` | `test_lista_de_preditores_igual_ao_protocolo` |
-| C.3 regra dos 30 | `c3_regra_dos_30` | `test_regra_dos_30_exclui_categoria_rara_com_contagem` |
+| C.3 regra dos 30 e das 10 escolas | `c3_regra_dos_30` | `test_regra_dos_30_exclui_categoria_rara_com_contagem`, `test_categoria_com_escolas_ano_suficientes_e_poucas_escolas_sai`, `test_etapa_so_com_a_rede_estadual_roda_sem_fator_de_rede` |
 | C.4 modelos e matriz | `matriz_x`, `_ols` | `test_recupera_efeitos…`, `test_reamostragem_sem_a_categoria…` |
 | C.4 VIF | `c4_vif` | coberto por `test_executar_ordem_cabecalho_e_saidas` (03_vif.csv) |
 | C.5 efeitos relatados | `c5_efeitos`, `_escala_decide` | `test_recupera_efeitos…` (escala pp × decide) |

@@ -52,7 +52,8 @@ DIMENSOES = {f"dim_{d.lower()}_prop": len(itens) for d, itens in DIM_ITENS.items
 INDICE = "iie_prop"                           # C.4: modelo secundário
 PASSO_IIE = 0.25                              # C.6: uma dimensão inteira a mais
 CONTROLE = "ano"                              # C.3: controle, não é fator
-MIN_CATEGORIA = 30                            # C.3: regra dos 30
+MIN_CATEGORIA = 30                            # C.3: regra dos 30 (escolas-ano por categoria de rede)
+MIN_ESCOLAS = 10                              # C.3: e das 10 escolas distintas (a unidade do bootstrap)
 N_BOOT = 5000                                 # C.6
 SEMENTE = 20261115                            # C.6, C.8, C.9
 MAX_INVALIDAS = 0.10                          # C.6: reamostragens inválidas
@@ -86,13 +87,17 @@ def c2_universo(d, etapa, anos=JANELA):
 
 
 def c3_regra_dos_30(u):
-    """C.3: categoria de dependencia com menos de MIN_CATEGORIA escolas-ano sai com as suas linhas.
+    """C.3: uma categoria de dependencia só fica com pelo menos MIN_CATEGORIA escolas-ano E pelo menos
+    MIN_ESCOLAS escolas distintas (o bootstrap sorteia escolas); senão sai, com as suas linhas.
 
-    Regra mecânica, aplicada só pela contagem (nunca pela associação).
-    Devolve (universo filtrado, {categoria excluída: contagem})."""
-    cont = u["dependencia"].value_counts()
-    fora = sorted(c for c in cont.index if cont[c] < MIN_CATEGORIA)
-    return u[~u["dependencia"].isin(fora)].copy(), {c: int(cont[c]) for c in fora}
+    Regra mecânica, aplicada só pelas contagens (nunca pela associação).
+    Devolve (universo filtrado, {categoria excluída: {"escolas_ano": n, "escolas": k}})."""
+    escolas_ano = u["dependencia"].value_counts()
+    escolas = u.groupby("dependencia")["co_entidade"].nunique()
+    fora = sorted(c for c in escolas_ano.index
+                  if escolas_ano[c] < MIN_CATEGORIA or escolas[c] < MIN_ESCOLAS)
+    registro = {c: {"escolas_ano": int(escolas_ano[c]), "escolas": int(escolas[c])} for c in fora}
+    return u[~u["dependencia"].isin(fora)].copy(), registro
 
 
 def universo_pronto(d, etapa, anos=JANELA):
@@ -256,7 +261,8 @@ def c6_inferencia(u, anos=JANELA, n_boot=N_BOOT, semente=SEMENTE, com_vereditos=
 
 # ------------------------------------------------------------------ C.7: Q1 (R², ΔR² sobre o modelo só com o ano)
 def _pipeline_q1(modelo, so_ano, semente=None):
-    """C.7: o mesmo pré-processamento para os três modelos, ajustado só no treino de cada dobra (regra 5)."""
+    """C.7: o mesmo pré-processamento para os três modelos, ajustado só no treino de cada dobra (regra 5).
+    handle_unknown="ignore": categoria ausente no treino da dobra fica com as dummies em zero (C.7)."""
     categoricas = [CONTROLE] if so_ano else list(CATEGORICAS) + [CONTROLE]
     partes = [("cat", OneHotEncoder(handle_unknown="ignore"), categoricas)]
     if not so_ano:
@@ -410,7 +416,7 @@ def c10_janela_2012_2019(d, etapa, categorias, n_boot=N_BOOT, semente=SEMENTE):
     """C.10 (b): a mesma análise com t = 2012–2019 (2012 porque dim_ida_prop e dim_idp_prop começam em
     2012; 2019 porque o desfecho é do próprio ano). Sem Holm e sem veredito.
 
-    `categorias` são as de dependencia que ficaram na tabela 0 da janela principal: a regra dos 30 NÃO é
+    `categorias` são as de dependencia que ficaram na tabela 0 da janela principal: a regra do C.3 NÃO é
     reaplicada aqui (C.13: a tabela 0 é o único lugar), para o modelo ter os mesmos fatores do principal.
     As linhas retiradas (preditor vazio; categoria fora da tabela 0) vão como colunas da tabela."""
     u, vazios = c2_universo(d, etapa, JANELA_ROBUSTEZ)
@@ -426,8 +432,8 @@ def c10_janela_2012_2019(d, etapa, categorias, n_boot=N_BOOT, semente=SEMENTE):
 # ------------------------------------------------------------------ C.13: tabela 0, itens, correlação e gravação
 def c13_tabela0(d, anos=JANELA):
     """C.13: a tabela 0 — contagens por etapa (escolas, escolas-ano, categorias), linhas com preditor
-    vazio, a aplicação da regra dos 30 e o tamanho da família F7. É gerada ANTES de qualquer modelo e é o
-    único lugar onde a regra dos 30 é aplicada."""
+    vazio, a aplicação da regra dos 30 e das 10 escolas (com as duas contagens) e o tamanho da família F7.
+    É gerada ANTES de qualquer modelo e é o único lugar onde a regra é aplicada."""
     linhas, universos = [], {}
     for etapa in ETAPAS:
         u, reg = universo_pronto(d, etapa, anos)
@@ -441,8 +447,13 @@ def c13_tabela0(d, anos=JANELA):
         for var in CATEGORICAS:
             for cat, n in u[var].value_counts().items():
                 linhas.append({"etapa": etapa, "chave": f"{var}={cat}", "valor": int(n)})
-        for cat, n in reg["categorias_excluidas"].items():
-            linhas.append({"etapa": etapa, "chave": f"excluida_regra_30:dependencia={cat}", "valor": n})
+        for cat, n in u.groupby("dependencia")["co_entidade"].nunique().items():
+            linhas.append({"etapa": etapa, "chave": f"escolas:dependencia={cat}", "valor": int(n)})
+        for cat, cont in reg["categorias_excluidas"].items():       # as duas contagens de quem saiu (C.3)
+            linhas.append({"etapa": etapa, "chave": f"excluida:dependencia={cat}:escolas_ano",
+                           "valor": cont["escolas_ano"]})
+            linhas.append({"etapa": etapa, "chave": f"excluida:dependencia={cat}:escolas",
+                           "valor": cont["escolas"]})
         X, _ = matriz_x(u, "principal", anos)
         n_familia = len(_fatores_do_modelo(X, "principal")) + 1  # + iie_prop do secundário (C.6)
         linhas.append({"etapa": etapa, "chave": "familia_f7", "valor": n_familia})
