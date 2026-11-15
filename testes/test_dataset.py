@@ -110,6 +110,26 @@ def test_regerar_da_o_arquivo_versionado(base):
 PROP = [f"dim_{d.lower()}_prop" for d in DS.DIM_ITENS] + ["iie_prop"]
 
 
+def test_zano_longe_das_fronteiras_de_arredondamento(base):
+    """O arquivo é o mesmo em qualquer máquina: cada valor *_zano, antes de arredondar, fica a pelo menos
+    FOLGA_MINIMA (10× a maior diferença medida entre Windows e Linux) da fronteira de arredondamento de
+    CASAS_ZANO casas. Se um dado novo cair perto de uma fronteira, este teste avisa antes do arquivo divergir."""
+    bruto = DS.montar(base)
+    passo = 10.0 ** -DS.CASAS_ZANO
+    for c in DS.colunas_zano(bruto):
+        v = bruto[c].dropna().to_numpy(dtype=float)
+        escalado = v / passo
+        folga = np.abs(escalado - np.floor(escalado) - 0.5) * passo
+        assert folga.min() > DS.FOLGA_MINIMA, (
+            f"{c}: um valor está a {folga.min():.1e} de uma fronteira de arredondamento "
+            f"(mínimo {DS.FOLGA_MINIMA:.0e}); reveja CASAS_ZANO em src/dataset.py")
+    # as outras colunas de ponto flutuante não são arredondadas
+    nao_zano = [c for c in bruto.columns if str(bruto[c].dtype) == "Float64" and c not in DS.colunas_zano(bruto)]
+    arred = DS.arredondar(bruto)
+    for c in nao_zano:
+        assert _iguais(arred[c], bruto[c]), c
+
+
 def _iguais(a, b):
     return np.allclose(np.asarray(a, dtype=float), np.asarray(b, dtype=float), equal_nan=True, rtol=0, atol=1e-12)
 

@@ -87,7 +87,7 @@ Nenhum ano sai do dataset: `janela_segura` só marca os anos usados nas análise
 
 ## Infraestrutura: `_zano` × `_prop`
 
-As duas versões resumem os mesmos 18 itens em 4 dimensões e um índice geral. As colunas `dim_*_zano` e `iie_zano` são padronizadas dentro do ano com **todas as escolas** daquele ano (média, desvio e componente principal). As colunas `dim_*_prop` e `iie_prop` usam **só a própria linha**: a fração dos itens da dimensão que a escola tem, e a média simples das 4 frações. Por isso as `_prop` podem ser padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece em 2007–2011 (o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens.
+As duas versões resumem os mesmos 18 itens em 4 dimensões e um índice geral. As colunas `dim_*_zano` e `iie_zano` são padronizadas dentro do ano com **todas as escolas** daquele ano (média, desvio e componente principal). As colunas `dim_*_prop` e `iie_prop` usam **só a própria linha**: a fração dos itens da dimensão que a escola tem, e a média simples das 4 frações. Por isso as `_prop` podem ser padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece em 2007–2011 (o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens. As `_zano` são gravadas com 9 casas decimais, para o arquivo ser o mesmo em qualquer máquina: elas vêm de contas do numpy cuja última casa muda entre sistemas operacionais.
 
 ## Ressalva sobre a procedência
 

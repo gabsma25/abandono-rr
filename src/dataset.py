@@ -13,7 +13,8 @@ Alvos (ano t+1):
 
 Dimensões de infraestrutura em proporção (v0.2.0): dim_<d>_prop = itens que a escola tem ÷ itens da dimensão,
 calculada só com a própria linha (sem média, desvio ou disponibilidade de outras escolas); vazia se algum item da
-dimensão estiver vazio. iie_prop = média simples das 4. As colunas *_zano e iie_zano continuam como estavam.
+dimensão estiver vazio. iie_prop = média simples das 4. As colunas *_zano e iie_zano continuam como estavam, gravadas
+com CASAS_ZANO casas decimais (o arquivo é o mesmo em qualquer máquina).
 
 Nenhum número é digitado: os anos disponíveis do dicionário são contados aqui.
 Uso: python -m src.dataset
@@ -215,7 +216,9 @@ def dicionario(d):
           "padronizadas depois, dentro de um `Pipeline`, só com a parte de treino de cada dobra (`CLAUDE.md`, "
           "regra 5). Uma `_prop` fica vazia quando falta algum item da dimensão, o que só acontece "
           f"em {_anos(d.loc[d['iie_prop'].isna(), 'ano'], d.loc[d['iie_prop'].isna(), 'ano'])} "
-          "(o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens."), "",
+          "(o Censo ainda não perguntava alguns itens); as `_zano` desses anos usam menos itens. "
+          f"As `_zano` são gravadas com {CASAS_ZANO} casas decimais, para o arquivo ser o mesmo em qualquer "
+          "máquina: elas vêm de contas do numpy cuja última casa muda entre sistemas operacionais."), "",
           "## Ressalva sobre a procedência", "",
           ("Os dados de 2007 a 2018 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
           "Eles foram conferidos contra a fonte do INEP uma vez, em 14/10/2026, na máquina do Gustavo "
@@ -225,9 +228,31 @@ def dicionario(d):
     return "\n".join(L)
 
 
+# Arredondamento das colunas *_zano (DECISOES, 2026-11-15). Elas vêm de médias, desvios e componente principal
+# calculados pelo numpy/LAPACK, cuja ordem de operações muda entre plataformas: o iie_zano difere até 3e-15
+# entre Windows e Linux. As demais colunas de ponto flutuante vêm de leitura de texto e de contas IEEE simples
+# (diferença, divisão, média de poucos termos), idênticas em qualquer máquina, e não são arredondadas.
+CASAS_ZANO = 9
+RUIDO_PLATAFORMA = 3e-15           # maior diferença medida entre Windows e Linux (iie_zano)
+FOLGA_MINIMA = 10 * RUIDO_PLATAFORMA  # testes/test_dataset.py exige essa distância às fronteiras de arredondamento
+
+
+def colunas_zano(d):
+    return [c for c in d.columns if c.endswith("_zano")]
+
+
+def arredondar(d):
+    """As colunas *_zano com CASAS_ZANO casas decimais; o + 0.0 transforma −0,0 em 0,0."""
+    d = d.copy()
+    for c in colunas_zano(d):
+        v = d[c].astype("float64").to_numpy()
+        d[c] = pd.array(np.round(v, CASAS_ZANO) + 0.0, dtype="Float64")
+    return d
+
+
 def para_csv(d):
-    """Texto CSV do dataset, como gravado no arquivo (UTF-8, quebra de linha LF)."""
-    return d.to_csv(index=False, lineterminator="\n")
+    """Texto CSV do dataset, como gravado no arquivo (UTF-8, quebra de linha LF), com as *_zano arredondadas."""
+    return arredondar(d).to_csv(index=False, lineterminator="\n")
 
 
 def main():

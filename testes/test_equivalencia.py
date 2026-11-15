@@ -10,7 +10,7 @@ ser exatamente igual ao que o projeto anterior gerou:
      contra as linhas das réguas em 03_classificacao.csv;
   4. o funil (degraus 2 a 7) e o desfecho por ano, 2013–2019, ano a ano e etapa a etapa.
 
-Igualdade exata: nenhuma tolerância. As referências estão em testes/referencias/ (README lá).
+Igualdade exata, com uma exceção: o IIE_zano da base, com tolerância de 1e-12 (TOLERANCIA_PLATAFORMA). As referências estão em testes/referencias/ (README lá).
 Pré-requisito: as saídas regeradas (python rodar_tudo.py, ou os scripts na ordem do README).
 """
 from pathlib import Path
@@ -46,10 +46,19 @@ def _celulas_diferentes(a, b, chave):
     return dif
 
 
+# A única exceção à igualdade exata (docs/DECISOES.md, 2026-11-15): o IIE_zano é a componente principal das 4
+# dimensões, calculada pelo numpy/LAPACK, e difere até 3e-15 entre Windows e Linux. Ele é comparado com
+# tolerância absoluta de 1e-12; todas as outras colunas da base seguem exatas.
+TOLERANCIA_PLATAFORMA = {"IIE_zano": 1e-12}
+
+
 def test_base_atual_identica():
     novo = _ler(SAIDA / "base_atual.parquet", pd.read_parquet)
     ant = pd.read_parquet(REF / "base_atual.parquet")
-    pd.testing.assert_frame_equal(novo, ant, check_exact=True)
+    exatas = [c for c in ant.columns if c not in TOLERANCIA_PLATAFORMA]
+    pd.testing.assert_frame_equal(novo[exatas], ant[exatas], check_exact=True)
+    for c, tol in TOLERANCIA_PLATAFORMA.items():
+        pd.testing.assert_series_equal(novo[c], ant[c], check_exact=False, rtol=0, atol=tol)
 
 
 def test_regua_etapa1_identica():
