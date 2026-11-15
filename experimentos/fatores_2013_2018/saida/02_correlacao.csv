@@ -1,0 +1,100 @@
+# commit=2deb135f1f1165f51e1e80b004e1aad6ea6828fe branch=integracao/gabriela dataset_sha256=0dbdec151fea0d9a84c9b0bd5aa71e371b4ef93060019992882576706ecdf5f9 gerado=2026-11-15
+etapa,variavel,com,r,bloco
+AF,localizacao=Rural,localizacao=Rural,1.0,entre_preditores
+AF,dependencia=Municipal,localizacao=Rural,0.16647032504830847,entre_preditores
+AF,dim_iib_prop,localizacao=Rural,-0.6490537858905205,entre_preditores
+AF,dim_ida_prop,localizacao=Rural,-0.5721683438929525,entre_preditores
+AF,dim_idp_prop,localizacao=Rural,-0.6989425928494505,entre_preditores
+AF,dim_iep_prop,localizacao=Rural,-0.646374210791225,entre_preditores
+AF,iie_prop,localizacao=Rural,-0.7060713971975817,entre_preditores
+AF,localizacao=Rural,dependencia=Municipal,0.16647032504830847,entre_preditores
+AF,dependencia=Municipal,dependencia=Municipal,1.0,entre_preditores
+AF,dim_iib_prop,dependencia=Municipal,-0.037890315334123695,entre_preditores
+AF,dim_ida_prop,dependencia=Municipal,-0.12432114756366314,entre_preditores
+AF,dim_idp_prop,dependencia=Municipal,-0.19720847982360626,entre_preditores
+AF,dim_iep_prop,dependencia=Municipal,-0.14616775770318374,entre_preditores
+AF,iie_prop,dependencia=Municipal,-0.13916261506385627,entre_preditores
+AF,localizacao=Rural,dim_iib_prop,-0.6490537858905205,entre_preditores
+AF,dependencia=Municipal,dim_iib_prop,-0.037890315334123695,entre_preditores
+AF,dim_iib_prop,dim_iib_prop,1.0,entre_preditores
+AF,dim_ida_prop,dim_iib_prop,0.7691122610800244,entre_preditores
+AF,dim_idp_prop,dim_iib_prop,0.7594995643834702,entre_preditores
+AF,dim_iep_prop,dim_iib_prop,0.747309717322445,entre_preditores
+AF,iie_prop,dim_iib_prop,0.9005210994420776,entre_preditores
+AF,localizacao=Rural,dim_ida_prop,-0.5721683438929525,entre_preditores
+AF,dependencia=Municipal,dim_ida_prop,-0.12432114756366314,entre_preditores
+AF,dim_iib_prop,dim_ida_prop,0.7691122610800244,entre_preditores
+AF,dim_ida_prop,dim_ida_prop,1.0,entre_preditores
+AF,dim_idp_prop,dim_ida_prop,0.7917784921552468,entre_preditores
+AF,dim_iep_prop,dim_ida_prop,0.736445733892509,entre_preditores
+AF,iie_prop,dim_ida_prop,0.9077476262890782,entre_preditores
+AF,localizacao=Rural,dim_idp_prop,-0.6989425928494505,entre_preditores
+AF,dependencia=Municipal,dim_idp_prop,-0.19720847982360626,entre_preditores
+AF,dim_iib_prop,dim_idp_prop,0.7594995643834702,entre_preditores
+AF,dim_ida_prop,dim_idp_prop,0.7917784921552468,entre_preditores
+AF,dim_idp_prop,dim_idp_prop,1.0,entre_preditores
+AF,dim_iep_prop,dim_idp_prop,0.7843044943920161,entre_preditores
+AF,iie_prop,dim_idp_prop,0.9152882948154658,entre_preditores
+AF,localizacao=Rural,dim_iep_prop,-0.646374210791225,entre_preditores
+AF,dependencia=Municipal,dim_iep_prop,-0.14616775770318374,entre_preditores
+AF,dim_iib_prop,dim_iep_prop,0.747309717322445,entre_preditores
+AF,dim_ida_prop,dim_iep_prop,0.736445733892509,entre_preditores
+AF,dim_idp_prop,dim_iep_prop,0.7843044943920161,entre_preditores
+AF,dim_iep_prop,dim_iep_prop,1.0,entre_preditores
+AF,iie_prop,dim_iep_prop,0.9060379074048144,entre_preditores
+AF,localizacao=Rural,iie_prop,-0.7060713971975817,entre_preditores
+AF,dependencia=Municipal,iie_prop,-0.13916261506385627,entre_preditores
+AF,dim_iib_prop,iie_prop,0.9005210994420776,entre_preditores
+AF,dim_ida_prop,iie_prop,0.9077476262890782,entre_preditores
+AF,dim_idp_prop,iie_prop,0.9152882948154658,entre_preditores
+AF,dim_iep_prop,iie_prop,0.9060379074048144,entre_preditores
+AF,iie_prop,iie_prop,1.0,entre_preditores
+AF,localizacao=Rural,abandono_t,0.15114421595637947,"com_o_desfecho (só exibição, não decide)"
+AF,dependencia=Municipal,abandono_t,0.046579780151786564,"com_o_desfecho (só exibição, não decide)"
+AF,dim_iib_prop,abandono_t,-0.1246956822020061,"com_o_desfecho (só exibição, não decide)"
+AF,dim_ida_prop,abandono_t,-0.11214983657689322,"com_o_desfecho (só exibição, não decide)"
+AF,dim_idp_prop,abandono_t,-0.10014010585107591,"com_o_desfecho (só exibição, não decide)"
+AF,dim_iep_prop,abandono_t,-0.12112206041859025,"com_o_desfecho (só exibição, não decide)"
+AF,iie_prop,abandono_t,-0.12657913904837617,"com_o_desfecho (só exibição, não decide)"
+EM,localizacao=Rural,localizacao=Rural,1.0,entre_preditores
+EM,dim_iib_prop,localizacao=Rural,-0.6232953589737469,entre_preditores
+EM,dim_ida_prop,localizacao=Rural,-0.4614164692528597,entre_preditores
+EM,dim_idp_prop,localizacao=Rural,-0.6261555264600347,entre_preditores
+EM,dim_iep_prop,localizacao=Rural,-0.5619208568869618,entre_preditores
+EM,iie_prop,localizacao=Rural,-0.6379422095000237,entre_preditores
+EM,localizacao=Rural,dim_iib_prop,-0.6232953589737469,entre_preditores
+EM,dim_iib_prop,dim_iib_prop,1.0,entre_preditores
+EM,dim_ida_prop,dim_iib_prop,0.7165553891187986,entre_preditores
+EM,dim_idp_prop,dim_iib_prop,0.7639430710146916,entre_preditores
+EM,dim_iep_prop,dim_iib_prop,0.6987713453268631,entre_preditores
+EM,iie_prop,dim_iib_prop,0.8919205097166426,entre_preditores
+EM,localizacao=Rural,dim_ida_prop,-0.4614164692528597,entre_preditores
+EM,dim_iib_prop,dim_ida_prop,0.7165553891187986,entre_preditores
+EM,dim_ida_prop,dim_ida_prop,1.0,entre_preditores
+EM,dim_idp_prop,dim_ida_prop,0.7700937656805982,entre_preditores
+EM,dim_iep_prop,dim_ida_prop,0.6658767777414165,entre_preditores
+EM,iie_prop,dim_ida_prop,0.8815940588828475,entre_preditores
+EM,localizacao=Rural,dim_idp_prop,-0.6261555264600347,entre_preditores
+EM,dim_iib_prop,dim_idp_prop,0.7639430710146916,entre_preditores
+EM,dim_ida_prop,dim_idp_prop,0.7700937656805982,entre_preditores
+EM,dim_idp_prop,dim_idp_prop,1.0,entre_preditores
+EM,dim_iep_prop,dim_idp_prop,0.7319544505872171,entre_preditores
+EM,iie_prop,dim_idp_prop,0.9124480565274867,entre_preditores
+EM,localizacao=Rural,dim_iep_prop,-0.5619208568869618,entre_preditores
+EM,dim_iib_prop,dim_iep_prop,0.6987713453268631,entre_preditores
+EM,dim_ida_prop,dim_iep_prop,0.6658767777414165,entre_preditores
+EM,dim_idp_prop,dim_iep_prop,0.7319544505872171,entre_preditores
+EM,dim_iep_prop,dim_iep_prop,1.0,entre_preditores
+EM,iie_prop,dim_iep_prop,0.8764813731058382,entre_preditores
+EM,localizacao=Rural,iie_prop,-0.6379422095000237,entre_preditores
+EM,dim_iib_prop,iie_prop,0.8919205097166426,entre_preditores
+EM,dim_ida_prop,iie_prop,0.8815940588828475,entre_preditores
+EM,dim_idp_prop,iie_prop,0.9124480565274867,entre_preditores
+EM,dim_iep_prop,iie_prop,0.8764813731058382,entre_preditores
+EM,iie_prop,iie_prop,1.0,entre_preditores
+EM,localizacao=Rural,abandono_t,0.11667557624778707,"com_o_desfecho (só exibição, não decide)"
+EM,dim_iib_prop,abandono_t,-0.10336624634198197,"com_o_desfecho (só exibição, não decide)"
+EM,dim_ida_prop,abandono_t,-0.10358171423701812,"com_o_desfecho (só exibição, não decide)"
+EM,dim_idp_prop,abandono_t,-0.10426838609410671,"com_o_desfecho (só exibição, não decide)"
+EM,dim_iep_prop,abandono_t,-0.13922332048061783,"com_o_desfecho (só exibição, não decide)"
+EM,iie_prop,abandono_t,-0.12734626324263207,"com_o_desfecho (só exibição, não decide)"
