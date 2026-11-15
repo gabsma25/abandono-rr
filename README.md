@@ -47,7 +47,7 @@ Orientador: Prof. Bruno Cesar Barreto Figueiredo.
 
 ## Instalação
 
-Pré-requisitos: **Python 3.12** e Git. Cerca de 1,5 GB livres se for baixar os zips do INEP.
+Pré-requisitos: **Python 3.12 ou mais recente** (testado em 3.12 e 3.14) e Git. Cerca de 1,5 GB livres se for baixar os zips do INEP.
 
 ```bash
 git clone <endereço-do-repositório> abandono-rr
