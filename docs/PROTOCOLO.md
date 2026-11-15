@@ -7,6 +7,7 @@ Este arquivo guarda, nesta ordem:
 - **B.** o desenho padrão de avaliação do projeto, que vale como regra para todo estudo novo;
 - **C.** o protocolo do **estudo de fatores associados ao nível de abandono**, escrito **antes** de qualquer
   execução;
+- **D.** o que acontece depois de uma execução (as saídas, o relato e a correção de erros);
 - no fim, o protocolo da Etapa 4 (regressão do abandono em t+1), registrado em 2026-11-11, **nunca executado**,
   guardado inteiro na seção "Protocolo registrado, não executado, substituído em 2026-11-14".
 
@@ -339,15 +340,42 @@ As saídas entram no git no pull request da execução (política das cópias co
 
 ---
 
+## D. Depois da execução (vale para todo estudo)
+
+A execução é única porque o valor do resultado está em ele não ter sido escolhido: se fosse possível rodar,
+olhar, ajustar e rodar de novo, o resultado seria o que as escolhas quisessem, e o p, o IC e o Holm deixariam de
+valer (eles supõem uma análise fixada antes de ver o desfecho). Isto diz o que acontece depois.
+
+1. **As saídas ficam congeladas.** Entram no git no pull request da execução, cada uma com o commit e o sha256
+   do dataset na primeira linha, e nunca são regravadas: o script recusa rodar se a pasta de saídas existir.
+2. **Tudo é relatado como saiu**, inclusive os nulos e os INCONCLUSIVO, com a leitura da seção do protocolo
+   (os vereditos e as frases já fixados), nunca com a leitura que se preferiria. O relatório só exibe números
+   dos arquivos de saída (regras 3 e 4).
+3. **Um erro descoberto depois não apaga o resultado.** Só justifica nova execução um defeito em relação ao
+   protocolo: o código fazendo algo diferente do que o protocolo diz, ou um dado de entrada errado. Discordar
+   do resultado não justifica. Nesse caso:
+   - o defeito, a evidência e a correção ficam no `docs/DECISOES.md` **antes** da nova execução;
+   - a correção do código entra por pull request revisado;
+   - as saídas da primeira execução continuam no git (movidas para uma pasta com o número da execução) e
+     **os dois resultados são relatados lado a lado**, com o motivo da segunda.
+4. **Mudar o desenho depois de ver o resultado é estudo novo:** exige protocolo novo, escrito antes de rodar,
+   e o relato diz que ele foi desenhado depois de conhecido o primeiro resultado (é exploratório).
+5. **Controle negativo reprovado é a exceção:** ele roda primeiro, com o desfecho embaralhado, e a execução para
+   antes de calcular qualquer associação real. Nenhum resultado foi visto, então, corrigida a causa e
+   registrada no `docs/DECISOES.md`, a execução pode ser feita de novo; o 07 reprovado fica no git.
+
+---
+
 ## Protocolo registrado, não executado, substituído em 2026-11-14
 
 O protocolo abaixo (a "Etapa 4": regressão do abandono em t+1 com MLPRegressor) foi registrado em
 2026-11-11 e **nunca foi executado**: a pasta `experimentos/regressao_mlp_2013_2018/` nunca existiu. Com a
 mudança de pergunta do projeto (`docs/DECISOES.md`, 2026-11-14), ele foi substituído pela seção C, que
-aproveita a forma do exemplo do professor para o estudo de nível. O texto segue **inteiro e sem nenhuma
-edição**, inclusive o título original.
+aproveita a forma do exemplo do professor para o estudo de nível. O texto segue **inteiro**; a única
+mudança são os títulos, rebaixados dois níveis (`#` → `###`) para ficarem abaixo desta seção
+(`testes/test_protocolo.py` confere isso contra o original).
 
-# Protocolo da Etapa 4 — regressão do abandono em t+1 com MLPRegressor
+### Protocolo da Etapa 4 — regressão do abandono em t+1 com MLPRegressor
 
 **Estado:** escrito **antes** de qualquer execução. Nenhum modelo da Etapa 4 foi treinado, nenhuma métrica foi
 calculada e nenhum dado do teste foi olhado para escrever este texto. A execução é **única** (`CLAUDE.md`,
@@ -367,7 +395,7 @@ MLPRegressor"):
 
 ---
 
-## 1. As perguntas
+#### 1. As perguntas
 
 Uma pergunta por configuração de variáveis, cada uma com a sua comparação obrigatória:
 
@@ -377,7 +405,7 @@ Uma pergunta por configuração de variáveis, cada uma com a sua comparação o
 
 A régua, a B2 e a Ridge entram nas duas, na mesma tabela.
 
-## 2. Dados e universo
+#### 2. Dados e universo
 
 - **Fonte:** `dataset/escolas_rr_v0.1.0.csv` (dicionário em `dataset/DICIONARIO.md`), lido como está, com
   `co_entidade` e `co_municipio` como string. Nenhuma coluna nova entra no dataset.
@@ -390,7 +418,7 @@ A régua, a B2 e a Ridge entram nas duas, na mesma tabela.
 - **Ausente estrutural** (`CLAUDE.md`, regra 8): escola sem a etapa no ano não está no universo daquele ano e
   etapa. Nada vira 0.
 
-## 3. Divisão temporal (fixa, decidida antes)
+#### 3. Divisão temporal (fixa, decidida antes)
 
 | Papel | Anos t (preditores) | Anos t+1 (desfecho `abandono_t1`) |
 |---|---|---|
@@ -406,9 +434,9 @@ A régua, a B2 e a Ridge entram nas duas, na mesma tabela.
 - O resultado desta etapa é, então, uma **nova leitura de anos já usados**, com outra pergunta (o valor da taxa, e não
   o rótulo de alto risco). Não é uma avaliação em dados virgens, e o relatório tem que dizer isso.
 
-## 4. Variáveis
+#### 4. Variáveis
 
-### 4.1 O que fica fora antes de tudo (por pertinência, decidido agora)
+##### 4.1 O que fica fora antes de tudo (por pertinência, decidido agora)
 
 Equivale à célula `df.drop([...])` do exemplo. Nenhuma exclusão usa o desfecho.
 
@@ -422,7 +450,7 @@ Equivale à célula `df.drop([...])` do exemplo. Nenhuma exclusão usa o desfech
 | os 18 itens `iib_*`, `ida_*`, `idp_*`, `iep_*` | resumidos pelas quatro dimensões e pelo IIE, como na classificação de 2026-11-10 |
 | `infra_itens_completos`, `infra_fonte_artigo` | marcadores de qualidade do dado, não características da escola |
 
-### 4.2 As candidatas de cada configuração
+##### 4.2 As candidatas de cada configuração
 
 A lista vem nesta ordem, que é também a **ordem de prioridade** usada na regra de redundância (4.3).
 
@@ -440,7 +468,7 @@ A lista vem nesta ordem, que é também a **ordem de prioridade** usada na regra
 - As dimensões `*_zano` são padronizadas dentro de cada ano, com as escolas daquele ano
   (`src/estendida/05_indices_infra.py`). Isso usa só dados do próprio ano t, disponíveis em t; não usa o desfecho.
 
-### 4.3 A regra de seleção: redundância entre preditores, só no treino
+##### 4.3 A regra de seleção: redundância entre preditores, só no treino
 
 Equivale aos mapas de correlação do exemplo, mas a correlação é **entre preditores**, nunca com o desfecho
 (`CLAUDE.md`, regra 7).
@@ -459,7 +487,7 @@ A lista final de cada etapa × configuração e o motivo de cada exclusão vão 
 `saida/04_variaveis.csv` antes do ajuste de qualquer modelo. Os mesmos conjuntos valem para a rede (as três
 topologias) e para a Ridge.
 
-## 5. Pré-processamento (dentro do `Pipeline`, ajustado só no treino)
+#### 5. Pré-processamento (dentro do `Pipeline`, ajustado só no treino)
 
 - **Numéricas:** `SimpleImputer(strategy="median", add_indicator=True)` e depois `StandardScaler()`, como na
   classificação de 2026-11-10. A imputação é necessária porque a infraestrutura tem vazios; o exemplo não tem.
@@ -471,9 +499,9 @@ topologias) e para a Ridge.
   (`y.max()`), o que usa o teste. As previsões voltam para pontos percentuais (× 100) antes de qualquer métrica.
   As previsões **não são cortadas** em [0, 100] (o exemplo não corta); o relatório conta quantas ficaram fora.
 
-## 6. Modelos
+#### 6. Modelos
 
-### 6.1 A rede (resultado principal)
+##### 6.1 A rede (resultado principal)
 
 `MLPRegressor` com os parâmetros do exemplo, sem nenhum ajuste:
 
@@ -490,20 +518,20 @@ MLPRegressor(hidden_layer_sizes=(50,), activation="logistic", solver="adam",
 - `early_stopping=True` separa, ao acaso, 10% das linhas **de treino** (`validation_fraction=0.1`, o padrão) para
   decidir quando parar. Só usa anos de treino; não é uma divisão temporal. Fica registrado como diferença conhecida.
 
-### 6.2 Sensibilidade de topologia (decidida antes, não substitui o principal)
+##### 6.2 Sensibilidade de topologia (decidida antes, não substitui o principal)
 
 A mesma rede, com as mesmas variáveis, sementes e métricas, também com `hidden_layer_sizes=(10,)` e `(25,)`.
 Os resultados são relatados **ao lado** do principal. **Nenhum deles substitui o resultado de 50 neurônios,
 qualquer que seja o resultado.** Não entram nas famílias de Holm e não sustentam nenhuma frase de "supera".
 
-### 6.3 Validação cruzada temporal no treino (livro, 5.5.1) — só descritiva
+##### 6.3 Validação cruzada temporal no treino (livro, 5.5.1) — só descritiva
 
 Dentro do treino, janela expansiva por ano do desfecho: treina até o desfecho de 2014 e valida no de 2015; treina até
 2015 e valida em 2016; treina até 2016 e valida em 2017. Cada dobra roda com 10, 25 e 50 neurônios e as 10
 sementes, e relata o MAE médio e o desvio. **Não escolhe nada**: a topologia principal já está fixada em 6.1, e os
 desfechos de 2016 e 2017 são anos de teste já usados (regra 10).
 
-### 6.4 Comparações obrigatórias (na mesma tabela)
+##### 6.4 Comparações obrigatórias (na mesma tabela)
 
 | Nome | Previsão de `abandono_t1` | Ajuste |
 |---|---|---|
@@ -511,7 +539,7 @@ desfechos de 2016 e 2017 são anos de teste já usados (regra 10).
 | **B2** | mediana de `abandono_t1` no treino por `localizacao` × `dependencia`; célula sem escola no treino recebe a mediana geral do treino (`src/avaliacao/baselines.b2_mediana_estrato`) | só treino |
 | **Ridge** | `Ridge(alpha=1.0)`, com o mesmo `Pipeline`, as mesmas variáveis e o mesmo alvo ÷ 100 da rede, em cada configuração | só treino; `alpha` fixo, não ajustado |
 
-## 7. Sementes (livro, 5.5.5)
+#### 7. Sementes (livro, 5.5.5)
 
 - A rede é treinada com **10 sementes** fixas: `random_state` = 1, 2, …, 10. A semente controla a inicialização dos
   pesos e o sorteio interno do `early_stopping`.
@@ -520,7 +548,7 @@ desfechos de 2016 e 2017 são anos de teste já usados (regra 10).
   (seria outro modelo, um comitê).
 - A régua, a B2 e a Ridge são determinísticas: uma execução, desvio não se aplica.
 
-## 8. Métricas
+#### 8. Métricas
 
 Calculadas em pontos percentuais, por etapa e configuração:
 
@@ -538,9 +566,9 @@ separadamente, como descrição.
 **Não se usa o MAPE.** O abandono tem muitos zeros, e o erro percentual divide por eles. A curva de perda do
 treinamento (`loss_curve_`) é guardada para cada semente, mas não é métrica de avaliação.
 
-## 9. Intervalos, testes e a regra de leitura (escrita antes)
+#### 9. Intervalos, testes e a regra de leitura (escrita antes)
 
-### 9.1 Intervalo de confiança
+##### 9.1 Intervalo de confiança
 
 - **Bootstrap por escola** (cluster): sorteiam-se escolas (`co_entidade`) com reposição, mantendo os dois anos de
   teste de cada escola sorteada (`src/avaliacao/bootstrap.Agrupado`). **5.000 reamostragens**, semente fixa
@@ -550,7 +578,7 @@ treinamento (`loss_curve_`) é guardada para cada semente, mas não é métrica 
   intervalo é o da média das sementes.
 - IC 95%: percentis 2,5 e 97,5. O p-valor de uma diferença é o bootstrap bilateral de `bootstrap.p_bootstrap`.
 
-### 9.2 As famílias de teste e a correção de Holm
+##### 9.2 As famílias de teste e a correção de Holm
 
 | Família | Diferença testada (MAE) | Testes |
 |---|---|---|
@@ -559,7 +587,7 @@ treinamento (`loss_curve_`) é guardada para cada semente, mas não é métrica 
 
 O Holm é aplicado dentro de cada família, com α = 0,05.
 
-### 9.3 A regra de leitura
+##### 9.3 A regra de leitura
 
 A rede **"supera a régua"** (F1) numa etapa e configuração **só se as duas coisas** acontecerem:
 
@@ -573,7 +601,7 @@ Tudo o mais é **descritivo**, com IC e sem frase de "supera": a rede − Ridge,
 B2, as diferenças em RMSE, R² e Recall@20%, a sensibilidade de topologia (6.2) e a validação cruzada (6.3).
 Resultado nulo também é resultado, e é relatado do mesmo jeito.
 
-## 10. O que a execução grava
+#### 10. O que a execução grava
 
 Código em `experimentos/regressao_mlp_2013_2018/04_regressao_mlp.py`, que lê o dataset e as funções de `src/` e
 não escreve fora da própria pasta. Saídas em `experimentos/regressao_mlp_2013_2018/saida/`:
@@ -595,7 +623,7 @@ saídas de `experimentos/classificacao_2013_2018/saida/`, citadas no `docs/BASEL
 precisa abrir uma exceção para `experimentos/*/saida/`, ou o resultado desta etapa também não chega a quem clonar o
 repositório.
 
-## 11. O que mudou em relação ao exemplo, e por quê
+#### 11. O que mudou em relação ao exemplo, e por quê
 
 | No exemplo | Aqui | Por quê | Livro |
 |---|---|---|---|
@@ -616,7 +644,7 @@ Os números 5.5.1 (validação cruzada) e 5.5.5 (várias execuções) vêm do pe
 conferir", a seção do cap. 5 ainda precisa ser localizada no exemplar antes do merge; nenhum número de seção foi
 atribuído sem conferência.
 
-## 12. O que esta avaliação responde e o que não responde
+#### 12. O que esta avaliação responde e o que não responde
 
 - **Responde:** se a rede prevê o **valor** do abandono de t+1 com erro absoluto menor que repetir o abandono de t−1,
   nas mesmas escolas, nos desfechos de 2018 e 2019.
