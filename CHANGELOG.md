@@ -53,6 +53,10 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   no `docs/DECISOES.md`, 2026-11-15.
 - `docs/PROTOCOLO.md`, seção D, "Depois da execução": por que a execução é única e o que acontece depois
   dela (saídas congeladas, relato, correção de erro declarada, estudo novo, controle negativo reprovado).
+- Revisão do João no PR #9 (`docs/revisoes/2026-11-15_joao_pr9.md`; decisões no `docs/DECISOES.md`, 2026-11-15):
+  a regra dos 30 passa a exigir também 10 escolas distintas por categoria de rede; o motivo da referência Urbana;
+  a colinearidade entre localização e infraestrutura nas expectativas e na leitura; o `handle_unknown` do
+  `OneHotEncoder`. Só texto da seção C do protocolo. O `README.md` pede Python 3.12 ou mais recente.
 
 ### Corrigido
 - **O `rodar_tudo.py` funciona num clone limpo, sem `dados/origem/`** (issue #6): a etapa 01 lê cada ano do
