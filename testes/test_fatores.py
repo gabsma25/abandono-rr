@@ -230,7 +230,8 @@ def test_groupkfold_nao_poe_a_mesma_escola_dos_dois_lados():
 
 
 # ------------------------------------------------------------------ 7. travas da execução única
-def test_sem_executar_nada_roda(capsys, monkeypatch):
+def test_sem_executar_nada_roda(capsys, monkeypatch, tmp_path):
+    monkeypatch.setattr(F, "SAIDA", tmp_path / "saida")
     def nao_pode(*a, **k):
         raise AssertionError("leu o dataset sem --executar")
     monkeypatch.setattr(F, "ler_dataset", nao_pode)
