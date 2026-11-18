@@ -676,3 +676,25 @@ para o `curl.exe` dentro do `src/aquisicao.py` fica como pendência.
 e 2018; página HTML no lugar do zip; idempotência; linhas existentes do manifesto e do fallback intocadas, byte a
 byte) e `testes/test_conferir_cache.py` (zip sintético do Censo: idêntico, célula alterada, estatística nacional
 alterada; `dados/cache/` não muda).
+
+---
+
+## 2026-11-18 — As saídas do levantamento das colunas do Censo entram no git
+
+**O que é.** `experimentos/levantamento_colunas_censo/levantar.py` lê só os cabeçalhos dos CSV dos zips do Censo
+Escolar 2007–2025 (`dados/origem/censo/`) e lista as colunas de cada ano e as candidatas a características novas
+(início de M1/M6). Não lê nenhum valor nem o rendimento: não olha o desfecho (regra 7).
+
+**Decisão (Gustavo).** A pasta `experimentos/levantamento_colunas_censo/saida/` ganha uma exceção no `.gitignore`,
+como a `experimentos/fatores_2013_2018/saida/`, e a pasta inteira é versionada: `arquivos.csv`, `candidatas.csv`,
+`colunas_outras_2025.csv`, `colunas_por_ano.csv` e `resumo.txt`.
+
+**Por quê.** O levantamento só se regera com os zips do INEP, e hoje só o Gustavo os tem: o INEP recusa as
+conexões do Python (`--baixar` falha; ver a entrada "Os zips de 2007–2018 entram no manifesto"). Sem os arquivos
+no git, o grupo não teria como ver o resultado antes de decidir quais colunas entram no dataset.
+
+**O que não é.** Não é a escolha das colunas: essa é do grupo, por pertinência, cobertura e estabilidade, e fica
+registrada aqui quando for feita. "Existe no cabeçalho" não é "foi coletada"; essa conferência é um segundo passo,
+só para as candidatas escolhidas.
+
+**Evidência:** `experimentos/levantamento_colunas_censo/README.md` e os arquivos em `saida/`.

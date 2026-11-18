@@ -1,0 +1,9 @@
+Levantamento das colunas do Censo Escolar (2007–2025), só cabeçalhos.
+Zips lidos: 19. Anos: 19.
+Colunas distintas na tabela principal, somando os anos: 507.
+Colunas presentes em todos os 19 anos: 210.
+Colunas por ano (tabela principal): 2007=370, 2008=370, 2009=370, 2010=370, 2011=370, 2012=370, 2013=370, 2014=370, 2015=370, 2016=370, 2017=370, 2018=370, 2019=370, 2020=370, 2021=370, 2022=385, 2023=408, 2024=426, 2025=290.
+2021 -> 2022: +15 colunas, -0 colunas.
+2022 -> 2023: +71 colunas, -48 colunas.
+2023 -> 2024: +18 colunas, -0 colunas.
+2024 -> 2025: +33 colunas, -169 colunas.

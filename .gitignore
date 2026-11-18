@@ -19,3 +19,5 @@ saida/
 # Exceção: as saídas da execução única do estudo de fatores entram no git (docs/PROTOCOLO.md, C.13 e D.1).
 # Com a pasta versionada, a trava "recusa se saida/ existe" vale em qualquer clone.
 !experimentos/fatores_2013_2018/saida/
+# Exceção: o levantamento das colunas do Censo só se regera com os zips do INEP (docs/DECISOES.md, 2026-11-18).
+!experimentos/levantamento_colunas_censo/saida/

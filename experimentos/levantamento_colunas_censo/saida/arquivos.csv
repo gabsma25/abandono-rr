@@ -1,0 +1,27 @@
+ano,zip,csv,bytes,n_colunas,separador,principal
+2007,microdados_censo_escolar_2007.zip,microdados_ed_basica_2007/dados/microdados_ed_basica_2007.csv,144898082,370,;,1
+2008,microdados_censo_escolar_2008.zip,microdados_ed_basica_2008/dados/microdados_ed_basica_2008.csv,195181862,370,;,1
+2009,microdados_censo_escolar_2009.zip,microdados_ed_basica_2009/dados/microdados_ed_basica_2009.csv,193502759,370,;,1
+2010,microdados_censo_escolar_2010.zip,microdados_ed_basica_2010/dados/microdados_ed_basica_2010.csv,192692441,370,;,1
+2011,microdados_censo_escolar_2011.zip,microdados_ed_basica_2011/dados/microdados_ed_basica_2011.csv,228004228,370,;,1
+2012,microdados_censo_escolar_2012.zip,microdados_ed_basica_2012/dados/microdados_ed_basica_2012.csv,228361454,370,;,1
+2013,microdados_censo_escolar_2013.zip,microdados_ed_basica_2013/dados/microdados_ed_basica_2013.csv,229171472,370,;,1
+2014,microdados_censo_escolar_2014.zip,microdados_ed_basica_2014/dados/microdados_ed_basica_2014.csv,229662568,370,;,1
+2015,microdados_censo_escolar_2015.zip,microdados_ed_basica_2015/dados/microdados_ed_basica_2015.csv,225243680,370,;,1
+2016,microdados_censo_escolar_2016.zip,microdados_ed_basica_2016/dados/microdados_ed_basica_2016.csv,225018852,370,;,1
+2017,microdados_censo_escolar_2017.zip,microdados_ed_basica_2017/dados/microdados_ed_basica_2017.csv,224364311,370,;,1
+2018,microdados_censo_escolar_2018.zip,microdados_ed_basica_2018/dados/microdados_ed_basica_2018.csv,224419401,370,;,1
+2019,microdados_censo_escolar_2019.zip,microdados_ed_basica_2019/dados/microdados_ed_basica_2019.csv,217066579,370,;,1
+2020,microdados_censo_escolar_2020.zip,microdados_ed_basica_2020/dados/microdados_ed_basica_2020.CSV,213247882,370,;,1
+2021,microdados_censo_escolar_2021.zip,microdados_ed_basica_2021/dados/microdados_ed_basica_2021.csv,210559443,370,;,1
+2022,microdados_censo_escolar_2022.zip,Microdados do Censo Escolar da Educaç╞o Básica 2022/dados/microdados_ed_basica_2022.csv,190008267,385,;,1
+2023,microdados_censo_escolar_2023.zip,microdados_censo_escolar_2023/dados/microdados_ed_basica_2023.csv,210035219,408,;,1
+2023,microdados_censo_escolar_2023.zip,microdados_censo_escolar_2023/dados/suplemento_cursos_tecnicos_2023.csv,4018614,29,;,0
+2024,microdados_censo_escolar_2024.zip,microdados_censo_escolar_2024_defeso/dados/microdados_ed_basica_2024.csv,217925280,426,;,1
+2024,microdados_censo_escolar_2024.zip,microdados_censo_escolar_2024_defeso/dados/suplemento_cursos_tecnicos_2024.csv,4717121,29,;,0
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Curso_Tecnico_2025_V2.csv,8221173,49,;,0
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Docente_2025_V2.csv,88344680,184,;,0
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Escola_2025_V2.csv,141425160,290,;,1
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Gestor_Escolar_2025_v2.csv,52458104,88,;,0
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Matricula_2025_V2.csv,123318048,263,;,0
+2025,microdados_censo_escolar_2025_.zip,microdados_censo_escolar_2025_v2/dados/Tabela_Turma_2025_V2.csv,99920475,218,;,0
