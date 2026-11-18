@@ -11,6 +11,14 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
 ### Adicionado
+- **Registro de anos novos no manifesto** (`src/aquisicao.py`, `--registrar ANOS` e `--aplicar-registro`): baixa ou
+  copia os zips de microdados e de rendimento por escola para `dados/cache_download/registro/`, propõe as linhas do
+  `dados/MANIFEST.csv` e acrescenta os links ao `src/fontes_inep.csv`; a proposta revisada entra no manifesto antes
+  das linhas de 2019. Para trazer 2007–2018, que só existiam como cache (`docs/DECISOES.md`, 2026-11-18). Testes em
+  `testes/test_registro.py`.
+- `src/estendida/conferir_cache.py`: refaz numa pasta temporária o cache das etapas 01 e 03 de cada ano com zip e
+  compara com `dados/cache/` célula a célula (`saida/relatorios/conferencia_cache.csv`); testes em
+  `testes/test_conferir_cache.py`.
 - **Dataset `v0.2.0`** (`dataset/escolas_rr_v0.2.0.csv`): cinco colunas novas, `dim_iib_prop`, `dim_ida_prop`,
   `dim_idp_prop`, `dim_iep_prop` (proporção dos itens de cada dimensão que a escola tem, calculada só com a própria
   linha; vazia se faltar item) e `iie_prop` (média simples das quatro). As 44 colunas da v0.1.0 ficam idênticas,
@@ -34,6 +42,10 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   do protocolo ganhou o item da falha técnica no meio da execução.
 
 ### Alterado
+- **Procedência de 2007–2018 conferida:** os 38 zips do INEP de 2007–2025 foram baixados do zero em 2026-11-18, e o
+  cache refeito a partir deles é idêntico ao versionado nos 19 anos (`docs/DECISOES.md`, 2026-11-18); a ressalva do
+  `dataset/DICIONARIO.md` (via `src/dataset.py`) e do `README.md` muda de acordo. O `dados/MANIFEST.csv` ganha as 24
+  linhas de 2007–2018, e o `src/fontes_inep.csv`, os links delas.
 - **A pergunta do projeto muda** (`docs/DECISOES.md`, 2026-11-14): de antecipar as escolas de abandono alto no ano
   seguinte para os fatores estruturais associados ao nível de abandono da escola-ano (Q1–Q4). O `README.md` traz a
   pergunta nova, o que já foi respondido (a Q4) e o que o resultado não é. O artigo da disciplina de Mineração de
@@ -59,6 +71,11 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `OneHotEncoder`. Só texto da seção C do protocolo. O `README.md` pede Python 3.12 ou mais recente.
 
 ### Corrigido
+- `testes/test_fatores.py::test_sem_executar_nada_roda` usa uma pasta temporária: falhava em qualquer clone depois
+  de as saídas do estudo de fatores serem versionadas (`c2b9adb`). Mergeado direto, sem revisão (`docs/DECISOES.md`,
+  2026-11-18).
+- `testes/test_validacoes.py`: a conferência do teste 03 com os zips originais exige os anos que tiverem zip, e não
+  só 2019–2025.
 - **O `rodar_tudo.py` funciona num clone limpo, sem `dados/origem/`** (issue #6): a etapa 01 lê cada ano do
   cache versionado quando não há zips, em vez de parar com `FileNotFoundError`
   (`testes/test_etapa01_sem_origem.py`).

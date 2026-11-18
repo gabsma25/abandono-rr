@@ -590,3 +590,89 @@ que rodou, e qualquer mudança pedida depois vira um estudo novo, com protocolo 
 
 **Data pública do protocolo.** O protocolo não foi depositado em repositório externo: ele tem data pública só
 pelo push no GitHub (branches `docs/leva-pilha-ao-main` e `integracao/gabriela`), feito antes da execução.
+
+---
+
+## 2026-11-18 — Merge direto da correção do `test_sem_executar_nada_roda` (desvio da regra 12)
+
+**O que aconteceu.** Depois do commit `c2b9adb` (saídas do estudo de fatores versionadas), a pasta
+`experimentos/fatores_2013_2018/saida/` existe em todo clone, e o `testes/test_fatores.py::test_sem_executar_nada_roda`,
+que conferia a pasta real, falhava em qualquer máquina (os "109 aprovados" de 2026-11-15 são do commit `9678207`,
+anterior às saídas). O teste passou a usar uma pasta temporária, como o `test_executar_recusa_saida_existente`
+(commit `62e66a9`). O Gustavo mergeou direto na `integracao/gabriela`, sem revisão, em 2026-11-18.
+
+**Alcance.** Duas linhas num teste; o que ele confere não mudou. `python rodar_tudo.py` no Windows, sem os zips:
+109 aprovados, 2 pulados.
+
+---
+
+## 2026-11-18 — Os zips de 2007–2018 entram no manifesto (registro, depois conferência)
+
+**O que faltava.** Na migração (2026-11-11), o `src/aquisicao.py` veio do `abandono-escolar`, onde o manifesto só
+tinha 2019–2025; de 2007–2018 veio só o cache do Gustavo (`dados/cache/`). A aquisição só obtém o que o manifesto
+lista, com sha256, e não havia como pôr um ano novo nele. Por isso 2007–2018, que contêm a janela de todas as
+análises, "não podem ser reverificados" (`dataset/DICIONARIO.md`), e nenhuma coluna nova do Censo pode entrar
+nesses anos (o cache só tem as 22 colunas dos 18 itens).
+
+**Decisão (Gustavo).** O `src/aquisicao.py` ganha o registro de anos novos, em dois passos com revisão no meio:
+
+1. `python -m src.aquisicao --registrar 2007-2018 --baixar` (ou `--origem-local PASTA`): raspa as páginas do INEP
+   (microdados e aba de cada ano de tx_rend), baixa os zips de microdados e de rendimento por escola dos anos que o
+   manifesto ainda não tem para `dados/cache_download/registro/` (nunca para `dados/origem/`), grava a proposta de
+   linhas em `dados/cache_download/registro/manifesto_proposto.csv` e acrescenta os links novos ao
+   `src/fontes_inep.csv`, sem mexer nas linhas existentes;
+2. depois de revisada a proposta, `python -m src.aquisicao --aplicar-registro` acrescenta as linhas ao
+   `dados/MANIFEST.csv`, antes das de 2019 da mesma tabela; recusa tudo se um arquivo já registrado vier com outro
+   sha256.
+
+Depois disso, a aquisição normal (`--baixar` ou `--origem-local`) leva os zips para `dados/origem/` conferindo o hash,
+como para 2019–2025. O nome registrado é o publicado pelo INEP, que muda de padrão ao longo dos anos
+(`tx_rendimento_escolas_2007.zip`, `TX_REND_ESCOLAS_2018.zip`, `tx_rend_escolas_2019.zip`, conferidos nas abas do
+INEP nesta data); a tabela do zip sai do nome pela mesma regra do `01_tx_rend_bruto.mapear_zips_escola`.
+
+**Os links de 2007–2018 no fallback estático.** Na primeira execução (2026-11-18), o `www.gov.br` derrubou todas
+as conexões do script (ConnectionResetError 10054), e a raspagem não achou nenhum link. O registro passou a usar o
+fallback estático para o que a raspagem não achar, como a aquisição normal já fazia, e o `src/fontes_inep.csv`
+ganhou os 24 links: os 12 de microdados lidos da captura de 2026-09-30 (`testes/fixtures/html/`, a mesma página
+real, com o "Atualizado em" de cada item); os 12 de rendimento por escola lidos nas abas de cada ano do INEP em
+2026-11-18, pelo assistente, fora do script. Os nomes mudam quase todo ano (`tx_rendimento_escola_2008.zip`,
+`tx_rendimento_escolas_2010_19082011.zip`, `tx_rendimento_escolas_2011_2.zip`, `TAXA_REND_2016_ESCOLAS.zip`). Um
+link errado não passa despercebido: o download falha ou a conferência do conteúdo diverge.
+
+**Registrar não é conferir.** O sha256 só garante que o arquivo é o mesmo daqui em diante. A conferência do conteúdo
+é feita por:
+
+- `python src/estendida/conferir_cache.py`: refaz numa pasta temporária, com as mesmas funções das etapas 01 e 03, o
+  cache de cada ano que tem zip, e compara com `dados/cache/` célula a célula (e a estatística nacional do Censo);
+  grava `saida/relatorios/conferencia_cache.csv` e nunca escreve em `dados/cache/`;
+- o teste 03 (`--completo`), que já lia os zips de 2007–2018 quando presentes (relatório 04, §4: 19 de 19 anos em
+  14/10/2026). O `testes/test_validacoes.py` passa a exigir a frase com os anos que tiverem zip, e não só 2019–2025.
+
+**Alternativas descartadas:** gravar o sha256 direto no manifesto ao baixar (o manifesto deixaria de ser a
+especificação revisada do que se obtém); copiar à mão os zips antigos do projeto anterior sem registro (repetiria a
+situação de outubro, com 179 zips fora do manifesto).
+
+**O INEP recusou o Python; o download foi feito com o `curl.exe`.** Em 2026-11-18, também o
+`download.inep.gov.br` derrubou toda conexão do `requests`, com qualquer User-Agent (diagnóstico com o do projeto e
+com o de um navegador), mas aceitou o navegador e o `curl.exe` do Windows. Os 38 zips de 2007–2025 foram baixados
+do zero com o `curl.exe`, a partir dos links do `src/fontes_inep.csv`, para `dados/cache_download/inep_curl/`, e
+entraram pelo caminho normal: `--registrar 2007-2018 --origem-local`, `--aplicar-registro` e `--origem-local`. O
+`--baixar` do projeto continua dependente do `requests` e, enquanto o INEP recusar o Python, falha: levar o download
+para o `curl.exe` dentro do `src/aquisicao.py` fica como pendência.
+
+**Resultado (2026-11-18, Windows, Gustavo).**
+
+- **Registro:** 24 linhas novas no `dados/MANIFEST.csv` (2007–2018, microdados e rendimento por escola), o
+  sha256 de cada zip baixado nesta data.
+- **2019–2025 conferem com o manifesto de setembro:** os 14 zips baixados de novo têm o mesmo sha256 registrado pela
+  Gabriela em 2026-09-02/15 (`adquirir`: 38 copiados, 0 faltando). O INEP não mudou esses arquivos desde então.
+- **O cache é o dos zips:** `src/estendida/conferir_cache.py`, 19 anos × 2 etapas, **38 de 38 idênticos**
+  (rendimento por escola da etapa 01; colunas cruas de RR e estatística nacional da etapa 03), em
+  `saida/relatorios/conferencia_cache.csv`.
+- A ressalva de procedência (`dataset/DICIONARIO.md`, gerada por `src/dataset.py`, e `README.md`) passa a dizer
+  que os 19 anos foram conferidos contra os zips originais.
+
+**Evidência:** `testes/test_registro.py` (servidor falso com o layout real das páginas; nomes reais de 2007, 2014
+e 2018; página HTML no lugar do zip; idempotência; linhas existentes do manifesto e do fallback intocadas, byte a
+byte) e `testes/test_conferir_cache.py` (zip sintético do Censo: idêntico, célula alterada, estatística nacional
+alterada; `dados/cache/` não muda).
