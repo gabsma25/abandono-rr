@@ -676,3 +676,45 @@ para o `curl.exe` dentro do `src/aquisicao.py` fica como pendência.
 e 2018; página HTML no lugar do zip; idempotência; linhas existentes do manifesto e do fallback intocadas, byte a
 byte) e `testes/test_conferir_cache.py` (zip sintético do Censo: idêntico, célula alterada, estatística nacional
 alterada; `dados/cache/` não muda).
+
+---
+
+## 2026-11-19 — Cache completo do Censo: todas as colunas de RR, extraídas uma vez
+
+**O problema.** O cache do Censo (`dados/cache/censo/`) só guarda as 22 colunas dos 18 itens de infraestrutura.
+Qualquer coluna nova (metas M1/M6 do `docs/ROTEIRO.md`; candidatas em `experimentos/levantamento_colunas_censo/`)
+exigiria voltar aos zips, que hoje só o Gustavo tem, e mexer no 03, que é o único que lê o Censo. Cada grupo novo
+de colunas seria mais uma leitura dos ~2 GB de zips e mais uma mudança na sequência do pipeline.
+
+**Decisão (Gustavo, 2026-11-19).** Extrair uma única vez, de cada zip registrado no `dados/MANIFEST.csv`, as linhas
+de Roraima com TODAS as colunas de TODAS as tabelas (inclusive as seis de 2025 e o suplemento de cursos técnicos de
+2023–2024), para `dados/cache/censo_completo/`, por um script novo fora do fluxo normal,
+`src/estendida/extrair_censo.py`. É o primeiro passo da reorganização do pipeline em grupos de colunas; os outros
+(a pasta de grupos com o de infraestrutura, e o primeiro grupo novo) vêm em pull requests próprios.
+
+- **Valores como texto, exatamente como no CSV.** O cache não converte, não troca `''` ou `'--'` por ausente e não
+  renomeia (regra 1); a conversão e a regra de ausente (regra 8) ficam com quem usa a coluna.
+- **Contagens nacionais por coluna** (`{ano}_{tabela}_nacional.csv`: linhas, preenchidas, numéricas, iguais a 1,
+  maiores que 0). A regra de "coletada" do 03 (alguma escola do Brasil com valor 1) serve para indicadores 0/1;
+  contagens precisam de outra, e cada grupo declara a sua. Com o Brasil todo contado agora, nenhum grupo precisa
+  voltar aos zips.
+- **Recorte por `SG_UF == "RR"`**, a mesma regra do 03; todas as tabelas têm `SG_UF` e `CO_ENTIDADE`
+  (`experimentos/levantamento_colunas_censo/saida/`).
+- **O cache antigo de 22 colunas fica onde está e não muda:** o 03, a base e os resultados publicados continuam
+  lendo dele. Trocar o 03 para ler o cache completo é o passo seguinte, com teste de equivalência byte a byte.
+- **Só leitura depois de gravado.** O script confere o sha256 de cada zip contra o manifesto antes de ler, grava
+  numa pasta `.parcial` e só a renomeia para `dados/cache/censo_completo/` se todos os anos deram certo; recusa
+  gravar se a pasta já existe. Para refazer e comparar, `--destino PASTA_NOVA`. Cada arquivo gravado entra no
+  `dados/MANIFEST.csv` (estágio `cache`, tabela `cache_censo_completo`) com o sha256; o nome-base inclui o ano
+  (`2013_escola.parquet`), porque o manifesto identifica arquivos pelo nome-base.
+
+**Alternativas descartadas:** acrescentar colunas ao cache de 22 (regravaria `dados/cache/censo/`, contra a regra 1,
+e mudaria os arquivos que os resultados publicados usam); guardar só as colunas candidatas do levantamento (cada
+escolha nova do grupo voltaria aos zips); guardar o Brasil inteiro (centenas de MB no git, sem uso: o estudo é de RR).
+
+**Aprovação.** O cache entra em `dados/cache/`, que pede o aval do grupo; o aval é a revisão do pull request.
+
+**Evidência:** `testes/test_cache_censo_completo.py`: nos 19 anos, o cache completo tem as mesmas escolas, na mesma
+ordem, e os mesmos valores nas 22 colunas do cache antigo, e as mesmas contagens nacionais (`n_numerico` e `n_um`
+contra `nao_nulo` e `uns`); só linhas de RR, tudo texto; todo arquivo da pasta está no manifesto com o sha256 certo.
+O extrator é testado com zips sintéticos (texto preservado, contagens, recusa de pasta existente).
