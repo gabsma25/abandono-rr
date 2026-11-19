@@ -33,7 +33,7 @@ TOL = 1e-9
 
 # do 05 só as CONSTANTES e a função pura 'calcular' (usada apenas na seção D)
 spec = importlib.util.spec_from_file_location(
-    "ind05", GUSTAVO / "src" / "estendida" / "05_indices_infra.py")
+    "ind05", GUSTAVO / "src" / "estendida" / "grupos" / "infraestrutura.py")
 ind05 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ind05)
 DIMS = ind05.DIMENSOES

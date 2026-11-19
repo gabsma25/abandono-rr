@@ -2,10 +2,10 @@
 """
 02 — Do bruto (01) constrói o SELECIONADO e o LONGITUDINAL.
 
-Entrada:  gustavo/saida/etapas/01_tx_rend_bruto.parquet  (via cache em gustavo/cache/tx_rend/)
-Saídas:   gustavo/saida/etapas/02a_tx_rend_selecionado.parquet
-          gustavo/saida/etapas/02b_tx_rend_longitudinal.parquet
-Relatório: gustavo/saida/relatorios/validacao_longitudinal.txt
+Entrada:  dados/cache/tx_rend/{ano}.parquet (e saida/etapas/01_tx_rend_bruto.parquet, só para contar linhas)
+Saídas:   saida/etapas/02a_tx_rend_selecionado.parquet
+          saida/etapas/02b_tx_rend_longitudinal.parquet
+Relatório: saida/relatorios/validacao_longitudinal.txt
 
 Por que lê cache e não o bruto direto: o bruto empilha as 3 gerações pelo
 NOME da coluna e perde a ORDEM original; a posição é a única coisa confiável
@@ -16,7 +16,7 @@ Armadilha P009/P014: em 2019-2020 o nome técnico engana (tap_F04 é Anos
 Finais, tap_F58 é 1º ano). Este script lê por POSIÇÃO e TRAVA com o rótulo
 humano do cabeçalho, para não trocar taxas em silêncio.
 
-Uso:  python programas/02_tx_rend_selecionado_longitudinal.py
+Uso:  python src/estendida/02_tx_rend_selecionado_longitudinal.py
 """
 import re
 import sys
@@ -31,10 +31,7 @@ import pandas as pd
 
 
 RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-BASE_PROJETO = RAIZ  # antes: a pasta abandono-escolar; os dados agora ficam em RAIZ/dados
-
-RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-GUSTAVO = RAIZ  # raiz do abandono-rr (no projeto anterior, a pasta gustavo/)
+BASE_PROJETO = GUSTAVO = RAIZ  # nomes do projeto anterior (abandono-escolar e a pasta gustavo/)
 CACHE = GUSTAVO / "dados" / "cache" / "tx_rend"
 SAIDA_ETAPAS = GUSTAVO / "saida" / "etapas"
 SAIDA_REL = GUSTAVO / "saida" / "relatorios"

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-99 — Pipeline completo: 01 → 02 → 03 → 04 → 05.
+99 — Pipeline completo: 01 → 02 → 03.
 
-Roda os 5 scripts em ordem. Cada um é independente e tem cache próprio.
-Se um falhar, o pipeline para e você pode retomar de onde parou (rodando
-o script específico).
+  01  rendimento por escola de RR, 2007–2025 (lê o cache dados/cache/tx_rend/; com os zips, confere a ordem)
+  02  seleção das taxas e base longitudinal (lags, deltas, ANO_ALVO)
+  03  grupos de colunas ligados em src/estendida/grupos/ligados.txt → saida/base_atual.parquet
+
+O cache em dados/cache/ é somente leitura (regra 1): nenhuma etapa o regrava. Para conferir o cache contra
+os zips do INEP, use src/estendida/conferir_cache.py; o cache completo do Censo só se refaz com
+src/estendida/extrair_censo.py, numa pasta nova.
 
 Uso:
-    python programas/99_pipeline.py               # usa cache onde tiver
-    python programas/99_pipeline.py --force       # ignora todo cache
-    python programas/99_pipeline.py --from 03     # começa do 03
+    python src/estendida/99_pipeline.py               # 01 → 02 → 03
+    python src/estendida/99_pipeline.py --from 03     # começa do 03
 """
 import argparse
 import subprocess
@@ -17,77 +20,47 @@ import sys
 import time
 from pathlib import Path
 
-PROGRAMAS = Path(__file__).resolve().parent
-RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-GUSTAVO = RAIZ  # raiz do abandono-rr (no projeto anterior, a pasta gustavo/)
+PASTA = Path(__file__).resolve().parent
+RAIZ = PASTA.parents[1]
 
 ETAPAS = [
-    ("01", "01_tx_rend_bruto.py", []),
-    ("02", "02_tx_rend_selecionado_longitudinal.py", []),
-    ("03", "03_censo_features.py", ["--force"]),  # aceita --force
-    ("04", "04_merge_features.py", []),
-    ("05", "05_indices_infra.py", []),
+    ("01", "01_tx_rend_bruto.py"),
+    ("02", "02_tx_rend_selecionado_longitudinal.py"),
+    ("03", "03_grupos.py"),
 ]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--force", action="store_true",
-                        help="ignora cache em todas as etapas")
     parser.add_argument("--from", dest="from_etapa", default=None,
                         help="começa a partir desta etapa (ex: 03)")
     args = parser.parse_args()
 
-    # Decide em qual etapa começar
-    if args.from_etapa:
-        try:
-            idx = [e[0] for e in ETAPAS].index(args.from_etapa)
-        except ValueError:
-            print(f"[ERRO] etapa {args.from_etapa!r} não existe. "
-                  f"Opções: {[e[0] for e in ETAPAS]}")
-            return 1
-        etapas = ETAPAS[idx:]
-    else:
-        etapas = ETAPAS
+    nomes = [e[0] for e in ETAPAS]
+    if args.from_etapa and args.from_etapa not in nomes:
+        print(f"[ERRO] etapa {args.from_etapa!r} não existe. Opções: {nomes}")
+        return 1
+    etapas = ETAPAS[nomes.index(args.from_etapa):] if args.from_etapa else ETAPAS
 
     print("=" * 78)
-    print("PIPELINE — 01 → 02 → 03 → 04 → 05")
-    print(f"GUSTAVO: {GUSTAVO}")
-    if args.force:
-        print("Modo: --force (ignora cache)")
+    print("PIPELINE — " + " → ".join(nomes))
+    print(f"Raiz do projeto: {RAIZ}")
     if args.from_etapa:
         print(f"Começando em: {args.from_etapa}")
     print("=" * 78)
 
     tempo_total = time.time()
-    for nome, script, flags_extra in etapas:
-        caminho = PROGRAMAS / script
-        if not caminho.exists():
-            print(f"\n[ERRO] não achei {caminho}")
-            return 1
-
-        cmd = [sys.executable, str(caminho)]
-        if args.force:
-            cmd += flags_extra
-            if nome == "01":
-                cmd.append("--force")
-
-        print(f"\n{'=' * 78}")
-        print(f"ETAPA {nome}: {script}")
-        print(f"{'=' * 78}")
+    for nome, script in etapas:
+        print(f"\n{'=' * 78}\nETAPA {nome}: {script}\n{'=' * 78}")
         t0 = time.time()
-        ret = subprocess.run(cmd, cwd=str(GUSTAVO))
-        dt = time.time() - t0
+        ret = subprocess.run([sys.executable, str(PASTA / script)], cwd=str(RAIZ))
         if ret.returncode != 0:
-            print(f"\n[!] Etapa {nome} falhou (código {ret.returncode}). "
-                  f"Parei aqui.")
+            print(f"\n[!] Etapa {nome} falhou (código {ret.returncode}). Parei aqui.")
             return ret.returncode
-        print(f"\n[ok] Etapa {nome} concluída em {dt:.1f}s")
+        print(f"\n[ok] Etapa {nome} concluída em {time.time() - t0:.1f}s")
 
-    print(f"\n{'=' * 78}")
-    print(f"PIPELINE COMPLETO em {time.time() - tempo_total:.1f}s")
-    print(f"{'=' * 78}")
-    print(f"\nBase final: {GUSTAVO / 'saida' / 'base_atual.parquet'}")
+    print(f"\n{'=' * 78}\nPIPELINE COMPLETO em {time.time() - tempo_total:.1f}s\n{'=' * 78}")
+    print(f"\nBase final: {RAIZ / 'saida' / 'base_atual.parquet'}")
     return 0
 
 

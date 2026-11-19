@@ -45,18 +45,18 @@ Gerado por `python -m src.dataset` a partir de `saida/base_atual.parquet` (não 
 | `iep_impressora` | explicativa | equipamento pedagógico: impressora (1 = tem) | 0/1 | INEP, Censo Escolar (tabela de escolas) | 2007–2025 |
 | `iep_projetor` | explicativa | equipamento pedagógico: projetor (1 = tem) | 0/1 | INEP, Censo Escolar (tabela de escolas) | 2007–2025 |
 | `iep_internet` | explicativa | equipamento pedagógico: internet (1 = tem) | 0/1 | INEP, Censo Escolar (tabela de escolas) | 2007–2025 |
-| `dim_iib_zano` | explicativa | dimensão de infraestrutura básica, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
-| `dim_ida_zano` | explicativa | dimensão de dependências administrativas, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
-| `dim_idp_zano` | explicativa | dimensão de dependências pedagógicas, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
-| `dim_iep_zano` | explicativa | dimensão de equipamentos pedagógicos, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
-| `iie_zano` | explicativa | índice de infraestrutura escolar (1ª componente principal das 4 dimensões, por ano) | desvios-padrão | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
+| `dim_iib_zano` | explicativa | dimensão de infraestrutura básica, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
+| `dim_ida_zano` | explicativa | dimensão de dependências administrativas, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
+| `dim_idp_zano` | explicativa | dimensão de dependências pedagógicas, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
+| `dim_iep_zano` | explicativa | dimensão de equipamentos pedagógicos, padronizada dentro do ano | desvios-padrão | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
+| `iie_zano` | explicativa | índice de infraestrutura escolar (1ª componente principal das 4 dimensões, por ano) | desvios-padrão | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
 | `dim_iib_prop` | explicativa | dimensão de infraestrutura básica: proporção dos 4 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2007–2025 |
 | `dim_ida_prop` | explicativa | dimensão de dependência administrativa: proporção dos 5 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
 | `dim_idp_prop` | explicativa | dimensão de dependência pedagógica: proporção dos 5 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
 | `dim_iep_prop` | explicativa | dimensão de equipamento pedagógico: proporção dos 4 itens que a escola tem; vazia se algum item estiver vazio | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2007–2025 |
 | `iie_prop` | explicativa | índice geral de infraestrutura: média simples das 4 dimensões `dim_*_prop` (não é a componente principal do `iie_zano`); vazio se alguma dimensão estiver vazia | proporção (0 a 1) | calculada pelo projeto (src/dataset.py), só com a própria linha | 2012–2025 |
-| `infra_itens_completos` | explicativa | 1 se os 18 itens de infraestrutura estão preenchidos no ano | 0/1 | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
-| `infra_fonte_artigo` | explicativa | 1 se todos os itens vieram das colunas do artigo de referência (Almeida & Mussato, 2023) | 0/1 | calculada pelo projeto (src/estendida/05_indices_infra.py) | 2007–2025 |
+| `infra_itens_completos` | explicativa | 1 se os 18 itens de infraestrutura estão preenchidos no ano | 0/1 | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
+| `infra_fonte_artigo` | explicativa | 1 se todos os itens vieram das colunas do artigo de referência (Almeida & Mussato, 2023) | 0/1 | calculada pelo projeto (src/estendida/grupos/infraestrutura.py) | 2007–2025 |
 
 ## Definição completa de `alto_risco_t1`
 

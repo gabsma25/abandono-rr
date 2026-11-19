@@ -718,3 +718,66 @@ escolha nova do grupo voltaria aos zips); guardar o Brasil inteiro (centenas de 
 ordem, e os mesmos valores nas 22 colunas do cache antigo, e as mesmas contagens nacionais (`n_numerico` e `n_um`
 contra `nao_nulo` e `uns`); só linhas de RR, tudo texto; todo arquivo da pasta está no manifesto com o sha256 certo.
 O extrator é testado com zips sintéticos (texto preservado, contagens, recusa de pasta existente).
+
+---
+
+## 2026-11-19 — O pipeline passa a acrescentar grupos de colunas numa etapa única
+
+**O problema.** Depois da base longitudinal (02), o pipeline era uma sequência fixa só para a infraestrutura: o 03
+lia os zips (ou o cache de 22 colunas) e montava os 18 itens, o 04 juntava com a base e o 05 calculava os índices.
+Cada conjunto novo de colunas (metas M1/M6) exigiria mais um script na sequência, mexendo em todos os seguintes, e
+voltaria aos zips.
+
+**Decisão (Gustavo, 2026-11-19).** O 03, o 04 e o 05 viram:
+
+- **`src/estendida/03_grupos.py`**, a etapa única que lê o 02b e, para cada grupo listado em
+  `src/estendida/grupos/ligados.txt`, junta as colunas do grupo (`how="left"` a partir da base, `validate="1:1"`) e
+  as derivadas, se houver; grava `saida/base_atual.parquet`;
+- **`src/estendida/grupos/infraestrutura.py`**, o primeiro grupo: a regra de fonte do antigo 03 (os 18 itens e o
+  `INFRA_FONTE_ARTIGO`) e o método do antigo 05 (dimensões e IIE `_zano`, `INFRA_ITENS_COMPLETOS`), sem mudança,
+  lendo o cache completo do Censo (`dados/cache/censo_completo/`, entrada anterior) no lugar do de 22 colunas.
+
+O 01 e o 02 não mudam de papel. A sequência fica 01 (rendimento) → 02 (base longitudinal) → 03 (grupos).
+
+**O contrato dos grupos** (`src/estendida/grupos/README.md`), conferido pelo `03_grupos.py`, que para com erro:
+um grupo só acrescenta colunas (nenhum nome repetido, nenhuma linha a mais ou a menos, chave única); `extrair` lê só
+o cache do Censo, nunca o rendimento (regras 6 e 7); `derivar` recebe só `ANO` e as colunas do próprio grupo. Grupo
+novo calcula linha a linha (regra 5); o z-score no ano da infraestrutura usa as outras escolas da base e fica como
+herança declarada, porque mudá-lo mudaria os resultados publicados.
+
+**A lista de grupos ligados é versionada e faz parte da versão do dataset.** Fica num arquivo, não numa opção da
+linha de comando, para que dois datasets com o mesmo nome não tenham grupos diferentes. Ligar ou desligar um grupo é
+decisão registrada aqui, por pull request; para um estudo, a lista é fixada no `docs/PROTOCOLO.md` antes de rodar.
+Nunca se liga ou desliga um grupo olhando o resultado (regras 7 e 10).
+
+**Nada muda nos resultados.** Com só a infraestrutura ligada, a `saida/base_atual.parquet` saiu idêntica byte a byte
+à da sequência antiga (mesmo sha256), e a tabela do grupo é idêntica ao antigo `03_censo_features.parquet`; os
+relatórios `fontes_features_censo.csv` e `indices_infra_parametros.json` também saíram idênticos. O `docs/PROTOCOLO.md`
+(congelado desde 2026-11-15) cita `src/estendida/05_indices_infra.py` para o `_zano`: o código citado está, sem
+mudança, em `src/estendida/grupos/infraestrutura.py`.
+
+**O que mudou junto.**
+
+- Os arquivos intermediários `03_censo_features.parquet`, `04_base_com_censo.parquet` e `05_base_com_indices.parquet`
+  dão lugar a `03_grupo_infraestrutura.parquet` e `03_base_com_grupos.parquet`. Os validadores (`testes/01`, `02` e
+  `03_validar_*`) leem os arquivos novos; o "04" deles é a base com os itens, sem as derivadas. A seção E do
+  `testes/03_validar_censo_pos04.py` continua recomputando a regra de fonte a partir do cache ANTIGO de 22 colunas,
+  agora como conferência independente da fonte que o pipeline lê.
+- O `src/estendida/conferir_cache.py` confere o cache completo do Censo contra os zips (todas as tabelas e as
+  contagens nacionais), refazendo-o numa pasta temporária com o `extrair_censo.py`.
+- `--force` e `--force-year` do `01_tx_rend_bruto.py` regravavam `dados/cache/tx_rend/` a partir dos zips, contra a
+  regra 1; passam a ser recusados, e o `99_pipeline.py` perde o `--force`. A conferência contra os zips é a do
+  `conferir_cache.py`.
+- O `--com-prop` do antigo 05 não vira opção do grupo (o pipeline nunca o usava): continua em
+  `infraestrutura.calcular(..., com_prop=True)`, que o `testes/test_dataset.py` usa como implementação independente.
+- Limpeza: caminhos antigos nos comentários (`gustavo/`, `programas/`), `RAIZ` definido duas vezes no 01 e no 02.
+
+**Alternativas descartadas:** manter o 03, o 04 e o 05 e só acrescentar scripts depois do 05 (cada grupo novo
+mudaria a sequência e reabriria os zips); escolher os grupos por opção de linha de comando (datasets diferentes
+com o mesmo nome).
+
+**Evidência:** `testes/test_grupos.py`: nos 19 anos, o grupo infraestrutura lendo o cache completo dá o mesmo
+quadro e as mesmas fontes que o antigo 03 lendo o cache de 22 colunas; o contrato com grupos sintéticos (acrescenta
+sem mudar a base, recusa chave repetida, coluna repetida, colunas não declaradas e `derivar` fora do contrato;
+`derivar` não vê o rendimento). O `testes/test_equivalencia.py` (base célula a célula contra o projeto anterior) e o
+`testes/test_dataset.py` (dataset byte a byte) passam sem mudança.
