@@ -52,7 +52,7 @@ def main():
 
     print("=" * 78)
     print("PIPELINE — 01 → 02 → 03 → 04 → 05")
-    print(f"GUSTAVO: {GUSTAVO}")
+    print(f"Raiz do projeto: {GUSTAVO}")
     if args.force:
         print("Modo: --force (ignora cache)")
     if args.from_etapa:

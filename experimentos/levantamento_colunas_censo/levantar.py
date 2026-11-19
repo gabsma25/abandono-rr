@@ -18,6 +18,9 @@ Saídas (saida/):
                           com os anos em que existem
   resumo.txt              contagens geradas por este script
 
+Todas as saídas são gravadas em UTF-8 com quebra de linha LF, como o .gitattributes as guarda no git; assim
+regerar não deixa a pasta versionada aparecendo como modificada.
+
 "Existe no cabeçalho" não é "foi coletada": o INEP mantém colunas no layout mesmo sem a pergunta (03, regra de
 fonte). A conferência de "coletada" (alguma escola do Brasil com valor 1) é um segundo passo, só para as
 candidatas que o grupo escolher.
@@ -95,25 +98,25 @@ def main():
     todas = sorted({c for cols in principal.values() for c in cols})
 
     with open(SAIDA / "arquivos.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["ano", "zip", "csv", "bytes", "n_colunas", "separador", "principal"])
         w.writerows(arquivos)
 
     with open(SAIDA / "colunas_por_ano.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["coluna", "n_anos", "primeiro", "ultimo", *anos])
         for c in todas:
             tem = [a for a in anos if c in principal[a]]
             w.writerow([c, len(tem), tem[0], tem[-1], *["1" if a in tem else "" for a in anos]])
 
     with open(SAIDA / "colunas_outras_2025.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["ano", "tabela", "coluna", "tambem_na_principal"])
         outras_2025 = [[a, t, c, int(c in principal[a])] for a, t, c in outras_2025]
         w.writerows(outras_2025)
 
     with open(SAIDA / "candidatas.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["grupo", "coluna", "n_anos", "primeiro", "ultimo", "anos_faltando"])
         for grupo, rx in PADROES.items():
             for c in todas:
@@ -135,7 +138,7 @@ def main():
         saem = set(principal[a]) - set(principal[b])
         if novas or saem:
             linhas.append(f"{a} -> {b}: +{len(novas)} colunas, -{len(saem)} colunas.")
-    (SAIDA / "resumo.txt").write_text("\n".join(linhas) + "\n", encoding="utf-8")
+    (SAIDA / "resumo.txt").write_text("\n".join(linhas) + "\n", encoding="utf-8", newline="\n")
     print("\n".join(linhas))
     print(f"\nSaídas em {SAIDA}")
     return 0

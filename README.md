@@ -77,8 +77,9 @@ python rodar_tudo.py
 ```
 
 Regera, na ordem: a base 2007–2025 (`saida/base_atual.parquet`), o funil e o desfecho por ano, as réguas, o
-dataset e o dicionário; depois roda todos os testes. Leva cerca de 1 minuto. Sem os zips do INEP, dois testes
-aparecem como **pulados**, com o motivo: a conferência de 2019–2025 com a fonte e a comparação com um backup que
+dataset e o dicionário; depois roda todos os testes. Leva cerca de 1 minuto sem os zips do INEP e cerca de 10
+minutos com eles, porque aí os testes conferem o cache contra os zips. Sem os zips do INEP, dois testes
+aparecem como **pulados**, com o motivo: a conferência dos anos com zip contra a fonte e a comparação com um backup que
 ficou no projeto anterior.
 
 `python rodar_tudo.py --sem-testes` só regera.

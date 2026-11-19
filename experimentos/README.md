@@ -25,4 +25,5 @@ Regras:
 | Pasta | O que é | Estado |
 |---|---|---|
 | [`classificacao_2013_2018/`](classificacao_2013_2018/) | ferramenta de alerta precoce do projeto anterior: classificação de alto risco na janela segura | encerrado; executado uma vez em 2026-11-10 |
+| [`fatores_2013_2018/`](fatores_2013_2018/) | estudo de fatores associados ao nível de abandono (`docs/PROTOCOLO.md`, seção C) | encerrado; executado uma vez em 2026-11-15 |
 | [`levantamento_colunas_censo/`](levantamento_colunas_censo/) | levantamento das colunas do Censo Escolar 2007–2025, só cabeçalhos (início de M1/M6) | em andamento; resultado vai ao grupo |

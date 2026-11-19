@@ -11,6 +11,9 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
 ### Adicionado
+- `experimentos/levantamento_colunas_censo/`: levantamento das colunas do Censo Escolar 2007–2025 só pelos
+  cabeçalhos dos zips (início de M1/M6), com a matriz coluna × ano e as candidatas; a pasta `saida/` é versionada
+  (`docs/DECISOES.md`, 2026-11-18).
 - **Registro de anos novos no manifesto** (`src/aquisicao.py`, `--registrar ANOS` e `--aplicar-registro`): baixa ou
   copia os zips de microdados e de rendimento por escola para `dados/cache_download/registro/`, propõe as linhas do
   `dados/MANIFEST.csv` e acrescenta os links ao `src/fontes_inep.csv`; a proposta revisada entra no manifesto antes
@@ -37,7 +40,8 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
 - `docs/ROTEIRO.md`: as metas M1–M12 do projeto anterior, cópia literal do arquivo, todas "a revisar".
 - Registro do desvio da regra 12 (pull requests #1 e #2 mergeados sem revisão) no `docs/DECISOES.md`.
 - `experimentos/fatores_2013_2018/`: o código do estudo de fatores (`docs/PROTOCOLO.md`, seção C), com as travas
-  da execução única e a conferência por dados sintéticos (`testes/test_fatores.py`). **Ainda não executado.**
+  da execução única e a conferência por dados sintéticos (`testes/test_fatores.py`). **Executado uma única vez em
+  2026-11-15**; as saídas estão versionadas em `experimentos/fatores_2013_2018/saida/`.
   A conferência do código contra o protocolo e as correções estão no `docs/DECISOES.md`, 2026-11-15; a seção D
   do protocolo ganhou o item da falha técnica no meio da execução.
 

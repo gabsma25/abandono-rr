@@ -698,3 +698,19 @@ registrada aqui quando for feita. "Existe no cabeçalho" não é "foi coletada";
 só para as candidatas escolhidas.
 
 **Evidência:** `experimentos/levantamento_colunas_censo/README.md` e os arquivos em `saida/`.
+
+---
+
+## 2026-11-18 — Pequenas correções de texto e de formato
+
+**O que mudou (Gustavo).**
+
+- O cabeçalho do `src/estendida/99_pipeline.py` passa a imprimir "Raiz do projeto:" no lugar do rótulo `GUSTAVO:`,
+  resto da migração (nota opcional do João no PR #9, que tinha ficado para depois). Só muda o texto impresso.
+- O `experimentos/fatores_2013_2018/README.md`, o `CHANGELOG.md` e o índice `experimentos/README.md` deixam de dizer
+  que o estudo de fatores não foi executado: ele rodou uma vez em 2026-11-15 (entrada desse dia).
+- O `README.md` diz quanto o `rodar_tudo.py` leva com e sem os zips do INEP.
+- O levantamento das colunas do Censo grava as saídas com quebra de linha LF, como o `.gitattributes` as guarda no
+  git; antes gravava CRLF, e regerar deixaria a pasta versionada aparecendo como modificada.
+
+**Evidência:** os próprios arquivos; `python rodar_tudo.py` verde depois das mudanças.
