@@ -40,7 +40,7 @@ SUF = {"AF": "FUN_AF", "EM": "MED"}
 CHAVE = ["ANO", "CO_ENTIDADE"]
 F_RENDIMENTO = "INEP, Indicadores Educacionais: taxas de rendimento por escola (tx_rend)"
 F_CENSO = "INEP, Censo Escolar (tabela de escolas)"
-F_PROJETO = "calculada pelo projeto (src/estendida/05_indices_infra.py)"
+F_PROJETO = "calculada pelo projeto (src/estendida/grupos/infraestrutura.py)"
 
 ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheiro", "IDA_despensa",
          "IDA_refeitorio", "IDA_sala_diretoria", "IDA_sala_professor", "IDA_secretaria", "IDP_biblioteca",
@@ -49,7 +49,7 @@ ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheir
 DESC_ITEM = {"IIB": "infraestrutura básica", "IDA": "dependência administrativa",
              "IDP": "dependência pedagógica", "IEP": "equipamento pedagógico"}
 F_PROP = "calculada pelo projeto (src/dataset.py), só com a própria linha"
-# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/05_indices_infra.DIMENSOES)
+# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/grupos/infraestrutura.DIMENSOES)
 DIM_ITENS = {d: [i.lower() for i in ITENS if i.startswith(d)] for d in DESC_ITEM}
 
 # (coluna, papel, significado, unidade, fonte)

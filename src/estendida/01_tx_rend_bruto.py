@@ -3,21 +3,22 @@
 01 — Lê os zips de tx_rend em dados/origem/indicadores/ e constrói o parquet
 BRUTO para Roraima (2007-2025).
 
-Entrada:  abandono-escolar/dados/origem/indicadores/*.zip
-Saída:    gustavo/saida/etapas/01_tx_rend_bruto.parquet
-Cache:    gustavo/cache/tx_rend/{ano}.parquet
-Relatório: gustavo/saida/relatorios/diagnostico_bruto.txt
+Entrada:  dados/origem/indicadores/*.zip (opcional) e dados/cache/tx_rend/{ano}.parquet (somente leitura)
+Saída:    saida/etapas/01_tx_rend_bruto.parquet
+Relatório: saida/relatorios/diagnostico_bruto.txt
 
 Preserva as 3 gerações de layout do INEP (2007-2011 .xls, 2012-2020 tap_,
 2021+ 1_CAT_). Não filtra colunas — isso é etapa do 02.
 
 Flags:
-  --force           refaz TUDO ignorando cache
-  --force-year N    refaz só o ano N (pode repetir)
+  --force, --force-year N  recusados: regravariam dados/cache/tx_rend/, que é somente leitura (regra 1).
+                           Para conferir o cache contra os zips, use src/estendida/conferir_cache.py, que
+                           refaz numa pasta temporária (docs/DECISOES.md, 2026-11-19).
 """
 import argparse
 import io
 import os
+import sys
 import re
 import warnings
 import zipfile
@@ -34,10 +35,7 @@ warnings.filterwarnings("ignore")
 
 
 RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-BASE_PROJETO = RAIZ  # antes: a pasta abandono-escolar; os dados agora ficam em RAIZ/dados
-
-RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-GUSTAVO = RAIZ  # raiz do abandono-rr (no projeto anterior, a pasta gustavo/)
+BASE_PROJETO = GUSTAVO = RAIZ  # nomes do projeto anterior (abandono-escolar e a pasta gustavo/)
 INDICADORES = BASE_PROJETO / "dados" / "origem" / "indicadores"
 SAIDA_ETAPAS = GUSTAVO / "saida" / "etapas"
 SAIDA_REL = GUSTAVO / "saida" / "relatorios"
@@ -344,6 +342,10 @@ def main():
     args = parser.parse_args()
 
     force_years = set(args.force_year)
+    if args.force or force_years:
+        print(f"[ERRO] --force/--force-year regravariam {CACHE}, que é somente leitura (regra 1). "
+              f"Para conferir o cache contra os zips: python src/estendida/conferir_cache.py")
+        return 1
 
     print("=" * 80)
     print("01 — tx_rend BRUTO RR 2007-2025")
@@ -455,4 +457,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

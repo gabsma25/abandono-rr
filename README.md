@@ -68,6 +68,7 @@ para reconstruir o cache:
 python -m src.aquisicao --origem-local C:\pasta\com\os\zips   # copia de uma pasta, conferindo o sha256
 python -m src.aquisicao --baixar                              # ou baixa do INEP o que faltar
 python src/estendida/conferir_cache.py                        # refaz o cache a partir dos zips e compara
+python src/estendida/extrair_censo.py --destino PASTA_NOVA    # refaz o cache completo do Censo noutra pasta
 ```
 
 ## Rodar tudo com um comando
@@ -106,7 +107,7 @@ Baixe-os numa pasta e use `--origem-local`.
 dados/          MANIFEST.csv (hashes) e cache/ (recorte de RR 2007–2025) no git; origem/ fora do git
 dataset/        o dataset versionado e o dicionário
 src/
-  estendida/    pipeline 2007–2025: rendimento, Censo, merge, índices de infraestrutura
+  estendida/    pipeline 2007–2025: 01 rendimento, 02 base longitudinal, 03 grupos de colunas (grupos/)
   avaliacao/    réguas, métricas, bootstrap por escola, Holm, classificação (funções)
   relatorios/   funil e desfecho por ano
   dataset.py    gera o dataset e o dicionário

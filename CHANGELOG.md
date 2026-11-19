@@ -10,7 +10,24 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 2026-11-14). O dataset ganha as dimensões de infraestrutura em proporção; as 44 colunas da v0.1.0 não mudam.
 Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
+### Mudado
+- **Pipeline em grupos de colunas** (`docs/DECISOES.md`, 2026-11-19): o `03_censo_features.py`, o
+  `04_merge_features.py` e o `05_indices_infra.py` viram a etapa única `src/estendida/03_grupos.py` e o grupo
+  `src/estendida/grupos/infraestrutura.py`, que lê o cache completo do Censo. Os grupos ligados ficam em
+  `src/estendida/grupos/ligados.txt`; o contrato (só acrescenta, não lê o rendimento, linha a linha) está no
+  `README.md` da pasta e é conferido pelo código. A base, o dataset e os resultados não mudam: a
+  `base_atual.parquet` saiu idêntica byte a byte. Testes em `testes/test_grupos.py`.
+- `src/estendida/conferir_cache.py` confere o cache completo do Censo (todas as tabelas e as contagens
+  nacionais) no lugar do cache de 22 colunas.
+- `01_tx_rend_bruto.py --force` e `--force-year` passam a ser recusados (regravariam `dados/cache/tx_rend/`), e o
+  `99_pipeline.py` perde o `--force`.
+
 ### Adicionado
+- **Cache completo do Censo** (`dados/cache/censo_completo/`, gerado uma vez por `src/estendida/extrair_censo.py`):
+  as linhas de Roraima de 2007–2025 com todas as colunas de todas as tabelas de cada zip, como texto, e as
+  contagens nacionais por coluna para a regra de "coletada"; cada arquivo com sha256 no `dados/MANIFEST.csv`.
+  O cache de 22 colunas não muda; `testes/test_cache_censo_completo.py` confere que os dois têm os mesmos valores
+  (`docs/DECISOES.md`, 2026-11-19).
 - `experimentos/levantamento_colunas_censo/`: levantamento das colunas do Censo Escolar 2007–2025 só pelos
   cabeçalhos dos zips (início de M1/M6), com a matriz coluna × ano e as candidatas; a pasta `saida/` é versionada
   (`docs/DECISOES.md`, 2026-11-18).

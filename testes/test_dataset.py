@@ -10,7 +10,7 @@ Confere dataset/escolas_rr_v<versão>.csv e dataset/DICIONARIO.md (gerados por p
   - o dicionário tem uma linha por coluna, na mesma ordem, com papel alvo ou explicativa
   - o nome da escola não está no dataset
   - dim_*_prop e iie_prop (v0.2.0): proporção dos itens da própria linha, vazia se faltar item; não mudam quando
-    outras escolas saem da base; iguais às de 05_indices_infra --com-prop onde o ano tem todos os itens
+    outras escolas saem da base; iguais às do grupo infraestrutura (calcular com com_prop=True) onde o ano tem todos os itens
 """
 import importlib.util
 import re
@@ -162,12 +162,12 @@ def test_prop_nao_depende_de_outras_escolas(base):
 
 
 def test_prop_igual_ao_05_onde_o_ano_tem_todos_os_itens(base):
-    """Confere contra a implementação independente de src/estendida/05_indices_infra.py (--com-prop).
+    """Confere contra a implementação independente de src/estendida/grupos/infraestrutura.py (calcular com com_prop=True).
 
     Lá, o denominador são os itens disponíveis no ano (perguntados a alguma escola); aqui, todos os itens da
     dimensão. Nos anos com todos os itens, as duas coincidem; nos outros, a proporção daqui é vazia.
     """
-    spec = importlib.util.spec_from_file_location("indices", RAIZ / "src" / "estendida" / "05_indices_infra.py")
+    spec = importlib.util.spec_from_file_location("indices", RAIZ / "src" / "estendida" / "grupos" / "infraestrutura.py")
     I = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(I)
     novas, params = I.calcular(base, com_prop=True)
