@@ -679,6 +679,44 @@ alterada; `dados/cache/` não muda).
 
 ---
 
+## 2026-11-18 — As saídas do levantamento das colunas do Censo entram no git
+
+**O que é.** `experimentos/levantamento_colunas_censo/levantar.py` lê só os cabeçalhos dos CSV dos zips do Censo
+Escolar 2007–2025 (`dados/origem/censo/`) e lista as colunas de cada ano e as candidatas a características novas
+(início de M1/M6). Não lê nenhum valor nem o rendimento: não olha o desfecho (regra 7).
+
+**Decisão (Gustavo).** A pasta `experimentos/levantamento_colunas_censo/saida/` ganha uma exceção no `.gitignore`,
+como a `experimentos/fatores_2013_2018/saida/`, e a pasta inteira é versionada: `arquivos.csv`, `candidatas.csv`,
+`colunas_outras_2025.csv`, `colunas_por_ano.csv` e `resumo.txt`.
+
+**Por quê.** O levantamento só se regera com os zips do INEP, e hoje só o Gustavo os tem: o INEP recusa as
+conexões do Python (`--baixar` falha; ver a entrada "Os zips de 2007–2018 entram no manifesto"). Sem os arquivos
+no git, o grupo não teria como ver o resultado antes de decidir quais colunas entram no dataset.
+
+**O que não é.** Não é a escolha das colunas: essa é do grupo, por pertinência, cobertura e estabilidade, e fica
+registrada aqui quando for feita. "Existe no cabeçalho" não é "foi coletada"; essa conferência é um segundo passo,
+só para as candidatas escolhidas.
+
+**Evidência:** `experimentos/levantamento_colunas_censo/README.md` e os arquivos em `saida/`.
+
+---
+
+## 2026-11-18 — Pequenas correções de texto e de formato
+
+**O que mudou (Gustavo).**
+
+- O cabeçalho do `src/estendida/99_pipeline.py` passa a imprimir "Raiz do projeto:" no lugar do rótulo `GUSTAVO:`,
+  resto da migração (nota opcional do João no PR #9, que tinha ficado para depois). Só muda o texto impresso.
+- O `experimentos/fatores_2013_2018/README.md`, o `CHANGELOG.md` e o índice `experimentos/README.md` deixam de dizer
+  que o estudo de fatores não foi executado: ele rodou uma vez em 2026-11-15 (entrada desse dia).
+- O `README.md` diz quanto o `rodar_tudo.py` leva com e sem os zips do INEP.
+- O levantamento das colunas do Censo grava as saídas com quebra de linha LF, como o `.gitattributes` as guarda no
+  git; antes gravava CRLF, e regerar deixaria a pasta versionada aparecendo como modificada.
+
+**Evidência:** os próprios arquivos; `python rodar_tudo.py` verde depois das mudanças.
+
+---
+
 ## 2026-11-19 — Cache completo do Censo: todas as colunas de RR, extraídas uma vez
 
 **O problema.** O cache do Censo (`dados/cache/censo/`) só guarda as 22 colunas dos 18 itens de infraestrutura.

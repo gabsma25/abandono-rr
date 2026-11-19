@@ -1,10 +1,11 @@
 # Estudo de fatores associados ao nível de abandono (t = 2013–2018)
 
 Implementação da **seção C do `docs/PROTOCOLO.md`**. Lê só `dataset/escolas_rr_v0.2.0.csv` e as funções
-de `src/`; escreve só em `saida/` (fora do git até o pull request da execução). **Ainda não foi
-executado com o desfecho real.**
+de `src/`; escreve só em `saida/`, que é versionada. **Executado uma única vez em 2026-11-15**, no commit
+`2deb135` do branch `integracao/gabriela`, antes da aprovação formal do PR #9 (desvio registrado no
+`docs/DECISOES.md`, 2026-11-15). As saídas estão em `saida/`, com o commit no cabeçalho de cada arquivo.
 
-## Como rodar (uma única vez, e ainda não)
+## Como rodar (uma única vez; já rodou)
 
 ```
 python experimentos/fatores_2013_2018/fatores.py --executar
@@ -23,8 +24,9 @@ Travas (regra 10 e C.13):
 - ordem: tabela 0 → controle negativo (C.9) → se passar, o resto; se o controle reprovar, grava **só**
   o `07_controle_negativo.csv` e para.
 
-A execução real só acontece depois que o código entrar no `main` por pull request revisado **e** de uma
-revisão independente do código contra o protocolo, por outro integrante.
+O plano era executar só depois que o código entrasse no `main` por pull request revisado **e** de uma revisão
+independente do código contra o protocolo, por outro integrante. A execução de 2026-11-15 veio antes disso; o
+desvio e a consequência (o protocolo fica congelado) estão no `docs/DECISOES.md`.
 
 ## Seção do protocolo → função → teste
 
