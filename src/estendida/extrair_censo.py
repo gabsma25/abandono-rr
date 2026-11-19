@@ -7,8 +7,8 @@ dados/cache/, que é somente leitura (regra 1). Roda uma vez, quando o grupo apr
 no dados/MANIFEST.csv com sha256. Depois disso, o pipeline só LÊ este cache; quem precisar de uma coluna nova
 do Censo não volta aos zips (docs/DECISOES.md, 2026-11-19).
 
-O cache antigo de 22 colunas (dados/cache/censo/, do 03_censo_features.py) continua onde está e não muda:
-os resultados já publicados dependem dele. testes/test_cache_censo_completo.py confere que este cache tem
+O cache antigo de 22 colunas (dados/cache/censo/, do antigo 03_censo_features.py) continua onde está e não
+muda; o pipeline lê este cache desde 2026-11-19 (src/estendida/grupos/infraestrutura.py). testes/test_cache_censo_completo.py confere que este cache tem
 exatamente os mesmos valores nas 22 colunas.
 
 O que grava, em dados/cache/censo_completo/ (nome-base único por arquivo, como o manifesto exige):

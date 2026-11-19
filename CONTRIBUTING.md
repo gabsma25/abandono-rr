@@ -127,7 +127,8 @@ Tipos: `feat` (algo novo), `fix` (correção), `test` (testes), `docs` (document
   `dados/cache/`, que é pequeno e não tem outra fonte para 2007–2018; e o dataset versionado em `dataset/`.
 - Coluna nova do Censo sai de `dados/cache/censo_completo/` (todas as colunas de todas as tabelas, só RR, como
   texto), sem voltar aos zips. Esse cache só se refaz com `src/estendida/extrair_censo.py`, que recusa gravar
-  por cima do que existe.
+  por cima do que existe. Colunas novas entram como um grupo em `src/estendida/grupos/` (contrato e regras no
+  `README.md` de lá), ligado em `ligados.txt` por pull request.
 - Para obter os zips: `python -m src.aquisicao --origem-local PASTA` (copia de uma pasta) ou
   `python -m src.aquisicao --baixar` (baixa do INEP). Os dois conferem o sha256 de cada arquivo contra o
   MANIFEST e recusam arquivo divergente.

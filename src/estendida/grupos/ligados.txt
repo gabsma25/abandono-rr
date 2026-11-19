@@ -1,0 +1,7 @@
+# Grupos de colunas que entram na base (src/estendida/03_grupos.py), um por linha, na ordem de entrada.
+# Cada nome é um arquivo src/estendida/grupos/<nome>.py que segue o contrato do README.md desta pasta.
+#
+# Esta lista faz parte da versão do dataset: ligar ou desligar um grupo muda a base e o dataset, e só se
+# faz por pull request, com a decisão no docs/DECISOES.md e, para um estudo, a lista fixada no
+# docs/PROTOCOLO.md antes de rodar (regras 7 e 10). Nunca se liga ou desliga um grupo olhando o resultado.
+infraestrutura

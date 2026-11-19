@@ -1,7 +1,7 @@
 """
 Regera tudo do abandono-rr, na ordem, e roda os testes.
 
-  1. pipeline estendido 2007–2025 (src/estendida/99_pipeline.py) → saida/base_atual.parquet
+  1. pipeline estendido 2007–2025 (src/estendida/99_pipeline.py: 01 → 02 → 03 grupos) → saida/base_atual.parquet
   2. funil e desfecho por ano (src/relatorios/)                     → saida/relatorios/
   3. régua da Etapa 1 e réguas da janela segura (src/avaliacao/)    → saida/avaliacao/
   4. dataset e dicionário (src/dataset.py)                          → dataset/

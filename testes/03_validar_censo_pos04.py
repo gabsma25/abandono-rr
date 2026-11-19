@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-03 — Auditoria do parquet PÓS-04 (04_base_com_censo.parquet): estado das 18
-variáveis de infraestrutura depois da correção da coleta (relatório 04).
+03 — Auditoria das 18 variáveis de infraestrutura na base: o 02b + as colunas extraídas pelo grupo
+infraestrutura, lidas de 03_base_com_grupos.parquet (antes da reorganização de 2026-11-19, o
+04_base_com_censo), depois da correção da coleta (relatório 04). "04" abaixo é essa base.
 
 NÃO olha para os índices do 05; isso é o testes/02_validar_indices.py.
 Este teste serve para VER como a base ficou e provar que ela está certa:
@@ -10,8 +11,9 @@ Este teste serve para VER como a base ficou e provar que ela está certa:
   B. Variáveis   : as 18 do Quadro 3 do artigo (4/5/5/4), binárias
   C. Ausências   : NaN esperado (itens não coletados) x NaN inesperado
   D. Zeros       : "zero estrutural" (coluna toda 0) e variáveis quase constantes
-  E. Recomputo   : refaz a regra de fonte do zero a partir do cache + estatística
-                   nacional e compara célula a célula com o 04
+  E. Recomputo   : refaz a regra de fonte do zero a partir do cache ANTIGO de 22 colunas
+                   (dados/cache/censo/, que o pipeline não lê mais: conferência independente)
+                   + estatística nacional, e compara célula a célula com o 04
   F. Microdados  : compara com o arquivo ORIGINAL do INEP, sem passar pelo cache
                    nem pelo script 03 (CSV 2019-2025; zips 2007-2018 com --completo)
   G. Merge       : escolas sem registro no Censo; escolas duplicadas
@@ -33,10 +35,16 @@ import pandas as pd
 
 RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
 GUSTAVO = RAIZ  # raiz do abandono-rr (no projeto anterior, a pasta gustavo/)
+import importlib.util  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location(
+    "grupo_infraestrutura", RAIZ / "src" / "estendida" / "grupos" / "infraestrutura.py")
+INFRA = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(INFRA)
 ETAPAS = GUSTAVO / "saida" / "etapas"
 REL = GUSTAVO / "saida" / "relatorios"
 CACHE = GUSTAVO / "dados" / "cache" / "censo"
-P04 = ETAPAS / "04_base_com_censo.parquet"
+P04 = ETAPAS / "03_base_com_grupos.parquet"
 P02B = ETAPAS / "02b_tx_rend_longitudinal.parquet"
 P_FONTES = REL / "fontes_features_censo.csv"
 P_BACKUP = GUSTAVO / "saida" / "_backup_2026-10-14" / "etapas" / "04_base_com_censo.parquet"
@@ -127,10 +135,11 @@ secao("A. ESTRUTURA")
 # ------------------------------------------------------------------
 for p in (P04, P02B, P_FONTES):
     if not p.exists():
-        print(f"[ERRO] falta {p} — rode o pipeline (python programas/99_pipeline.py)")
+        print(f"[ERRO] falta {p} — rode o pipeline (python src/estendida/99_pipeline.py)")
         sys.exit(1)
-b = pd.read_parquet(P04)
 lon = pd.read_parquet(P02B)
+b = pd.read_parquet(P04)
+b = b[list(lon.columns) + INFRA.COLUNAS].copy()   # o que era o 04: 02b + colunas extraídas do grupo
 fontes = pd.read_csv(P_FONTES, dtype={"coluna_usada": "string"}).fillna({"coluna_usada": ""})
 b["ANO_I"] = b["ANO"].astype(int)
 ANOS = sorted(b["ANO_I"].unique())
