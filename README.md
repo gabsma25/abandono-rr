@@ -68,6 +68,7 @@ para reconstruir o cache:
 python -m src.aquisicao --origem-local C:\pasta\com\os\zips   # copia de uma pasta, conferindo o sha256
 python -m src.aquisicao --baixar                              # ou baixa do INEP o que faltar
 python src/estendida/conferir_cache.py                        # refaz o cache a partir dos zips e compara
+python src/estendida/extrair_censo.py --destino PASTA_NOVA    # refaz o cache completo do Censo noutra pasta
 ```
 
 ## Rodar tudo com um comando

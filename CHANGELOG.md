@@ -11,6 +11,11 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
 ### Adicionado
+- **Cache completo do Censo** (`dados/cache/censo_completo/`, gerado uma vez por `src/estendida/extrair_censo.py`):
+  as linhas de Roraima de 2007–2025 com todas as colunas de todas as tabelas de cada zip, como texto, e as
+  contagens nacionais por coluna para a regra de "coletada"; cada arquivo com sha256 no `dados/MANIFEST.csv`.
+  O cache de 22 colunas não muda; `testes/test_cache_censo_completo.py` confere que os dois têm os mesmos valores
+  (`docs/DECISOES.md`, 2026-11-19).
 - **Registro de anos novos no manifesto** (`src/aquisicao.py`, `--registrar ANOS` e `--aplicar-registro`): baixa ou
   copia os zips de microdados e de rendimento por escola para `dados/cache_download/registro/`, propõe as linhas do
   `dados/MANIFEST.csv` e acrescenta os links ao `src/fontes_inep.csv`; a proposta revisada entra no manifesto antes
