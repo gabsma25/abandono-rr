@@ -56,9 +56,12 @@ def test_extrair_cobre_os_19_anos_com_as_colunas_declaradas(tmp_path):
     assert (tmp_path / "fontes_features_censo.csv").exists()
 
 
-def test_ligados_tem_so_a_infraestrutura():
-    """Ligar um grupo muda a versão do dataset: entra por pull request, com decisão registrada."""
-    assert G.ler_ligados() == ["infraestrutura"]
+def test_ligados_sao_os_registrados_no_decisoes():
+    """Ligar um grupo muda a base: entra por pull request, com decisão registrada (docs/DECISOES.md,
+    2026-11-20, "Grupos do Censo ligados")."""
+    assert G.ler_ligados() == ["infraestrutura", "censo_matriculas", "censo_docentes", "censo_turmas_salas",
+                               "censo_equipamentos", "censo_oferta_turno", "censo_escola_indigena",
+                               "censo_predio_servicos"]
 
 
 # --- contrato, com grupos sintéticos ------------------------------------------------------------------

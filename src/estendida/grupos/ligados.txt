@@ -5,3 +5,10 @@
 # faz por pull request, com a decisão no docs/DECISOES.md e, para um estudo, a lista fixada no
 # docs/PROTOCOLO.md antes de rodar (regras 7 e 10). Nunca se liga ou desliga um grupo olhando o resultado.
 infraestrutura
+censo_matriculas
+censo_docentes
+censo_turmas_salas
+censo_equipamentos
+censo_oferta_turno
+censo_escola_indigena
+censo_predio_servicos

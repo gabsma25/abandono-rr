@@ -918,3 +918,85 @@ Ele é só descrição do modelo sobreajustado.
 **As saídas entram no git** com este registro, como previsto no `experimentos/censo_bruto_v0/README.md` (seção D).
 
 **Evidência:** `experimentos/censo_bruto_v0/saida/` (`RELATORIO.md`, `05_f8.csv`, `08_previsao_testes.csv`).
+
+---
+
+## 2026-11-20 — Grupos do Censo ligados
+
+**Decisão (Gustavo).** As 124 colunas da lista fechada do estudo E (`censo_bruto_v0.COLUNAS`) entram na base como
+**7 grupos**, um por bloco de `censo_bruto_v0.BLOCOS`, ligados no `ligados.txt` depois do `infraestrutura`:
+`censo_matriculas`, `censo_docentes`, `censo_turmas_salas`, `censo_equipamentos`, `censo_oferta_turno`,
+`censo_escola_indigena` e `censo_predio_servicos`. O código comum fica em `grupos/_censo_comum.py`, que não é
+grupo. A revisão vem no pull request.
+
+**Motivo.** Deixar as colunas do Censo disponíveis na base para a exploração e para a limpeza coluna a coluna, que
+é o próximo passo. A origem é a lista fechada do estudo E, por blocos. Nenhuma coluna foi escolhida, tirada ou
+transformada olhando o desfecho (regra 7). As colunas entram **brutas**. A auditoria do estudo E encontrou
+sobreajuste por redundância e escala, por isso elas ainda não são lidas como fatores.
+
+**Como os grupos leem o cache.**
+- **Anos 2007 a 2025.** O filtro de anos é de quem usa a base.
+- **2025.** O cache divide a tabela escola em escola, docente, matricula e turma. As quatro são juntadas 1:1 por
+  `CO_ENTIDADE` (`how="left"` a partir da escola, `validate="1:1"`). Cada coluna é pega onde existe **com o mesmo
+  nome**, sem equivalências inventadas (regra 11). A coluna que não existe com o mesmo nome fica ausente em 2025
+  e vai para `saida/relatorios/grupos_censo_2025.txt`.
+- **Regra "coletada"** (`grupos/README.md`, regra 4), pelo arquivo nacional da tabela de origem: `IN_` foi
+  coletada se alguma escola do Brasil tem 1, e `QT_` se alguma tem valor maior que 0. Se não foi coletada, a
+  coluna fica ausente no ano inteiro. A matriz coluna × ano fica em `saida/relatorios/grupos_censo_coleta.csv`.
+- **Continuidade 2023 → 2024 → 2025.** A mediana e o % preenchido de cada coluna, nas públicas em funcionamento,
+  ficam em `saida/relatorios/grupos_censo_continuidade.csv`, com marca de variação da mediana acima de 50%. É só
+  relatório e não bloqueia.
+
+**Diferença em relação ao `censo_bruto_v0`.** Por causa da regra "coletada", os valores podem diferir dos do
+`censo_bruto_v0` nos anos em que uma coluna não foi coletada: lá ficava o valor do arquivo (em geral 0), e aqui
+fica ausente. O `censo_bruto_v0.py` não muda e continua não ligado, para o estudo E continuar reproduzível.
+
+**Consequências.**
+- A `saida/base_atual.parquet` ganha as 124 colunas, com as mesmas linhas e as colunas antigas idênticas.
+- O `src/dataset.py` e o `dataset/escolas_rr_v0.2.0.csv` não mudam, porque o dataset escolhe as colunas pelo nome.
+
+**Evidência:** `testes/test_grupos_censo.py` e os três relatórios em `saida/relatorios/`.
+
+---
+
+## 2026-11-20 — Notebook de apresentação (exploratório)
+
+**Decisão (Gustavo).** O `notebooks/05_apresentacao_censo.ipynb` apresenta ao professor quatro coisas:
+- o pipeline com o Censo 2007–2025;
+- o filtro de saúde automático, que só olha preditores;
+- o resultado oficial do estudo E, lido das saídas sem rodar nada;
+- uma exploração com os anos escolhidos numa célula de configuração (`ANO_INICIO`, `ANO_FIM`, `GRUPOS`,
+  `REMOVER_REDUNDANTES`, `SEMENTES_MLP`).
+
+As contas ficam em `notebooks/apoio_apresentacao.py`, com testes em `testes/test_apoio_apresentacao.py`. Fica
+guardada a versão executada com `ANO_INICIO = 2007`.
+
+**É exploração sobre anos já vistos, sem protocolo de execução única, e não decide nada.**
+- O teste é t = 2022–2023 (desfechos 2023 e 2024), anos já vistos.
+- Nenhuma coluna, modelo, janela ou limiar é escolhido pelo resultado (regra 7).
+- A comparação 2007+ × 2019+ é descritiva: escolher a janela pelo teste já visto não vale como prova.
+
+**Trava fixa do 2025**, no código e fora da configuração:
+- o desfecho de 2025 (t = 2024) nunca entra em treino nem em teste;
+- t = 2024 e 2025 aparecem só na coleta e na descrição (contagens e o filtro de saúde, que só olha preditores);
+- a avaliação usa no máximo t = 2023, com treino até t = 2021.
+
+O `test_apoio_apresentacao.py` confere a trava com uma sentinela no desfecho de t = 2024.
+
+**Exceção declarada à regra 4** ("notebook exibe, não calcula") e ao `notebooks/README.md`. As células 6 e 7
+ajustam modelos ao chamar o `apoio_apresentacao.py`; o número não vem de um CSV gravado antes. É a forma pedida
+para que o professor mude os anos e veja o efeito. As contas ficam fora das células, num módulo com testes. A
+revisão vem no pull request.
+
+**Como a exploração roda.**
+- **Universo e modelos:** o universo da Parte 2 do estudo E, as réguas B1R_lag e B2, e Ridge(alpha=1.0) e o MLP do
+  professor nos conjuntos A, A+, B e B+.
+- **Redundância:** a regra |r| > 0,90 entre preditores é calculada só nas linhas de treino, na ordem fixa: as
+  quatro dimensões da infraestrutura primeiro, depois os grupos na ordem da lista e as colunas em ordem alfabética.
+- **Pré-processamento:** dentro do `Pipeline`, ajustado só no treino.
+- **Métricas:** Recall@20% (média dos dois anos) e MAE, com IC pelo bootstrap agrupado por escola (1.000
+  reamostragens).
+- **Filtro de saúde:** o preenchimento é medido nos anos escolhidos até 2024, e a informação nos anos de treino.
+  Na comparação de janelas, o filtro e a redundância são refeitos com os anos de cada janela.
+
+**Evidência:** `notebooks/05_apresentacao_censo.ipynb` (executado) e `testes/test_apoio_apresentacao.py`.
