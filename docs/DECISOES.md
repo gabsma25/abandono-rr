@@ -1000,3 +1000,51 @@ revisão vem no pull request.
   Na comparação de janelas, o filtro e a redundância são refeitos com os anos de cada janela.
 
 **Evidência:** `notebooks/05_apresentacao_censo.ipynb` (executado) e `testes/test_apoio_apresentacao.py`.
+
+---
+
+## 2026-11-20 — Notebook de apresentação simplificado
+
+**Decisão (Gustavo).** O `notebooks/05_apresentacao_censo.ipynb` fica mais simples e tem quatro partes:
+1. o carregamento dos dados dos anos escolhidos, que já existia;
+2. a aplicação dos modelos;
+3. o resultado prático de cada modelo;
+4. um gráfico final com cada modelo em cada ano.
+
+Saem do notebook a tabela do filtro de saúde, o resultado oficial do estudo E e a comparação 2007+ × 2019+. O
+resultado do estudo E continua em `experimentos/censo_bruto_v0/saida/`.
+
+**Como os modelos são aplicados: previsão ano a ano.**
+- **Treino e teste.** Para cada ano t, cada modelo é treinado com todos os anos anteriores (de `ANO_INICIO` a
+  t − 1) e prevê o abandono de t + 1 das escolas de t. Os anos de treino só têm desfechos já conhecidos quando se
+  faz a previsão.
+- **Anos de teste.** O primeiro ano de teste tem pelo menos 2 anos de treino antes, e o último é t = 2023.
+- **Universo.** O da Parte 2 do estudo E, com AF e EM separados.
+- **Modelos.** A régua (o abandono de t − 1), Ridge(alpha=1.0), Random Forest (300 árvores, `min_samples_leaf=5`),
+  Gradient Boosting (`HistGradientBoostingRegressor`, padrão) e o MLP do professor (média de `SEMENTES_MLP`
+  sementes). Os hiperparâmetros são fixos, sem ajuste.
+- **Preditores.**
+  - Entram sempre o abandono e a reprovação de t − 1 e a variação defasada, mais a localização e a dependência.
+  - Entram também as quatro dimensões da infraestrutura e as colunas do Censo dos grupos escolhidos.
+  - **Saúde e redundância**, medidas só no treino de cada ano e sem olhar o desfecho (regra 7): sai a coluna com
+    menos de 95% de preenchimento ou com mais de 99% dos valores num único valor, e sai a coluna com |r| > 0,90
+    com outra que veio antes. A ordem é fixa: infraestrutura, grupos na ordem da lista, colunas em ordem
+    alfabética.
+  - A imputação e a padronização ficam dentro do `Pipeline`, ajustadas só no treino.
+- **Métricas.** As 20% das escolas com maior previsão são apontadas como de alto risco e comparadas com o
+  `alto_risco_t1`: Recall@20%, Precisão@20% e F1@20%. Há também R² e MAE da previsão do abandono. A tabela mostra
+  a média dos anos previstos e o gráfico mostra cada ano. Não há IC nem veredito: é descritivo.
+
+**Continua valendo** o que está na entrada "Notebook de apresentação (exploratório)": é exploração sobre anos já
+vistos, não decide nada, é a exceção declarada à regra 4, e a trava do 2025 fica no código (o desfecho de 2025
+nunca entra em treino nem em teste).
+
+**Evidência:** `notebooks/05_apresentacao_censo.ipynb` (executado com `ANO_INICIO = 2007`) e
+`testes/test_apoio_apresentacao.py`.
+
+**Acréscimo (Gustavo): colunas mais relevantes de cada modelo.** O notebook mostra, para cada modelo e etapa, a
+importância por permutação de cada coluna de entrada: o quanto o MAE (pp) piora no último ano previsto (teste em
+t = 2023, treino com os anos anteriores) quando a coluna é embaralhada. A conta usa 5 repetições, e no MLP é a
+média das sementes. A tabela mostra as 10 primeiras, e a lista completa, com todas as colunas, fica na variável
+`imp` (regra 7: todas reportadas, inclusive as nulas). É descrição do modelo, não causa, e não escolhe nem tira
+nenhuma coluna.
