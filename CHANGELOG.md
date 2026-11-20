@@ -23,6 +23,10 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `99_pipeline.py` perde o `--force`.
 
 ### Adicionado
+- `experimentos/selecao_grupos/01_inventario_colunas.py`: inventário das colunas do Censo de RR, 2007–2025, ano a
+  ano (presença no layout, coleta no Brasil, preenchimento nas escolas em atividade, descrição do dicionário do
+  INEP), com saídas em CSV e um `LEIA_ME.md` para outra pessoa ou IA propor os grupos de colunas; a pasta
+  `saida/` é versionada (`docs/DECISOES.md`, 2026-11-20).
 - **Cache completo do Censo** (`dados/cache/censo_completo/`, gerado uma vez por `src/estendida/extrair_censo.py`):
   as linhas de Roraima de 2007–2025 com todas as colunas de todas as tabelas de cada zip, como texto, e as
   contagens nacionais por coluna para a regra de "coletada"; cada arquivo com sha256 no `dados/MANIFEST.csv`.
