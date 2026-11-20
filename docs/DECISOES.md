@@ -895,3 +895,26 @@ versão final e continua sendo o próximo passo, mas não cabe no prazo.
 **Evidência:** `docs/PROTOCOLO.md`, seção E.
 
 **Interpretação registrada antes de rodar (Gustavo).** "Coluna constante na etapa" (E.2) é medida separadamente no universo da Parte 1 (S2, S2r) e no da Parte 2 (A+, B+), só com os preditores; as duas contagens saem no `01_universo.csv`.
+
+---
+
+## 2026-11-20 — Resultado do estudo E (v0)
+
+**O que aconteceu.** A execução única (commit `b5c21a9`) terminou sem parar: o filtro devolveu a lista fechada,
+o controle negativo passou e a equivalência com o estudo C passou.
+
+**Resultado.**
+- **E1:** NÃO ACRESCENTA nas duas etapas (AF e EM). Com as colunas brutas, o R² fora da amostra cai em relação
+  ao S1.
+- **E2:** F9 e F10 sem GANHO em nenhuma comparação (cada uma deu SEM GANHO PRÁTICO ou INCONCLUSIVO).
+
+**Auditoria (Gustavo).** A auditoria das saídas encontrou **sobreajuste**, por dois motivos:
+1. **colunas redundantes:** o protocolo E não incluiu a regra de redundância |r| > 0,90 entre preditores;
+2. **escala e valores extremos das contagens brutas.**
+
+Por isso, o ranking da importância por permutação (`06_permutacao.csv`) **não deve ser lido como importância**.
+Ele é só descrição do modelo sobreajustado.
+
+**As saídas entram no git** com este registro, como previsto no `experimentos/censo_bruto_v0/README.md` (seção D).
+
+**Evidência:** `experimentos/censo_bruto_v0/saida/` (`RELATORIO.md`, `05_f8.csv`, `08_previsao_testes.csv`).
