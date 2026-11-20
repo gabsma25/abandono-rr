@@ -819,3 +819,34 @@ quadro e as mesmas fontes que o antigo 03 lendo o cache de 22 colunas; o contrat
 sem mudar a base, recusa chave repetida, coluna repetida, colunas não declaradas e `derivar` fora do contrato;
 `derivar` não vê o rendimento). O `testes/test_equivalencia.py` (base célula a célula contra o projeto anterior) e o
 `testes/test_dataset.py` (dataset byte a byte) passam sem mudança.
+
+---
+
+## 2026-11-20 — Inventário das colunas para escolher os grupos
+
+**O que é (Gustavo).** O primeiro passo da escolha dos grupos de colunas novos:
+`experimentos/selecao_grupos/01_inventario_colunas.py` lista todas as colunas do Censo de Roraima, ano a ano
+(2007–2025, todas as tabelas), com a presença no layout, a coleta no Brasil, o preenchimento nas escolas de RR em
+atividade e a descrição, as categorias e as notas do dicionário de dados do INEP (as 5 versões que vêm nos zips). As
+saídas são CSV e um `LEIA_ME.md` gerado pelo script, feitos para outra pessoa ou outra IA ler e propor os grupos.
+
+**Decisões dentro do script.**
+
+- **Coletada** = alguma escola do Brasil com valor no ano (numérica > 0, ou texto não vazio), medida no cache
+  completo; a marca "s" do dicionário do INEP vem ao lado, e o número de discordâncias sai no `LEIA_ME.md`.
+- **Preenchimento em RR só nas escolas em atividade** (`TP_SITUACAO_FUNCIONAMENTO` = 1): de 2022 em diante o INEP
+  deixa em branco as escolas paralisadas ou extintas, que não têm rendimento.
+- **Sem desfecho.** O script não lê o rendimento, o dataset nem a base; a escolha dos grupos não pode olhar a relação
+  com o abandono (regra 7).
+
+**A pasta `saida/` é versionada** (exceção no `.gitignore`, como a do levantamento): o dicionário só se regera com
+os zips, que hoje só o Gustavo tem.
+
+**A escolha dos grupos não é feita aqui.** A IA ou a pessoa propõe; o grupo decide por pertinência, cobertura,
+estabilidade e redundância, registra aqui e, para um estudo, fixa no `docs/PROTOCOLO.md` antes de rodar.
+
+**O painel de resultados fica de lado.** O notebook `05_painel_resultados.ipynb` (proposto em 2026-11-19, não
+versionado) foi guardado num stash local (`git stash list`, "painel de resultados"); o gráfico de fatores dele usava
+a escala 0→1 e precisa ser trocado pelo efeito que decide antes de voltar.
+
+**Evidência:** `experimentos/selecao_grupos/saida/LEIA_ME.md`.
