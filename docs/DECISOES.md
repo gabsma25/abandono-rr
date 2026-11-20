@@ -850,3 +850,48 @@ versionado) foi guardado num stash local (`git stash list`, "painel de resultado
 a escala 0→1 e precisa ser trocado pelo efeito que decide antes de voltar.
 
 **Evidência:** `experimentos/selecao_grupos/saida/LEIA_ME.md`.
+
+---
+
+## 2026-11-20 — Estudo E (v0): as colunas do Censo entram brutas, por filtro mecânico, num estudo exploratório
+
+**Decisão (Gustavo).** Para ter um resultado ainda nesta data, as colunas do cache completo do Censo entram nos
+modelos **brutas**, escolhidas por um filtro mecânico de saúde que só olha preditores (`docs/PROTOCOLO.md`, E.2):
+- prefixo `QT_`/`IN_`;
+- fora as proibidas e as 22 colunas-fonte da infraestrutura;
+- ≥ 95% preenchidas em cada ano de 2013 a 2024;
+- inteiras e não negativas, `IN_` só 0/1;
+- nenhum valor com mais de 99% em 2013–2018.
+
+Resultado: 124 colunas, lista fechada no protocolo. As seis faixas de idade das matrículas ficam declaradas
+parcialmente mecânicas (regra 6). Nenhuma coluna calculada é criada: só a infraestrutura (18 → 4 → 1) tem base
+em artigo publicado. As outras derivações, como razões e transformações, ficam para depois da revisão coluna a
+coluna.
+
+**Motivo.** A mudança de pergunta de 2026-11-14 registrou que a janela não tinha matrículas, escola indígena nem
+dados de docentes. O cache completo do Censo (2026-11-19) passou a ter essas colunas. A revisão coluna a coluna
+pela metodologia de grupos (`docs/notas/METODOLOGIA_GRUPOS.md`) leva semanas. A versão 0 mede, com as colunas
+como estão, se elas mudam o quanto se explica e a lista de risco.
+
+**Travas, aceitas pelo Gustavo:**
+1. o filtro é mecânico e decidido antes, sem desfecho (regra 7);
+2. há protocolo antes de rodar, e o estudo é marcado exploratório (anos já vistos);
+3. o desfecho de 2025 fica fechado;
+4. a limpeza que vem depois é guiada pela qualidade do dado e nunca por "a métrica subiu". O desempenho só volta
+   a ser medido em marcos com protocolo próprio.
+
+**Desvio da regra B.6 e da regra 12.** O protocolo vai para o branch `estudo/e-censo-bruto-v0` por commit e
+push antes da execução, o que lhe dá data pública. Ele não passa antes por pull request revisado. A revisão
+acontece no pull request da execução.
+
+**Alternativa descartada:** revisar cada grupo de colunas antes de qualquer modelo. É o caminho certo para a
+versão final e continua sendo o próximo passo, mas não cabe no prazo.
+
+**Consequências:**
+- o `dataset/escolas_rr_v0.2.0.csv` e o `src/estendida/grupos/ligados.txt` não mudam;
+- o grupo `censo_bruto_v0` existe, mas não é ligado;
+- os resultados dos estudos anteriores continuam valendo.
+
+**Evidência:** `docs/PROTOCOLO.md`, seção E.
+
+**Interpretação registrada antes de rodar (Gustavo).** "Coluna constante na etapa" (E.2) é medida separadamente no universo da Parte 1 (S2, S2r) e no da Parte 2 (A+, B+), só com os preditores; as duas contagens saem no `01_universo.csv`.

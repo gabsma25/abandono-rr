@@ -8,6 +8,8 @@ Este arquivo guarda, nesta ordem:
 - **C.** o protocolo do **estudo de fatores associados ao nível de abandono**, escrito **antes** de qualquer
   execução;
 - **D.** o que acontece depois de uma execução (as saídas, o relato e a correção de erros);
+- **E.** o **estudo exploratório E (v0)**: as colunas brutas do Censo, escolhidas por um filtro mecânico sem
+  desfecho, na associação (desenho do C) e na previsão do ano seguinte, escrito antes da execução;
 - no fim, o protocolo da Etapa 4 (regressão do abandono em t+1), registrado em 2026-11-11, **nunca executado**,
   guardado inteiro na seção "Protocolo registrado, não executado, substituído em 2026-11-14".
 
@@ -383,6 +385,290 @@ valer (eles supõem uma análise fixada antes de ver o desfecho). Isto diz o que
 6. **Falha técnica no meio da execução:** as saídas parciais são guardadas numa pasta separada, a falha é
    registrada no `docs/DECISOES.md` e a execução é refeita com o mesmo commit; como as sementes são fixas, os
    números são idênticos.
+
+---
+
+## E. Estudo exploratório E (v0) — colunas brutas do Censo, por filtro mecânico
+
+**Estado: escrito em 2026-11-20, antes de qualquer execução deste estudo.** Nenhum modelo com estas colunas foi
+treinado e nenhuma relação delas com o abandono foi olhada. A lista de colunas saiu de um filtro que só usa
+preditores (E.2).
+
+**É exploratório, e o relatório diz isso.** Foi desenhado depois de conhecidos os resultados do estudo C e da
+classificação (seção A). Os desfechos 2016–2019 já foram vistos. Os outros anos da janela também, no estudo C.
+
+**Desvio declarado da regra B.6.** O protocolo vai para o branch com commit e push antes da execução, o que lhe
+dá data pública. Ele **não** passa antes por pull request revisado por outro integrante. A revisão vem depois,
+no pull request da execução. O desvio está registrado no `docs/DECISOES.md` (2026-11-20).
+
+**O que não muda:**
+- o `dataset/escolas_rr_v0.2.0.csv`;
+- o `src/estendida/grupos/ligados.txt`;
+- os resultados do estudo C;
+- o desfecho de 2025, que não é lido por nada deste estudo.
+
+### E.1 Perguntas
+
+- **E1 (associação, desenho do estudo C).** As colunas do Censo que passam no filtro mecânico explicam mais da
+  diferença de abandono entre escolas, no próprio ano t, do que o conjunto do estudo C (território, rede,
+  infraestrutura e ano)?
+- **E2 (previsão do ano seguinte, desenho da Etapa 4 adaptado).** Com essas colunas, a lista das escolas de maior
+  risco em t+1 fica melhor do que a da régua (B1R_lag)? E, sem nenhum histórico de rendimento, fica melhor do que
+  a da B2?
+
+Este estudo não responde à Q2 para as colunas novas. Elas não recebem coeficiente, veredito de fator nem frase de
+efeito: são brutas, sem a revisão coluna a coluna. A tabela de fatores continua sendo a do estudo C.
+
+### E.2 A lista fechada de colunas (filtro mecânico, sem desfecho)
+
+**Fonte:** as tabelas `dados/cache/censo_completo/{ano}_escola.parquet`, anos 2007 a 2024. O universo do filtro
+são as escolas públicas em funcionamento: `TP_SITUACAO_FUNCIONAMENTO` = 1 e `TP_DEPENDENCIA` em {1, 2, 3}.
+
+**Conversão:** o texto vira número com `pd.to_numeric(errors="coerce")`. `'--'`, texto vazio e qualquer valor não
+numérico viram ausente, **nunca 0** (regra 8).
+
+**Regras, aplicadas nesta ordem.** Cada coluna recebe o motivo da primeira regra em que cai:
+
+1. **tipo:** só passa coluna com prefixo `QT_` (contagem) ou `IN_` (indicador). Saem `CO_`, `NO_`, `TP_`,
+   `DT_`, `NU_`, `DS_`, `SG_`, `ID_` e as demais.
+2. **proibida:** sai o nome que bate com `abandono|aprovacao|reprovacao|alto_risco|variacao|tx_rend|base_atual`
+   (sem diferenciar maiúsculas).
+3. **já usada:** saem as 22 colunas-fonte dos 18 itens de infraestrutura (`src/estendida/grupos/infraestrutura.py`).
+   Elas já estão no estudo pelas dimensões, e o projeto nunca usa dois níveis da mesma informação (C.3). São estas:
+   `IN_AGUA_POTAVEL`, `IN_AGUA_FILTRADA`, `IN_ENERGIA_REDE_PUBLICA`, `IN_LIXO_SERVICO_COLETA`,
+   `IN_BANHEIRO`, `IN_BANHEIRO_DENTRO_PREDIO`, `IN_DESPENSA`, `IN_REFEITORIO`, `IN_SALA_DIRETORIA`,
+   `IN_SALA_PROFESSOR`, `IN_SECRETARIA`, `IN_BIBLIOTECA`, `IN_BIBLIOTECA_SALA_LEITURA`,
+   `IN_LABORATORIO_INFORMATICA`, `IN_PATIO_COBERTO`, `IN_PATIO_DESCOBERTO`, `IN_QUADRA_ESPORTES`,
+   `IN_COMPUTADOR`, `IN_EQUIP_IMPRESSORA`, `IN_EQUIP_MULTIMIDIA`, `IN_EQUIP_RETROPROJETOR`, `IN_INTERNET`.
+4. **preenchimento:** sai a coluna com menos de 95% de valores não ausentes em **algum** ano de 2013 a 2024. A
+   faixa cobre a janela e mantém possível o teste limpo de 2025 (t = 2024), que este estudo não usa.
+5. **escala:** sai a coluna que, em 2013–2024, tenha valor negativo ou não inteiro, e a de prefixo `IN_` com valor
+   fora de {0, 1}.
+6. **informação:** sai a coluna em que um único valor ocupa mais de 99% dos valores não ausentes de 2013–2018.
+
+Os limites (95%, 99%) e a faixa de anos foram fixados pelo Gustavo antes de qualquer modelo (`docs/DECISOES.md`,
+2026-11-20). Nenhum deles foi escolhido olhando o desfecho.
+
+**A lista resultante tem 124 colunas.** Ela é fechada aqui. O código recalcula o filtro a partir do cache e
+**para com erro** se a lista não for idêntica a esta: isso seria defeito de código ou de dado, não uma escolha.
+Os blocos (E.6) são definidos pelo nome e servem só para a importância por permutação:
+
+- **predio_servicos** (29): `IN_AGUA_CACIMBA`, `IN_AGUA_FONTE_RIO`, `IN_AGUA_INEXISTENTE`, `IN_AGUA_POCO_ARTESIANO`, `IN_AGUA_REDE_PUBLICA`, `IN_ALMOXARIFADO`, `IN_AREA_VERDE`, `IN_AUDITORIO`, `IN_BANHEIRO_CHUVEIRO`, `IN_BANHEIRO_EI`, `IN_BANHEIRO_PNE`, `IN_COZINHA`, `IN_DEPENDENCIAS_OUTRAS`, `IN_ENERGIA_INEXISTENTE`, `IN_ESGOTO_FOSSA`, `IN_ESGOTO_INEXISTENTE`, `IN_ESGOTO_REDE_PUBLICA`, `IN_LABORATORIO_CIENCIAS`, `IN_LIXO_ENTERRA`, `IN_LIXO_QUEIMA`, `IN_LOCAL_FUNC_GALPAO`, `IN_LOCAL_FUNC_OUTROS`, `IN_LOCAL_FUNC_PREDIO_ESCOLAR`, `IN_LOCAL_FUNC_SALAS_OUTRA_ESC`, `IN_PARQUE_INFANTIL`, `IN_QUADRA_ESPORTES_COBERTA`, `IN_QUADRA_ESPORTES_DESCOBERTA`, `IN_SALA_ATENDIMENTO_ESPECIAL`, `IN_SALA_LEITURA`
+- **oferta_turno** (16): `IN_DIURNO`, `IN_EJA`, `IN_EJA_FUND`, `IN_EJA_MED`, `IN_ESP`, `IN_ESP_CC`, `IN_FUND`, `IN_FUND_AF`, `IN_FUND_AI`, `IN_INF`, `IN_INF_CRE`, `IN_INF_PRE`, `IN_MED`, `IN_NOTURNO`, `IN_PROF`, `IN_PROF_TEC`
+- **escola_indigena** (1): `IN_EDUCACAO_INDIGENA`
+- **equipamentos** (10): `IN_EQUIP_COPIADORA`, `IN_EQUIP_DVD`, `IN_EQUIP_IMPRESSORA_MULT`, `IN_EQUIP_PARABOLICA`, `IN_EQUIP_SOM`, `IN_EQUIP_TV`, `QT_EQUIP_DVD`, `QT_EQUIP_MULTIMIDIA`, `QT_EQUIP_SOM`, `QT_EQUIP_TV`
+- **docentes** (15): `QT_DOC_BAS`, `QT_DOC_EJA`, `QT_DOC_EJA_FUND`, `QT_DOC_EJA_MED`, `QT_DOC_ESP`, `QT_DOC_ESP_CC`, `QT_DOC_FUND`, `QT_DOC_FUND_AF`, `QT_DOC_FUND_AI`, `QT_DOC_INF`, `QT_DOC_INF_CRE`, `QT_DOC_INF_PRE`, `QT_DOC_MED`, `QT_DOC_PROF`, `QT_DOC_PROF_TEC`
+- **matriculas** (37): `QT_MAT_BAS`, `QT_MAT_BAS_0_3`, `QT_MAT_BAS_11_14`, `QT_MAT_BAS_15_17`, `QT_MAT_BAS_18_MAIS`, `QT_MAT_BAS_4_5`, `QT_MAT_BAS_6_10`, `QT_MAT_BAS_AMARELA`, `QT_MAT_BAS_BRANCA`, `QT_MAT_BAS_D`, `QT_MAT_BAS_FEM`, `QT_MAT_BAS_INDIGENA`, `QT_MAT_BAS_MASC`, `QT_MAT_BAS_N`, `QT_MAT_BAS_ND`, `QT_MAT_BAS_PARDA`, `QT_MAT_BAS_PRETA`, `QT_MAT_EJA`, `QT_MAT_EJA_FUND`, `QT_MAT_EJA_MED`, `QT_MAT_ESP`, `QT_MAT_ESP_CC`, `QT_MAT_FUND`, `QT_MAT_FUND_AF`, `QT_MAT_FUND_AF_INT`, `QT_MAT_FUND_AI`, `QT_MAT_FUND_AI_INT`, `QT_MAT_FUND_INT`, `QT_MAT_INF`, `QT_MAT_INF_CRE`, `QT_MAT_INF_CRE_INT`, `QT_MAT_INF_INT`, `QT_MAT_INF_PRE`, `QT_MAT_MED`, `QT_MAT_MED_INT`, `QT_MAT_PROF`, `QT_MAT_PROF_TEC`
+- **turmas_salas** (16): `QT_SALAS_UTILIZADAS`, `QT_TUR_BAS`, `QT_TUR_EJA`, `QT_TUR_EJA_FUND`, `QT_TUR_EJA_MED`, `QT_TUR_ESP`, `QT_TUR_ESP_CC`, `QT_TUR_FUND`, `QT_TUR_FUND_AF`, `QT_TUR_FUND_AI`, `QT_TUR_INF`, `QT_TUR_INF_CRE`, `QT_TUR_INF_PRE`, `QT_TUR_MED`, `QT_TUR_PROF`, `QT_TUR_PROF_TEC`
+
+**Parcialmente mecânicas (regra 6).** As seis faixas de idade das matrículas (`QT_MAT_BAS_0_3`,
+`QT_MAT_BAS_4_5`, `QT_MAT_BAS_6_10`, `QT_MAT_BAS_11_14`, `QT_MAT_BAS_15_17`, `QT_MAT_BAS_18_MAIS`) funcionam
+como distorção idade-série. Ela acumula a reprovação e o abandono dos anos anteriores. Elas entram declaradas
+assim, e a robustez S2r (E.4) mostra o resultado sem elas.
+
+**Por etapa.** As 124 colunas são da escola e entram nas duas etapas. Coluna constante no universo da etapa (um
+único valor não ausente, olhando só os preditores) sai mecanicamente daquela etapa, com contagem na tabela 0.
+
+**Como as colunas chegam ao estudo.** O módulo `src/estendida/grupos/censo_bruto_v0.py` segue o contrato do
+`src/estendida/grupos/README.md`: `NOME`, `COLUNAS` (a lista acima, na ordem alfabética) e `extrair()`. Ele
+**não é ligado** no `ligados.txt`, então o dataset não muda. O estudo chama `extrair()` e junta o resultado ao
+`dataset/escolas_rr_v0.2.0.csv` por (`ano`, `co_entidade`), com `how="left"` e `validate="m:1"` (regra 9). As
+colunas da linha são as do Censo do **próprio ano t**.
+
+### E.3 O que vale do estudo C sem mudança
+
+Valem sem mudança:
+- desfecho (`abandono_t`), unidade, etapas separadas, janela t = 2013–2018 e universo (C.2);
+- regra dos 30 e das 10 escolas (C.3);
+- referências Urbana e Estadual;
+- `GroupKFold(n_splits=5)` por `co_entidade`, com as **mesmas dobras** do estudo C;
+- alvo ÷ 100 e previsões de volta em pp, sem corte;
+- `Ridge(alpha=1.0)`;
+- MLP do exemplo do professor, com as 10 sementes;
+- métricas MAE, RMSE e R², dentro da amostra e na validação cruzada agrupada;
+- controle negativo com o mesmo critério (C.9).
+
+As funções do `experimentos/fatores_2013_2018/fatores.py` são reutilizadas sempre que possível.
+
+### E.4 Parte 1 — E1, associação
+
+**Conjuntos de preditores, por etapa:**
+
+| Conjunto | Preditores |
+|---|---|
+| **S0** | só `ano` (o modelo de referência da C.7) |
+| **S1** | o conjunto do estudo C: `localizacao`, `dependencia`, as quatro `dim_*_prop` e `ano` |
+| **S2** | S1 + as colunas da lista fechada (E.2) que não forem constantes na etapa |
+| **S2r** | robustez: S2 sem as seis faixas de idade |
+
+**Pipeline das colunas novas.** `SimpleImputer(strategy="median", add_indicator=True)` e depois
+`StandardScaler()`, ajustados **só na parte de treino de cada dobra** (regra 5). As colunas de S1 seguem o
+pipeline da C.7. Nenhuma transformação a mais (log, razão, teto). As colunas entram brutas, por decisão do
+Gustavo (2026-11-20).
+
+**Universo idêntico em S0, S1, S2 e S2r.** As linhas são as do estudo C. Ausente nas colunas novas é imputado
+na dobra, e a linha não sai.
+
+**Conferência de equivalência (antes de qualquer resultado novo).** S0 e S1, com linear e Ridge, devem reproduzir
+o `r2_cv` e o `delta_r2_cv` do `experimentos/fatores_2013_2018/saida/05_r2.csv`, com diferença menor que 1e-6.
+Se não reproduzirem, a execução **para**: é defeito de código. No MLP, a diferença é relatada e não para a
+execução.
+
+**O número que responde à E1, declarado agora:**
+- é a diferença de R² da validação cruzada agrupada **S2 − S1**, na **Ridge**;
+- como S0 é o mesmo, ela é igual a ΔR²(S2) − ΔR²(S1);
+- a Ridge, e não a linear da C.7, é escolhida por estrutura, sem olhar resultado. Com cerca de 120 colunas
+  correlacionadas, algumas somas exatas de outras (ex.: `QT_MAT_BAS_FEM` + `QT_MAT_BAS_MASC`), a regressão
+  linear sem penalização fica mal condicionada;
+- linear e MLP são relatados ao lado, sem veredito e sem troca de modelo pelo resultado (regra 7).
+
+**Inferência:**
+- bootstrap agrupado por escola sobre as **previsões fora-da-dobra já calculadas**, sem reajuste: 5.000
+  reamostragens, semente **20261120**, as mesmas para S1 e S2;
+- em cada reamostragem, recalculam-se o R² de S1 e o de S2 e guarda-se a diferença;
+- IC 95% pelos percentis; p bilateral por `src/avaliacao/bootstrap.p_bootstrap`;
+- no MLP (descritivo), calcula-se o R² de cada semente e tira-se a média.
+
+**Família F8 = {AF, EM}** (a diferença S2 − S1 na Ridge), com Holm, α = 0,05.
+
+**Margem prática: 0,02 de R².** É o mesmo valor do critério do controle negativo (C.9): a folga do ruído da
+validação cruzada. Menos que isso não se distingue do ruído do próprio desenho.
+
+**Vereditos**, nesta ordem:
+1. **ACRESCENTA:** diferença ≥ 0,02 **e** p com Holm ≤ 0,05;
+2. **NÃO ACRESCENTA:** limite superior do IC 95% (sem correção) abaixo de 0,02;
+3. **INCONCLUSIVO:** qualquer outro caso.
+
+**Controle negativo.** É a C.9 aplicada a S1 e S2: `abandono_t` embaralhado dentro de cada etapa e ano, com a
+semente 20261115 da C.9. O critério continua ΔR² < 0,02 para cada modelo e conjunto. Ele roda **primeiro**. Se
+reprovar, a execução para antes de qualquer resultado real (D.5).
+
+### E.5 Parte 2 — E2, previsão de t+1
+
+**Universo:** o da Etapa 4. Por etapa, escolas públicas (`rede_publica` = 1) com `abandono_tm1`, `abandono_t` e
+`abandono_t1` não vazios, t = 2013–2018. `abandono_t` só delimita o universo e nunca entra em X.
+
+**Divisão fixa:** treino t = 2013–2016 (desfechos 2014–2017); teste t = 2017–2018 (desfechos 2018–2019, **já
+vistos**). Sem sorteio de linhas.
+
+**Alvo:** `abandono_t1 / 100`. As previsões voltam a pp.
+
+**Conjuntos:**
+
+| Conjunto | Preditores |
+|---|---|
+| **A** | `abandono_tm1`, `reprovacao_tm1`, `variacao_abandono_defasada`, `localizacao`, `dependencia`, as quatro `dim_*_prop` |
+| **A+** | A + a lista fechada (sem as constantes da etapa) |
+| **B** | `localizacao`, `dependencia`, as quatro `dim_*_prop` (nenhuma variável de rendimento) |
+| **B+** | B + a lista fechada (sem as constantes da etapa) |
+
+- As dimensões entram em `_prop`, e não em `_zano` como na Etapa 4, pela decisão de 2026-11-14 (linha a linha).
+- O Censo de t entra como já entravam as dimensões de t na classificação (bloco 3).
+
+**Modelos:**
+- régua **B1R_lag**: ordena por `abandono_tm1`;
+- **B2**: `src/avaliacao/baselines.b2_mediana_estrato`;
+- `Ridge(alpha=1.0)`;
+- o **MLP do professor**, com as sementes 1 a 10.
+
+Pipeline: numéricas com `SimpleImputer(median, add_indicator=True)` + `StandardScaler`; categóricas com
+`OneHotEncoder(handle_unknown="ignore")`. Tudo ajustado só no treino.
+
+**Métrica que decide: Recall@20%** sobre `alto_risco_t1`:
+- em cada ano de teste, das escolas com `alto_risco_t1` = 1, a fração que está entre os 20% do topo da
+  ordenação;
+- empates pelo valor esperado (`src/avaliacao/metricas.prob_topk`);
+- o valor é a média simples dos dois anos de teste.
+
+MAE, RMSE e R² são descritivos.
+
+**Inferência:**
+- bootstrap agrupado por escola (`src/avaliacao/bootstrap.Agrupado`), 5.000 reamostragens, semente
+  **20261120**, as mesmas para todos;
+- no MLP, a métrica de cada semente em cada reamostragem, e depois a média.
+
+**Famílias (Holm dentro de cada uma, α = 0,05):**
+
+| Família | Diferença no Recall@20% | Testes |
+|---|---|---|
+| **F9** | Ridge A+ − régua; MLP A+ − régua | 2 modelos × 2 etapas = 4 |
+| **F10** | Ridge B+ − B2; MLP B+ − B2 | 2 modelos × 2 etapas = 4 |
+
+**Vereditos:** a mesma leitura da classificação (`src/avaliacao/classificacao.leitura`, margem +0,10 no
+Recall@20%):
+- **GANHO:** diferença > 0 e p Holm ≤ 0,05;
+- **SEM GANHO PRÁTICO:** limite superior do IC abaixo de +0,10;
+- **INCONCLUSIVO:** o resto.
+
+**Descritivo, com IC e sem veredito:**
+- A+ − A e B+ − B (o que o Censo acrescenta ao mesmo modelo);
+- Ridge − MLP;
+- as métricas de valor.
+
+### E.6 Importância por permutação (descritiva)
+
+- Feita na Parte 1, conjunto S2, para Ridge e MLP, à maneira da C.8: fora da dobra, `n_repeats = 20`, semente
+  20261120.
+- Calculada por coluna e por bloco.
+- Os blocos são os da E.2 (prédio e serviços, oferta e turno, escola indígena, equipamentos, docentes,
+  matrículas, turmas e salas) mais os do estudo C (território, rede, infraestrutura e ano, este só relatado).
+- A permutação em bloco usa o **mesmo** sorteio de linhas para todas as colunas do bloco. É feita na coluna bruta,
+  antes do pipeline, e o indicador de ausente acompanha.
+- Nenhuma coluna entra, sai ou recebe veredito por importância. A ordem é descrição, e o ranking é o roteiro da
+  limpeza seguinte.
+
+### E.7 Expectativas registradas antes de rodar
+
+- **Superar a régua é improvável.** Nenhum modelo a superou na classificação (seção A) nem na Etapa 2
+  (`docs/BASELINE.md`). Onde as colunas novas podem aparecer é na E1 e na F10 (sem histórico).
+- **No EM**, cerca de 120 colunas para algumas centenas de escolas-ano é pouco dado por coluna. Uma diferença
+  S2 − S1 negativa na validação cruzada é possível e seria resultado, não defeito.
+- **As colunas estão brutas.** Problemas já conhecidos ficam dentro delas, como as turmas multisseriadas contadas
+  como anos finais (boletim de saúde do G1, 2026-11-20) e escolas que mudam de série entre os anos. O resultado é o da versão 0, antes da limpeza.
+
+### E.8 O que a execução grava
+
+Código em `experimentos/censo_bruto_v0/estudo_e.py`. Ele lê o dataset v0.2.0, o cache do Censo, por meio do
+grupo, e as funções de `src/` e do estudo C, e não escreve fora da própria pasta. Recusa rodar se `saida/`
+existir (D.1).
+
+Ordem de execução:
+1. o filtro e a tabela 0;
+2. o controle negativo, que pode parar a execução;
+3. a equivalência com o estudo C, que pode parar a execução;
+4. a Parte 1;
+5. a Parte 2.
+
+Tudo é calculado em memória e gravado no fim. Se a execução parar, grava só o que levou à parada.
+
+| Arquivo | Conteúdo |
+|---|---|
+| `00_filtro.csv` | as colunas da tabela escola com o motivo de cada uma (E.2) |
+| `01_universo.csv` | escolas e escolas-ano por etapa e ano, nas duas partes; colunas constantes retiradas por etapa |
+| `02_controle_negativo.csv` | o controle (E.4): passou ou parou |
+| `03_equivalencia_c.csv` | S0 e S1 contra o `05_r2.csv` do estudo C |
+| `04_r2.csv` | Parte 1: S0, S1, S2 e S2r × modelo × etapa, com MAE, RMSE e R² dentro e na validação cruzada, ΔR², média e desvio nas sementes |
+| `05_f8.csv` | a diferença S2 − S1 (Ridge, F8: IC, p, p Holm, veredito) e as mesmas diferenças da linear e do MLP, descritivas |
+| `06_permutacao.csv` | importância por coluna e por bloco, com IC |
+| `07_previsao_metricas.csv` | Parte 2: métricas por etapa × conjunto × modelo, com IC |
+| `08_previsao_testes.csv` | F9 e F10 com vereditos; diferenças descritivas |
+| `RELATORIO.md` | gerado por código, só com números destes arquivos, e com as ressalvas: exploratório, anos já vistos, colunas brutas, desvio da B.6 |
+
+Cada CSV traz na primeira linha o commit, o branch, o sha256 do dataset e a data, como no estudo C. As saídas
+entram no git no pull request da execução (seção D).
+
+### E.9 O que este estudo responde e o que não responde
+
+- **Responde:** se as colunas brutas do Censo que passam num filtro mecânico de saúde aumentam o quanto se
+  explica da diferença de abandono entre escolas (E1), e se melhoram a lista de risco do ano seguinte contra a
+  régua e contra a B2 (E2), na versão 0, antes da limpeza.
+- **Não responde:**
+  - o peso de cada coluna (nenhuma coluna nova recebe veredito);
+  - causa;
+  - qualquer coisa sobre 2025, que fica fechado para o teste limpo;
+  - se os dados limpos dariam outro resultado. Isso é o trabalho seguinte, guiado pela qualidade do dado. A
+    métrica nunca decide qual coluna fica (regra 7). O desempenho só volta a ser medido em marcos com protocolo
+    próprio.
 
 ---
 
