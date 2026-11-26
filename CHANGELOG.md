@@ -23,6 +23,9 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `99_pipeline.py` perde o `--force`.
 
 ### Adicionado
+- `experimentos/previsao_t1/` (issue #15): o `CONTRATO.md` dos arquivos `pares.csv` e `importancias.csv`, o
+  `contrato.py` que o confere e o `sintetico.py`, que gera os dois com variáveis verdadeiras plantadas, sem ler
+  dado real (`docs/DECISOES.md`, 2026-11-25). Testes em `testes/test_previsao_t1_contrato.py`.
 - `experimentos/selecao_grupos/01_inventario_colunas.py`: inventário das colunas do Censo de RR, 2007–2025, ano a
   ano (presença no layout, coleta no Brasil, preenchimento nas escolas em atividade, descrição do dicionário do
   INEP), com saídas em CSV e um `LEIA_ME.md` para outra pessoa ou IA propor os grupos de colunas; a pasta

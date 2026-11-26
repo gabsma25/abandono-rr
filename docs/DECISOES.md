@@ -1048,3 +1048,23 @@ t = 2023, treino com os anos anteriores) quando a coluna é embaralhada. A conta
 média das sementes. A tabela mostra as 10 primeiras, e a lista completa, com todas as colunas, fica na variável
 `imp` (regra 7: todas reportadas, inclusive as nulas). É descrição do modelo, não causa, e não escolhe nem tira
 nenhuma coluna.
+
+## 2026-11-25 — Contratos `pares.csv` e `importancias.csv` (proposta da issue #15)
+
+**Decisão (João, proposta; aguarda a aprovação do Gustavo e da Gabriela no pull request).** As partes do
+esqueleto de previsão do ano seguinte (#16–#22) trocam dados por dois arquivos, descritos em
+`experimentos/previsao_t1/CONTRATO.md` e conferidos por `experimentos/previsao_t1/contrato.py`:
+- **`pares.csv`**, largo: uma linha por escola × ano t × etapa, com o alvo `abandono_t1` e uma coluna por
+  preditor, com os nomes do `dataset/DICIONARIO.md`. AF e EM no mesmo arquivo, pela coluna `etapa`.
+- **`importancias.csv`**, uma linha por modelo × recorte × etapa × semente × variável; as sementes não são
+  agregadas no arquivo, para que quem lê veja a variação entre elas.
+
+**Por quê.** Os formatos foram conversados pelos três, mas não ficaram escritos em lugar nenhum. O largo com os
+nomes do dataset é o desenho do `escolas_rr_v0.2.0.csv`, então o `dados.py` (#17) só une e filtra, e o mesmo
+código dos modelos roda nos pares sintéticos e nos reais. O validador transforma em erro as regras 5, 6, 8, 9 e
+11 do `CLAUDE.md` que dependem só do formato: nenhuma coluna de t+1 nem `_zano` entre os preditores, nunca as três
+taxas do mesmo ano juntas, `co_entidade` como texto, alvo nunca vazio.
+
+**Evidência.** `testes/test_previsao_t1_contrato.py`: os exemplos do `CONTRATO.md` passam no validador; o
+sintético segue o contrato, é reprodutível e recupera os efeitos plantados; cada violação é denunciada pelo motivo
+certo. Nenhum dado real é lido.

@@ -27,4 +27,5 @@ Regras:
 | [`classificacao_2013_2018/`](classificacao_2013_2018/) | ferramenta de alerta precoce do projeto anterior: classificação de alto risco na janela segura | encerrado; executado uma vez em 2026-11-10 |
 | [`fatores_2013_2018/`](fatores_2013_2018/) | estudo de fatores associados ao nível de abandono (`docs/PROTOCOLO.md`, seção C) | encerrado; executado uma vez em 2026-11-15 |
 | [`selecao_grupos/`](selecao_grupos/) | inventário das colunas do Censo ano a ano, com coleta, preenchimento em RR e o dicionário do INEP, para escolher os grupos de colunas | em andamento |
+| [`previsao_t1/`](previsao_t1/) | esqueleto da previsão do abandono de t+1 e dos rankings de variáveis por redes; contratos `pares.csv` e `importancias.csv` e gerador sintético | em andamento; só dados sintéticos |
 | [`levantamento_colunas_censo/`](levantamento_colunas_censo/) | levantamento das colunas do Censo Escolar 2007–2025, só cabeçalhos (início de M1/M6) | em andamento; resultado vai ao grupo |
