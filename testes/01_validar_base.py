@@ -5,11 +5,11 @@
 Lê os parquets de saida/etapas/ e roda ~30 checks:
   - selecionado (02a)  : tipagem, chave única, taxas em [0,100], sem '--'
   - longitudinal (02b) : LAG/DELTA/T1 coerentes escola a escola, ANO_ALVO
-  - censo (03)         : 18 features binárias, sem "zeros estruturais"
-  - base final (04)    : cobertura no universo tx_rend, chaves únicas
-  - índices (05)       : 04 + 6 colunas (a validação detalhada está em
+  - grupo infraestrutura (03_grupo_infraestrutura): 18 features binárias, sem "zeros estruturais"
+  - base com os itens  : o 02b + as colunas extraídas do grupo; cobertura no universo tx_rend, chaves únicas
+  - base com grupos    : + as 6 derivadas do grupo (a validação detalhada está em
                          testes/02_validar_indices.py)
-  - base_atual.parquet : idêntica ao 05
+  - base_atual.parquet : idêntica à 03_base_com_grupos
   - 01 bruto x 02b     : mesmas escolas em cada ano (seção 14)
 
 Saída:
@@ -29,19 +29,21 @@ import pandas as pd
 
 
 RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-BASE_PROJETO = RAIZ  # antes: a pasta abandono-escolar; os dados agora ficam em RAIZ/dados
+BASE_PROJETO = GUSTAVO = RAIZ  # nomes do projeto anterior (abandono-escolar e a pasta gustavo/)
+import importlib.util  # noqa: E402
 
-RAIZ = next(p for p in Path(__file__).resolve().parents if (p / "src" / "estendida").is_dir())
-GUSTAVO = RAIZ  # raiz do abandono-rr (no projeto anterior, a pasta gustavo/)
+_spec = importlib.util.spec_from_file_location(
+    "grupo_infraestrutura", RAIZ / "src" / "estendida" / "grupos" / "infraestrutura.py")
+INFRA = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(INFRA)
 SAIDA_ETAPAS = GUSTAVO / "saida" / "etapas"
 SAIDA_REL = GUSTAVO / "saida" / "relatorios"
 SAIDA_REL.mkdir(parents=True, exist_ok=True)
 
 P_SEL = SAIDA_ETAPAS / "02a_tx_rend_selecionado.parquet"
 P_LONG = SAIDA_ETAPAS / "02b_tx_rend_longitudinal.parquet"
-P_CENSO = SAIDA_ETAPAS / "03_censo_features.parquet"
-P_FINAL = SAIDA_ETAPAS / "04_base_com_censo.parquet"
-P_IND = SAIDA_ETAPAS / "05_base_com_indices.parquet"
+P_CENSO = SAIDA_ETAPAS / "03_grupo_infraestrutura.parquet"
+P_IND = SAIDA_ETAPAS / "03_base_com_grupos.parquet"
 P_FONTES = SAIDA_REL / "fontes_features_censo.csv"
 P_BRUTO = SAIDA_ETAPAS / "01_tx_rend_bruto.parquet"
 P_ATUAL = GUSTAVO / "saida" / "base_atual.parquet"
@@ -96,9 +98,8 @@ secao("0. CARREGAMENTO")
 paths_obrigatorios = {
     "02a selecionado": P_SEL,
     "02b longitudinal": P_LONG,
-    "03 censo": P_CENSO,
-    "04 base final": P_FINAL,
-    "05 base com índices": P_IND,
+    "03 grupo infraestrutura": P_CENSO,
+    "03 base com grupos": P_IND,
     "fontes do censo": P_FONTES,
     "base_atual": P_ATUAL,
 }
@@ -110,16 +111,17 @@ for nome, p in paths_obrigatorios.items():
 sel = pd.read_parquet(P_SEL)
 lon = pd.read_parquet(P_LONG)
 censo = pd.read_parquet(P_CENSO)
-base = pd.read_parquet(P_FINAL)
 ind = pd.read_parquet(P_IND)
+# "base" = o 02b + as colunas extraídas do grupo infraestrutura (o que era o 04); "ind" = com as derivadas
+base = ind[list(lon.columns) + INFRA.COLUNAS].copy()
 fontes = pd.read_csv(P_FONTES, dtype={'coluna_usada': 'string'}).fillna({'coluna_usada': ''})
 atual = pd.read_parquet(P_ATUAL)
 
 ok(f"02a selecionado:    {sel.shape[0]:>7,} × {sel.shape[1]:>3}")
 ok(f"02b longitudinal:   {lon.shape[0]:>7,} × {lon.shape[1]:>3}")
-ok(f"03 censo features:  {censo.shape[0]:>7,} × {censo.shape[1]:>3}")
-ok(f"04 base final:      {base.shape[0]:>7,} × {base.shape[1]:>3}")
-ok(f"05 com índices:     {ind.shape[0]:>7,} × {ind.shape[1]:>3}")
+ok(f"03 grupo infra:     {censo.shape[0]:>7,} × {censo.shape[1]:>3}")
+ok(f"03 com itens:       {base.shape[0]:>7,} × {base.shape[1]:>3}")
+ok(f"03 com grupos:      {ind.shape[0]:>7,} × {ind.shape[1]:>3}")
 ok(f"base_atual:         {atual.shape[0]:>7,} × {atual.shape[1]:>3}")
 
 anos = sorted(base["ANO"].dropna().unique().tolist())
@@ -155,7 +157,7 @@ else:
     fail(f"taxas não-Float64: {nao_float}")
 
 
-for nome_est, df_est in [("02b", lon), ("03", censo), ("04", base), ("05", ind)]:
+for nome_est, df_est in [("02b", lon), ("03 grupo", censo), ("03 itens", base), ("03 grupos", ind)]:
     if str(df_est["CO_ENTIDADE"].dtype) == "string" and str(df_est["ANO"].dtype) in ("Int16", "int16"):
         ok(f"{nome_est}: CO_ENTIDADE string e ANO inteiro 16 bits")
     else:
@@ -388,23 +390,24 @@ else:
 
 
 # ==================================================================
-# 13. base_atual idêntica ao 05 e 05 preserva o 04
+# 13. base_atual idêntica à base com grupos, e os grupos só acrescentam
 # ==================================================================
-secao("13. base_atual = 05 e 05 preserva 04")
+secao("13. base_atual = 03_base_com_grupos, e os grupos só acrescentam")
 
 if ind.equals(atual):
-    ok("base_atual.parquet é idêntico ao 05_base_com_indices.parquet")
+    ok("base_atual.parquet é idêntico ao 03_base_com_grupos.parquet")
 else:
-    fail("base_atual e 05 divergem")
-if ind[list(base.columns)].equals(base):
-    ok("05 contém todas as colunas do 04 sem alteração")
+    fail("base_atual e 03_base_com_grupos divergem")
+lon_norm = lon.assign(CO_ENTIDADE=lon["CO_ENTIDADE"].astype(str).str.strip().astype("string"))
+if ind[list(lon.columns)].equals(lon_norm):
+    ok("a base com grupos contém o 02b sem alteração (mesmas linhas, na mesma ordem)")
 else:
-    fail("05 alterou colunas do 04")
-esperado_05 = 11 if "IIE_prop" in ind.columns else 6   # 5 zano + marcador (+5 prop com --com-prop)
-if ind.shape[1] - base.shape[1] == esperado_05:
-    ok(f"05 acrescenta exatamente {esperado_05} colunas ao 04")
+    fail("os grupos alteraram colunas ou linhas do 02b")
+esperadas = list(lon.columns) + INFRA.COLUNAS + INFRA.DERIVADAS
+if list(ind.columns) == esperadas:
+    ok(f"colunas = 02b + {len(INFRA.COLUNAS)} extraídas + {len(INFRA.DERIVADAS)} derivadas do grupo infraestrutura")
 else:
-    fail(f"05 acrescenta {ind.shape[1] - base.shape[1]} colunas (esperado {esperado_05})")
+    fail(f"colunas inesperadas: {sorted(set(ind.columns) ^ set(esperadas))[:8]}")
 
 
 # ==================================================================

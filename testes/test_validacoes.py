@@ -3,8 +3,8 @@ Roda os scripts de validação herdados do projeto anterior e exige 0 falhas em 
 
   01  base: rendimento 2007–2025, lags, desfecho de t+1, conjunto de escolas
   02  índices de infraestrutura (IIE e dimensões), contra o 05 do pipeline
-  03  Censo pós-04; com --completo, confere 2019–2025 célula a célula contra os zips originais
-      em dados/origem/ (2007–2018 não têm original no projeto: ressalva em docs/DECISOES.md)
+  03  Censo pós-04; com --completo, confere célula a célula contra os zips originais em dados/origem/
+      cada ano que tiver zip (2019–2025 desde a migração; 2007–2018 depois do registro, docs/DECISOES.md)
   04  instrumento de avaliação: métricas, réguas, universo, bootstrap por escola e Holm
   08  classificação de alto risco: painel, rótulo, sem vazamento, réguas e funil
 
@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 
 import pytest
+
+from src.aquisicao import ano_do_nome
 
 RAIZ = Path(__file__).resolve().parents[1]
 SCRIPTS = ["01_validar_base.py", "02_validar_indices.py", "03_validar_censo_pos04.py --completo",
@@ -44,11 +46,14 @@ def test_03_comparacao_com_backup_de_outubro():
     assert "❌" not in secao
 
 
-def test_03_confere_2019_2025_com_os_zips_originais():
-    """Seção F do teste 03: os 7 anos de 2019 a 2025 conferem célula a célula com os zips do INEP."""
-    zips = sorted((RAIZ / "dados" / "origem" / "censo").glob("microdados_censo_escolar_*.zip"))
-    if len(zips) < 7:
-        pytest.skip(f"só {len(zips)} dos 7 zips do Censo 2019–2025 estão em dados/origem/censo: a conferência com o "
+def test_03_confere_com_os_zips_originais():
+    """Seção F do teste 03: cada ano com zip do Censo em dados/origem/censo confere célula a célula com o original.
+    2019–2025 são o mínimo para o teste rodar; 2007–2018 entram quando os zips estiverem lá
+    (python -m src.aquisicao --registrar 2007-2018, docs/DECISOES.md)."""
+    zips = (RAIZ / "dados" / "origem" / "censo").glob("microdados_censo_escolar_*.zip")
+    anos = sorted({ano_do_nome(z.name) for z in zips} - {None})
+    if not set(range(2019, 2026)) <= set(anos):
+        pytest.skip(f"faltam zips do Censo 2019–2025 em dados/origem/censo (há: {anos}): a conferência com o "
                     "original não roda. Obtenha-os com python -m src.aquisicao --origem-local PASTA (ou --baixar)")
     rel = (RAIZ / "saida" / "relatorios" / "validacao_pos04.txt").read_text(encoding="utf-8")
-    assert "7 anos conferem célula a célula com o microdado ORIGINAL: 2019–2025" in rel
+    assert f"{len(anos)} anos conferem célula a célula com o microdado ORIGINAL: {anos[0]}–{anos[-1]}" in rel

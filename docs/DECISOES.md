@@ -477,6 +477,60 @@ os anos da etapa) e o `rodar_tudo.py` num clone limpo, sem `dados/origem/`.
 
 ---
 
+## 2026-11-15 — Conferência do código do estudo de fatores contra o protocolo, e o que foi corrigido
+
+**O que foi feito.** O `experimentos/fatores_2013_2018/fatores.py` foi conferido contra as seções B, C e D do
+`docs/PROTOCOLO.md`, seção por seção, antes de qualquer execução. **Essa conferência não foi independente:** foi
+feita pelo mesmo autor do código (o assistente de programação, na mesma sessão). Ela não substitui a revisão do
+código por outro integrante, que continua sendo condição para a execução.
+
+**Corrigido antes de qualquer execução** (um commit cada, todos com teste em `testes/test_fatores.py`):
+
+1. **As saídas não podiam entrar no git**, porque o `.gitignore` ignorava toda pasta `saida/`. Há agora uma
+   exceção para `experimentos/fatores_2013_2018/saida/`. Com a pasta versionada, a trava "recusa se `saida/`
+   existe" vale em qualquer clone depois que as saídas forem commitadas.
+2. **A figura principal trocava os rótulos** quando o AF e o EM tinham fatores diferentes (a regra dos 30 pode
+   excluir categorias diferentes em cada etapa): os dois painéis compartilhavam o eixo y. Cada painel tem
+   agora o seu eixo.
+3. **O commit do cabeçalho podia não ser o código que rodou.** `executar()` recusa rodar com a árvore do git
+   suja, antes de calcular qualquer coisa, e o cabeçalho leva o commit e o branch.
+4. **A robustez da janela 2012–2019 reaplicava a regra dos 30**, contra o C.13 (a tabela 0 é o único lugar).
+   Ela usa agora as categorias de `dependencia` da tabela 0 da janela principal, e as linhas retiradas vão
+   para o `08_robustez.csv`.
+
+**Corrigido junto, sem efeito em nenhum veredito:** o `07_controle_negativo.csv` ganhou os R² do desfecho
+embaralhado; a tabela 0 ganhou a contagem por ano; o `02_correlacao.csv` passou a incluir as dummies das
+categóricas; a contagem de previsões fora de [0, 100] deixou de truncar a média das sementes e existe também
+dentro da amostra; a figura leva o commit, o branch e o sha256 do dataset.
+
+**Conhecidas, não corrigidas; não mudam vereditos:**
+
+- **A comparação da C.8 não sai pronta num arquivo.** O `06_permutacao.csv` traz as importâncias e o
+  `04_fatores.csv` os efeitos padronizados; pôr as duas ordens lado a lado fica para o relatório, que só
+  reorganiza os dois arquivos (regra 4).
+- **A família de Holm é calculada sobre os p que existem.** Um coeficiente sem nenhuma reamostragem válida
+  sairia da família, e o `n_familia` do 04 ficaria diferente do `familia_f7` da tabela 0. Depois da regra dos
+  30 isso é praticamente impossível; se acontecer, as duas contagens ficam nos arquivos e a diferença é
+  relatada.
+- **O modelo só com o ano passa por outro caminho numérico.** Com só as dummies de ano, o pré-processamento
+  devolve uma matriz esparsa, e a regressão linear e a Ridge usam outro algoritmo para ela. A diferença, medida
+  em dados sintéticos, fica na última casa de ponto flutuante das previsões e não aparece no R².
+- **`executar()` pode ser chamada direto**, sem passar pelo `main()` e pela recusa de `saida/` existente. A
+  recusa da árvore suja vale nos dois caminhos; a de `saida/` existente, só na linha de comando.
+
+**Leituras que o código fez onde o protocolo não é explícito** (ficam registradas; nenhuma muda veredito): do
+modelo secundário só o `iie_prop` é relatado; o IC da importância por permutação junta sementes, dobras e
+repetições; na janela 2012–2019, o ano de referência das dummies é 2012.
+
+**Seção D do protocolo.** Acrescentado o item 6, a falha técnica no meio da execução: as saídas parciais são
+guardadas numa pasta separada, a falha é registrada aqui e a execução é refeita com o mesmo commit; como as
+sementes são fixas, os números são idênticos.
+
+**Evidência:** `testes/test_fatores.py` (rótulos da figura com exclusões diferentes, recusa da árvore suja,
+robustez com as categorias da tabela 0, colunas das saídas) e `git check-ignore` na pasta de saídas.
+
+---
+
 ## 2026-11-15 — Revisão do João no PR #9: o que mudou no protocolo antes do merge
 
 **A revisão.** O João revisou o pull request #9 em 2026-11-15: clone limpo, `rodar_tudo.py` verde, leitura do
@@ -516,3 +570,481 @@ outras duas notas opcionais do revisor (o rótulo `GUSTAVO:` no cabeçalho do pi
 quem quer reconstruir o cache a partir dos zips) ficam para depois.
 
 **Evidência:** `docs/revisoes/2026-11-15_joao_pr9.md` e os commits de texto do protocolo neste pull request.
+
+---
+
+## 2026-11-15 — Execução do estudo de fatores antes da aprovação formal do PR #9
+
+**Decisão (pesquisadora).** Execução do estudo de fatores no branch `integracao/gabriela`, antes da aprovação
+formal do PR #9 e sem PR do código. O protocolo recebeu a revisão do João, com os comentários aplicados
+(commits `76e2256` a `15181ae`), mas ainda não a aprovação. O código foi conferido pela autora-agente (revisão
+não independente) e por testes com dados sintéticos em Windows (Claude Code) e em Linux (Claude, sessão de
+chat, no commit `9678207`: `rodar_tudo.py` com 109 aprovados e 2 pulados, por falta dos zips do INEP;
+`test_fatores.py` com 21 de 21; `git status` limpo depois de regerar).
+
+**Desvio registrado.** Isso desvia da regra 10 e da seção B.6 do `docs/PROTOCOLO.md` (o protocolo no `main`
+por pull request revisado antes de qualquer execução) e da regra 12.
+
+**Consequência.** A partir desta execução, o protocolo fica congelado: a aprovação do #9 passa a confirmar o
+que rodou, e qualquer mudança pedida depois vira um estudo novo, com protocolo próprio.
+
+**Data pública do protocolo.** O protocolo não foi depositado em repositório externo: ele tem data pública só
+pelo push no GitHub (branches `docs/leva-pilha-ao-main` e `integracao/gabriela`), feito antes da execução.
+
+---
+
+## 2026-11-18 — Merge direto da correção do `test_sem_executar_nada_roda` (desvio da regra 12)
+
+**O que aconteceu.** Depois do commit `c2b9adb` (saídas do estudo de fatores versionadas), a pasta
+`experimentos/fatores_2013_2018/saida/` existe em todo clone, e o `testes/test_fatores.py::test_sem_executar_nada_roda`,
+que conferia a pasta real, falhava em qualquer máquina (os "109 aprovados" de 2026-11-15 são do commit `9678207`,
+anterior às saídas). O teste passou a usar uma pasta temporária, como o `test_executar_recusa_saida_existente`
+(commit `62e66a9`). O Gustavo mergeou direto na `integracao/gabriela`, sem revisão, em 2026-11-18.
+
+**Alcance.** Duas linhas num teste; o que ele confere não mudou. `python rodar_tudo.py` no Windows, sem os zips:
+109 aprovados, 2 pulados.
+
+---
+
+## 2026-11-18 — Os zips de 2007–2018 entram no manifesto (registro, depois conferência)
+
+**O que faltava.** Na migração (2026-11-11), o `src/aquisicao.py` veio do `abandono-escolar`, onde o manifesto só
+tinha 2019–2025; de 2007–2018 veio só o cache do Gustavo (`dados/cache/`). A aquisição só obtém o que o manifesto
+lista, com sha256, e não havia como pôr um ano novo nele. Por isso 2007–2018, que contêm a janela de todas as
+análises, "não podem ser reverificados" (`dataset/DICIONARIO.md`), e nenhuma coluna nova do Censo pode entrar
+nesses anos (o cache só tem as 22 colunas dos 18 itens).
+
+**Decisão (Gustavo).** O `src/aquisicao.py` ganha o registro de anos novos, em dois passos com revisão no meio:
+
+1. `python -m src.aquisicao --registrar 2007-2018 --baixar` (ou `--origem-local PASTA`): raspa as páginas do INEP
+   (microdados e aba de cada ano de tx_rend), baixa os zips de microdados e de rendimento por escola dos anos que o
+   manifesto ainda não tem para `dados/cache_download/registro/` (nunca para `dados/origem/`), grava a proposta de
+   linhas em `dados/cache_download/registro/manifesto_proposto.csv` e acrescenta os links novos ao
+   `src/fontes_inep.csv`, sem mexer nas linhas existentes;
+2. depois de revisada a proposta, `python -m src.aquisicao --aplicar-registro` acrescenta as linhas ao
+   `dados/MANIFEST.csv`, antes das de 2019 da mesma tabela; recusa tudo se um arquivo já registrado vier com outro
+   sha256.
+
+Depois disso, a aquisição normal (`--baixar` ou `--origem-local`) leva os zips para `dados/origem/` conferindo o hash,
+como para 2019–2025. O nome registrado é o publicado pelo INEP, que muda de padrão ao longo dos anos
+(`tx_rendimento_escolas_2007.zip`, `TX_REND_ESCOLAS_2018.zip`, `tx_rend_escolas_2019.zip`, conferidos nas abas do
+INEP nesta data); a tabela do zip sai do nome pela mesma regra do `01_tx_rend_bruto.mapear_zips_escola`.
+
+**Os links de 2007–2018 no fallback estático.** Na primeira execução (2026-11-18), o `www.gov.br` derrubou todas
+as conexões do script (ConnectionResetError 10054), e a raspagem não achou nenhum link. O registro passou a usar o
+fallback estático para o que a raspagem não achar, como a aquisição normal já fazia, e o `src/fontes_inep.csv`
+ganhou os 24 links: os 12 de microdados lidos da captura de 2026-09-30 (`testes/fixtures/html/`, a mesma página
+real, com o "Atualizado em" de cada item); os 12 de rendimento por escola lidos nas abas de cada ano do INEP em
+2026-11-18, pelo assistente, fora do script. Os nomes mudam quase todo ano (`tx_rendimento_escola_2008.zip`,
+`tx_rendimento_escolas_2010_19082011.zip`, `tx_rendimento_escolas_2011_2.zip`, `TAXA_REND_2016_ESCOLAS.zip`). Um
+link errado não passa despercebido: o download falha ou a conferência do conteúdo diverge.
+
+**Registrar não é conferir.** O sha256 só garante que o arquivo é o mesmo daqui em diante. A conferência do conteúdo
+é feita por:
+
+- `python src/estendida/conferir_cache.py`: refaz numa pasta temporária, com as mesmas funções das etapas 01 e 03, o
+  cache de cada ano que tem zip, e compara com `dados/cache/` célula a célula (e a estatística nacional do Censo);
+  grava `saida/relatorios/conferencia_cache.csv` e nunca escreve em `dados/cache/`;
+- o teste 03 (`--completo`), que já lia os zips de 2007–2018 quando presentes (relatório 04, §4: 19 de 19 anos em
+  14/10/2026). O `testes/test_validacoes.py` passa a exigir a frase com os anos que tiverem zip, e não só 2019–2025.
+
+**Alternativas descartadas:** gravar o sha256 direto no manifesto ao baixar (o manifesto deixaria de ser a
+especificação revisada do que se obtém); copiar à mão os zips antigos do projeto anterior sem registro (repetiria a
+situação de outubro, com 179 zips fora do manifesto).
+
+**O INEP recusou o Python; o download foi feito com o `curl.exe`.** Em 2026-11-18, também o
+`download.inep.gov.br` derrubou toda conexão do `requests`, com qualquer User-Agent (diagnóstico com o do projeto e
+com o de um navegador), mas aceitou o navegador e o `curl.exe` do Windows. Os 38 zips de 2007–2025 foram baixados
+do zero com o `curl.exe`, a partir dos links do `src/fontes_inep.csv`, para `dados/cache_download/inep_curl/`, e
+entraram pelo caminho normal: `--registrar 2007-2018 --origem-local`, `--aplicar-registro` e `--origem-local`. O
+`--baixar` do projeto continua dependente do `requests` e, enquanto o INEP recusar o Python, falha: levar o download
+para o `curl.exe` dentro do `src/aquisicao.py` fica como pendência.
+
+**Resultado (2026-11-18, Windows, Gustavo).**
+
+- **Registro:** 24 linhas novas no `dados/MANIFEST.csv` (2007–2018, microdados e rendimento por escola), o
+  sha256 de cada zip baixado nesta data.
+- **2019–2025 conferem com o manifesto de setembro:** os 14 zips baixados de novo têm o mesmo sha256 registrado pela
+  Gabriela em 2026-09-02/15 (`adquirir`: 38 copiados, 0 faltando). O INEP não mudou esses arquivos desde então.
+- **O cache é o dos zips:** `src/estendida/conferir_cache.py`, 19 anos × 2 etapas, **38 de 38 idênticos**
+  (rendimento por escola da etapa 01; colunas cruas de RR e estatística nacional da etapa 03), em
+  `saida/relatorios/conferencia_cache.csv`.
+- A ressalva de procedência (`dataset/DICIONARIO.md`, gerada por `src/dataset.py`, e `README.md`) passa a dizer
+  que os 19 anos foram conferidos contra os zips originais.
+
+**Evidência:** `testes/test_registro.py` (servidor falso com o layout real das páginas; nomes reais de 2007, 2014
+e 2018; página HTML no lugar do zip; idempotência; linhas existentes do manifesto e do fallback intocadas, byte a
+byte) e `testes/test_conferir_cache.py` (zip sintético do Censo: idêntico, célula alterada, estatística nacional
+alterada; `dados/cache/` não muda).
+
+---
+
+## 2026-11-18 — As saídas do levantamento das colunas do Censo entram no git
+
+**O que é.** `experimentos/levantamento_colunas_censo/levantar.py` lê só os cabeçalhos dos CSV dos zips do Censo
+Escolar 2007–2025 (`dados/origem/censo/`) e lista as colunas de cada ano e as candidatas a características novas
+(início de M1/M6). Não lê nenhum valor nem o rendimento: não olha o desfecho (regra 7).
+
+**Decisão (Gustavo).** A pasta `experimentos/levantamento_colunas_censo/saida/` ganha uma exceção no `.gitignore`,
+como a `experimentos/fatores_2013_2018/saida/`, e a pasta inteira é versionada: `arquivos.csv`, `candidatas.csv`,
+`colunas_outras_2025.csv`, `colunas_por_ano.csv` e `resumo.txt`.
+
+**Por quê.** O levantamento só se regera com os zips do INEP, e hoje só o Gustavo os tem: o INEP recusa as
+conexões do Python (`--baixar` falha; ver a entrada "Os zips de 2007–2018 entram no manifesto"). Sem os arquivos
+no git, o grupo não teria como ver o resultado antes de decidir quais colunas entram no dataset.
+
+**O que não é.** Não é a escolha das colunas: essa é do grupo, por pertinência, cobertura e estabilidade, e fica
+registrada aqui quando for feita. "Existe no cabeçalho" não é "foi coletada"; essa conferência é um segundo passo,
+só para as candidatas escolhidas.
+
+**Evidência:** `experimentos/levantamento_colunas_censo/README.md` e os arquivos em `saida/`.
+
+---
+
+## 2026-11-18 — Pequenas correções de texto e de formato
+
+**O que mudou (Gustavo).**
+
+- O cabeçalho do `src/estendida/99_pipeline.py` passa a imprimir "Raiz do projeto:" no lugar do rótulo `GUSTAVO:`,
+  resto da migração (nota opcional do João no PR #9, que tinha ficado para depois). Só muda o texto impresso.
+- O `experimentos/fatores_2013_2018/README.md`, o `CHANGELOG.md` e o índice `experimentos/README.md` deixam de dizer
+  que o estudo de fatores não foi executado: ele rodou uma vez em 2026-11-15 (entrada desse dia).
+- O `README.md` diz quanto o `rodar_tudo.py` leva com e sem os zips do INEP.
+- O levantamento das colunas do Censo grava as saídas com quebra de linha LF, como o `.gitattributes` as guarda no
+  git; antes gravava CRLF, e regerar deixaria a pasta versionada aparecendo como modificada.
+
+**Evidência:** os próprios arquivos; `python rodar_tudo.py` verde depois das mudanças.
+
+---
+
+## 2026-11-19 — Cache completo do Censo: todas as colunas de RR, extraídas uma vez
+
+**O problema.** O cache do Censo (`dados/cache/censo/`) só guarda as 22 colunas dos 18 itens de infraestrutura.
+Qualquer coluna nova (metas M1/M6 do `docs/ROTEIRO.md`; candidatas em `experimentos/levantamento_colunas_censo/`)
+exigiria voltar aos zips, que hoje só o Gustavo tem, e mexer no 03, que é o único que lê o Censo. Cada grupo novo
+de colunas seria mais uma leitura dos ~2 GB de zips e mais uma mudança na sequência do pipeline.
+
+**Decisão (Gustavo, 2026-11-19).** Extrair uma única vez, de cada zip registrado no `dados/MANIFEST.csv`, as linhas
+de Roraima com TODAS as colunas de TODAS as tabelas (inclusive as seis de 2025 e o suplemento de cursos técnicos de
+2023–2024), para `dados/cache/censo_completo/`, por um script novo fora do fluxo normal,
+`src/estendida/extrair_censo.py`. É o primeiro passo da reorganização do pipeline em grupos de colunas; os outros
+(a pasta de grupos com o de infraestrutura, e o primeiro grupo novo) vêm em pull requests próprios.
+
+- **Valores como texto, exatamente como no CSV.** O cache não converte, não troca `''` ou `'--'` por ausente e não
+  renomeia (regra 1); a conversão e a regra de ausente (regra 8) ficam com quem usa a coluna.
+- **Contagens nacionais por coluna** (`{ano}_{tabela}_nacional.csv`: linhas, preenchidas, numéricas, iguais a 1,
+  maiores que 0). A regra de "coletada" do 03 (alguma escola do Brasil com valor 1) serve para indicadores 0/1;
+  contagens precisam de outra, e cada grupo declara a sua. Com o Brasil todo contado agora, nenhum grupo precisa
+  voltar aos zips.
+- **Recorte por `SG_UF == "RR"`**, a mesma regra do 03; todas as tabelas têm `SG_UF` e `CO_ENTIDADE`
+  (`experimentos/levantamento_colunas_censo/saida/`).
+- **O cache antigo de 22 colunas fica onde está e não muda:** o 03, a base e os resultados publicados continuam
+  lendo dele. Trocar o 03 para ler o cache completo é o passo seguinte, com teste de equivalência byte a byte.
+- **Só leitura depois de gravado.** O script confere o sha256 de cada zip contra o manifesto antes de ler, grava
+  numa pasta `.parcial` e só a renomeia para `dados/cache/censo_completo/` se todos os anos deram certo; recusa
+  gravar se a pasta já existe. Para refazer e comparar, `--destino PASTA_NOVA`. Cada arquivo gravado entra no
+  `dados/MANIFEST.csv` (estágio `cache`, tabela `cache_censo_completo`) com o sha256; o nome-base inclui o ano
+  (`2013_escola.parquet`), porque o manifesto identifica arquivos pelo nome-base.
+
+**Alternativas descartadas:** acrescentar colunas ao cache de 22 (regravaria `dados/cache/censo/`, contra a regra 1,
+e mudaria os arquivos que os resultados publicados usam); guardar só as colunas candidatas do levantamento (cada
+escolha nova do grupo voltaria aos zips); guardar o Brasil inteiro (centenas de MB no git, sem uso: o estudo é de RR).
+
+**Aprovação.** O cache entra em `dados/cache/`, que pede o aval do grupo; o aval é a revisão do pull request.
+
+**Evidência:** `testes/test_cache_censo_completo.py`: nos 19 anos, o cache completo tem as mesmas escolas, na mesma
+ordem, e os mesmos valores nas 22 colunas do cache antigo, e as mesmas contagens nacionais (`n_numerico` e `n_um`
+contra `nao_nulo` e `uns`); só linhas de RR, tudo texto; todo arquivo da pasta está no manifesto com o sha256 certo.
+O extrator é testado com zips sintéticos (texto preservado, contagens, recusa de pasta existente).
+
+---
+
+## 2026-11-19 — O pipeline passa a acrescentar grupos de colunas numa etapa única
+
+**O problema.** Depois da base longitudinal (02), o pipeline era uma sequência fixa só para a infraestrutura: o 03
+lia os zips (ou o cache de 22 colunas) e montava os 18 itens, o 04 juntava com a base e o 05 calculava os índices.
+Cada conjunto novo de colunas (metas M1/M6) exigiria mais um script na sequência, mexendo em todos os seguintes, e
+voltaria aos zips.
+
+**Decisão (Gustavo, 2026-11-19).** O 03, o 04 e o 05 viram:
+
+- **`src/estendida/03_grupos.py`**, a etapa única que lê o 02b e, para cada grupo listado em
+  `src/estendida/grupos/ligados.txt`, junta as colunas do grupo (`how="left"` a partir da base, `validate="1:1"`) e
+  as derivadas, se houver; grava `saida/base_atual.parquet`;
+- **`src/estendida/grupos/infraestrutura.py`**, o primeiro grupo: a regra de fonte do antigo 03 (os 18 itens e o
+  `INFRA_FONTE_ARTIGO`) e o método do antigo 05 (dimensões e IIE `_zano`, `INFRA_ITENS_COMPLETOS`), sem mudança,
+  lendo o cache completo do Censo (`dados/cache/censo_completo/`, entrada anterior) no lugar do de 22 colunas.
+
+O 01 e o 02 não mudam de papel. A sequência fica 01 (rendimento) → 02 (base longitudinal) → 03 (grupos).
+
+**O contrato dos grupos** (`src/estendida/grupos/README.md`), conferido pelo `03_grupos.py`, que para com erro:
+um grupo só acrescenta colunas (nenhum nome repetido, nenhuma linha a mais ou a menos, chave única); `extrair` lê só
+o cache do Censo, nunca o rendimento (regras 6 e 7); `derivar` recebe só `ANO` e as colunas do próprio grupo. Grupo
+novo calcula linha a linha (regra 5); o z-score no ano da infraestrutura usa as outras escolas da base e fica como
+herança declarada, porque mudá-lo mudaria os resultados publicados.
+
+**A lista de grupos ligados é versionada e faz parte da versão do dataset.** Fica num arquivo, não numa opção da
+linha de comando, para que dois datasets com o mesmo nome não tenham grupos diferentes. Ligar ou desligar um grupo é
+decisão registrada aqui, por pull request; para um estudo, a lista é fixada no `docs/PROTOCOLO.md` antes de rodar.
+Nunca se liga ou desliga um grupo olhando o resultado (regras 7 e 10).
+
+**Nada muda nos resultados.** Com só a infraestrutura ligada, a `saida/base_atual.parquet` saiu idêntica byte a byte
+à da sequência antiga (mesmo sha256), e a tabela do grupo é idêntica ao antigo `03_censo_features.parquet`; os
+relatórios `fontes_features_censo.csv` e `indices_infra_parametros.json` também saíram idênticos. O `docs/PROTOCOLO.md`
+(congelado desde 2026-11-15) cita `src/estendida/05_indices_infra.py` para o `_zano`: o código citado está, sem
+mudança, em `src/estendida/grupos/infraestrutura.py`.
+
+**O que mudou junto.**
+
+- Os arquivos intermediários `03_censo_features.parquet`, `04_base_com_censo.parquet` e `05_base_com_indices.parquet`
+  dão lugar a `03_grupo_infraestrutura.parquet` e `03_base_com_grupos.parquet`. Os validadores (`testes/01`, `02` e
+  `03_validar_*`) leem os arquivos novos; o "04" deles é a base com os itens, sem as derivadas. A seção E do
+  `testes/03_validar_censo_pos04.py` continua recomputando a regra de fonte a partir do cache ANTIGO de 22 colunas,
+  agora como conferência independente da fonte que o pipeline lê.
+- O `src/estendida/conferir_cache.py` confere o cache completo do Censo contra os zips (todas as tabelas e as
+  contagens nacionais), refazendo-o numa pasta temporária com o `extrair_censo.py`.
+- `--force` e `--force-year` do `01_tx_rend_bruto.py` regravavam `dados/cache/tx_rend/` a partir dos zips, contra a
+  regra 1; passam a ser recusados, e o `99_pipeline.py` perde o `--force`. A conferência contra os zips é a do
+  `conferir_cache.py`.
+- O `--com-prop` do antigo 05 não vira opção do grupo (o pipeline nunca o usava): continua em
+  `infraestrutura.calcular(..., com_prop=True)`, que o `testes/test_dataset.py` usa como implementação independente.
+- Limpeza: caminhos antigos nos comentários (`gustavo/`, `programas/`), `RAIZ` definido duas vezes no 01 e no 02.
+
+**Alternativas descartadas:** manter o 03, o 04 e o 05 e só acrescentar scripts depois do 05 (cada grupo novo
+mudaria a sequência e reabriria os zips); escolher os grupos por opção de linha de comando (datasets diferentes
+com o mesmo nome).
+
+**Evidência:** `testes/test_grupos.py`: nos 19 anos, o grupo infraestrutura lendo o cache completo dá o mesmo
+quadro e as mesmas fontes que o antigo 03 lendo o cache de 22 colunas; o contrato com grupos sintéticos (acrescenta
+sem mudar a base, recusa chave repetida, coluna repetida, colunas não declaradas e `derivar` fora do contrato;
+`derivar` não vê o rendimento). O `testes/test_equivalencia.py` (base célula a célula contra o projeto anterior) e o
+`testes/test_dataset.py` (dataset byte a byte) passam sem mudança.
+
+---
+
+## 2026-11-20 — Inventário das colunas para escolher os grupos
+
+**O que é (Gustavo).** O primeiro passo da escolha dos grupos de colunas novos:
+`experimentos/selecao_grupos/01_inventario_colunas.py` lista todas as colunas do Censo de Roraima, ano a ano
+(2007–2025, todas as tabelas), com a presença no layout, a coleta no Brasil, o preenchimento nas escolas de RR em
+atividade e a descrição, as categorias e as notas do dicionário de dados do INEP (as 5 versões que vêm nos zips). As
+saídas são CSV e um `LEIA_ME.md` gerado pelo script, feitos para outra pessoa ou outra IA ler e propor os grupos.
+
+**Decisões dentro do script.**
+
+- **Coletada** = alguma escola do Brasil com valor no ano (numérica > 0, ou texto não vazio), medida no cache
+  completo; a marca "s" do dicionário do INEP vem ao lado, e o número de discordâncias sai no `LEIA_ME.md`.
+- **Preenchimento em RR só nas escolas em atividade** (`TP_SITUACAO_FUNCIONAMENTO` = 1): de 2022 em diante o INEP
+  deixa em branco as escolas paralisadas ou extintas, que não têm rendimento.
+- **Sem desfecho.** O script não lê o rendimento, o dataset nem a base; a escolha dos grupos não pode olhar a relação
+  com o abandono (regra 7).
+
+**A pasta `saida/` é versionada** (exceção no `.gitignore`, como a do levantamento): o dicionário só se regera com
+os zips, que hoje só o Gustavo tem.
+
+**A escolha dos grupos não é feita aqui.** A IA ou a pessoa propõe; o grupo decide por pertinência, cobertura,
+estabilidade e redundância, registra aqui e, para um estudo, fixa no `docs/PROTOCOLO.md` antes de rodar.
+
+**O painel de resultados fica de lado.** O notebook `05_painel_resultados.ipynb` (proposto em 2026-11-19, não
+versionado) foi guardado num stash local (`git stash list`, "painel de resultados"); o gráfico de fatores dele usava
+a escala 0→1 e precisa ser trocado pelo efeito que decide antes de voltar.
+
+**Evidência:** `experimentos/selecao_grupos/saida/LEIA_ME.md`.
+
+---
+
+## 2026-11-20 — Estudo E (v0): as colunas do Censo entram brutas, por filtro mecânico, num estudo exploratório
+
+**Decisão (Gustavo).** Para ter um resultado ainda nesta data, as colunas do cache completo do Censo entram nos
+modelos **brutas**, escolhidas por um filtro mecânico de saúde que só olha preditores (`docs/PROTOCOLO.md`, E.2):
+- prefixo `QT_`/`IN_`;
+- fora as proibidas e as 22 colunas-fonte da infraestrutura;
+- ≥ 95% preenchidas em cada ano de 2013 a 2024;
+- inteiras e não negativas, `IN_` só 0/1;
+- nenhum valor com mais de 99% em 2013–2018.
+
+Resultado: 124 colunas, lista fechada no protocolo. As seis faixas de idade das matrículas ficam declaradas
+parcialmente mecânicas (regra 6). Nenhuma coluna calculada é criada: só a infraestrutura (18 → 4 → 1) tem base
+em artigo publicado. As outras derivações, como razões e transformações, ficam para depois da revisão coluna a
+coluna.
+
+**Motivo.** A mudança de pergunta de 2026-11-14 registrou que a janela não tinha matrículas, escola indígena nem
+dados de docentes. O cache completo do Censo (2026-11-19) passou a ter essas colunas. A revisão coluna a coluna
+pela metodologia de grupos (`docs/notas/METODOLOGIA_GRUPOS.md`) leva semanas. A versão 0 mede, com as colunas
+como estão, se elas mudam o quanto se explica e a lista de risco.
+
+**Travas, aceitas pelo Gustavo:**
+1. o filtro é mecânico e decidido antes, sem desfecho (regra 7);
+2. há protocolo antes de rodar, e o estudo é marcado exploratório (anos já vistos);
+3. o desfecho de 2025 fica fechado;
+4. a limpeza que vem depois é guiada pela qualidade do dado e nunca por "a métrica subiu". O desempenho só volta
+   a ser medido em marcos com protocolo próprio.
+
+**Desvio da regra B.6 e da regra 12.** O protocolo vai para o branch `estudo/e-censo-bruto-v0` por commit e
+push antes da execução, o que lhe dá data pública. Ele não passa antes por pull request revisado. A revisão
+acontece no pull request da execução.
+
+**Alternativa descartada:** revisar cada grupo de colunas antes de qualquer modelo. É o caminho certo para a
+versão final e continua sendo o próximo passo, mas não cabe no prazo.
+
+**Consequências:**
+- o `dataset/escolas_rr_v0.2.0.csv` e o `src/estendida/grupos/ligados.txt` não mudam;
+- o grupo `censo_bruto_v0` existe, mas não é ligado;
+- os resultados dos estudos anteriores continuam valendo.
+
+**Evidência:** `docs/PROTOCOLO.md`, seção E.
+
+**Interpretação registrada antes de rodar (Gustavo).** "Coluna constante na etapa" (E.2) é medida separadamente no universo da Parte 1 (S2, S2r) e no da Parte 2 (A+, B+), só com os preditores; as duas contagens saem no `01_universo.csv`.
+
+---
+
+## 2026-11-20 — Resultado do estudo E (v0)
+
+**O que aconteceu.** A execução única (commit `b5c21a9`) terminou sem parar: o filtro devolveu a lista fechada,
+o controle negativo passou e a equivalência com o estudo C passou.
+
+**Resultado.**
+- **E1:** NÃO ACRESCENTA nas duas etapas (AF e EM). Com as colunas brutas, o R² fora da amostra cai em relação
+  ao S1.
+- **E2:** F9 e F10 sem GANHO em nenhuma comparação (cada uma deu SEM GANHO PRÁTICO ou INCONCLUSIVO).
+
+**Auditoria (Gustavo).** A auditoria das saídas encontrou **sobreajuste**, por dois motivos:
+1. **colunas redundantes:** o protocolo E não incluiu a regra de redundância |r| > 0,90 entre preditores;
+2. **escala e valores extremos das contagens brutas.**
+
+Por isso, o ranking da importância por permutação (`06_permutacao.csv`) **não deve ser lido como importância**.
+Ele é só descrição do modelo sobreajustado.
+
+**As saídas entram no git** com este registro, como previsto no `experimentos/censo_bruto_v0/README.md` (seção D).
+
+**Evidência:** `experimentos/censo_bruto_v0/saida/` (`RELATORIO.md`, `05_f8.csv`, `08_previsao_testes.csv`).
+
+---
+
+## 2026-11-20 — Grupos do Censo ligados
+
+**Decisão (Gustavo).** As 124 colunas da lista fechada do estudo E (`censo_bruto_v0.COLUNAS`) entram na base como
+**7 grupos**, um por bloco de `censo_bruto_v0.BLOCOS`, ligados no `ligados.txt` depois do `infraestrutura`:
+`censo_matriculas`, `censo_docentes`, `censo_turmas_salas`, `censo_equipamentos`, `censo_oferta_turno`,
+`censo_escola_indigena` e `censo_predio_servicos`. O código comum fica em `grupos/_censo_comum.py`, que não é
+grupo. A revisão vem no pull request.
+
+**Motivo.** Deixar as colunas do Censo disponíveis na base para a exploração e para a limpeza coluna a coluna, que
+é o próximo passo. A origem é a lista fechada do estudo E, por blocos. Nenhuma coluna foi escolhida, tirada ou
+transformada olhando o desfecho (regra 7). As colunas entram **brutas**. A auditoria do estudo E encontrou
+sobreajuste por redundância e escala, por isso elas ainda não são lidas como fatores.
+
+**Como os grupos leem o cache.**
+- **Anos 2007 a 2025.** O filtro de anos é de quem usa a base.
+- **2025.** O cache divide a tabela escola em escola, docente, matricula e turma. As quatro são juntadas 1:1 por
+  `CO_ENTIDADE` (`how="left"` a partir da escola, `validate="1:1"`). Cada coluna é pega onde existe **com o mesmo
+  nome**, sem equivalências inventadas (regra 11). A coluna que não existe com o mesmo nome fica ausente em 2025
+  e vai para `saida/relatorios/grupos_censo_2025.txt`.
+- **Regra "coletada"** (`grupos/README.md`, regra 4), pelo arquivo nacional da tabela de origem: `IN_` foi
+  coletada se alguma escola do Brasil tem 1, e `QT_` se alguma tem valor maior que 0. Se não foi coletada, a
+  coluna fica ausente no ano inteiro. A matriz coluna × ano fica em `saida/relatorios/grupos_censo_coleta.csv`.
+- **Continuidade 2023 → 2024 → 2025.** A mediana e o % preenchido de cada coluna, nas públicas em funcionamento,
+  ficam em `saida/relatorios/grupos_censo_continuidade.csv`, com marca de variação da mediana acima de 50%. É só
+  relatório e não bloqueia.
+
+**Diferença em relação ao `censo_bruto_v0`.** Por causa da regra "coletada", os valores podem diferir dos do
+`censo_bruto_v0` nos anos em que uma coluna não foi coletada: lá ficava o valor do arquivo (em geral 0), e aqui
+fica ausente. O `censo_bruto_v0.py` não muda e continua não ligado, para o estudo E continuar reproduzível.
+
+**Consequências.**
+- A `saida/base_atual.parquet` ganha as 124 colunas, com as mesmas linhas e as colunas antigas idênticas.
+- O `src/dataset.py` e o `dataset/escolas_rr_v0.2.0.csv` não mudam, porque o dataset escolhe as colunas pelo nome.
+
+**Evidência:** `testes/test_grupos_censo.py` e os três relatórios em `saida/relatorios/`.
+
+---
+
+## 2026-11-20 — Notebook de apresentação (exploratório)
+
+**Decisão (Gustavo).** O `notebooks/05_apresentacao_censo.ipynb` apresenta ao professor quatro coisas:
+- o pipeline com o Censo 2007–2025;
+- o filtro de saúde automático, que só olha preditores;
+- o resultado oficial do estudo E, lido das saídas sem rodar nada;
+- uma exploração com os anos escolhidos numa célula de configuração (`ANO_INICIO`, `ANO_FIM`, `GRUPOS`,
+  `REMOVER_REDUNDANTES`, `SEMENTES_MLP`).
+
+As contas ficam em `notebooks/apoio_apresentacao.py`, com testes em `testes/test_apoio_apresentacao.py`. Fica
+guardada a versão executada com `ANO_INICIO = 2007`.
+
+**É exploração sobre anos já vistos, sem protocolo de execução única, e não decide nada.**
+- O teste é t = 2022–2023 (desfechos 2023 e 2024), anos já vistos.
+- Nenhuma coluna, modelo, janela ou limiar é escolhido pelo resultado (regra 7).
+- A comparação 2007+ × 2019+ é descritiva: escolher a janela pelo teste já visto não vale como prova.
+
+**Trava fixa do 2025**, no código e fora da configuração:
+- o desfecho de 2025 (t = 2024) nunca entra em treino nem em teste;
+- t = 2024 e 2025 aparecem só na coleta e na descrição (contagens e o filtro de saúde, que só olha preditores);
+- a avaliação usa no máximo t = 2023, com treino até t = 2021.
+
+O `test_apoio_apresentacao.py` confere a trava com uma sentinela no desfecho de t = 2024.
+
+**Exceção declarada à regra 4** ("notebook exibe, não calcula") e ao `notebooks/README.md`. As células 6 e 7
+ajustam modelos ao chamar o `apoio_apresentacao.py`; o número não vem de um CSV gravado antes. É a forma pedida
+para que o professor mude os anos e veja o efeito. As contas ficam fora das células, num módulo com testes. A
+revisão vem no pull request.
+
+**Como a exploração roda.**
+- **Universo e modelos:** o universo da Parte 2 do estudo E, as réguas B1R_lag e B2, e Ridge(alpha=1.0) e o MLP do
+  professor nos conjuntos A, A+, B e B+.
+- **Redundância:** a regra |r| > 0,90 entre preditores é calculada só nas linhas de treino, na ordem fixa: as
+  quatro dimensões da infraestrutura primeiro, depois os grupos na ordem da lista e as colunas em ordem alfabética.
+- **Pré-processamento:** dentro do `Pipeline`, ajustado só no treino.
+- **Métricas:** Recall@20% (média dos dois anos) e MAE, com IC pelo bootstrap agrupado por escola (1.000
+  reamostragens).
+- **Filtro de saúde:** o preenchimento é medido nos anos escolhidos até 2024, e a informação nos anos de treino.
+  Na comparação de janelas, o filtro e a redundância são refeitos com os anos de cada janela.
+
+**Evidência:** `notebooks/05_apresentacao_censo.ipynb` (executado) e `testes/test_apoio_apresentacao.py`.
+
+---
+
+## 2026-11-20 — Notebook de apresentação simplificado
+
+**Decisão (Gustavo).** O `notebooks/05_apresentacao_censo.ipynb` fica mais simples e tem quatro partes:
+1. o carregamento dos dados dos anos escolhidos, que já existia;
+2. a aplicação dos modelos;
+3. o resultado prático de cada modelo;
+4. um gráfico final com cada modelo em cada ano.
+
+Saem do notebook a tabela do filtro de saúde, o resultado oficial do estudo E e a comparação 2007+ × 2019+. O
+resultado do estudo E continua em `experimentos/censo_bruto_v0/saida/`.
+
+**Como os modelos são aplicados: previsão ano a ano.**
+- **Treino e teste.** Para cada ano t, cada modelo é treinado com todos os anos anteriores (de `ANO_INICIO` a
+  t − 1) e prevê o abandono de t + 1 das escolas de t. Os anos de treino só têm desfechos já conhecidos quando se
+  faz a previsão.
+- **Anos de teste.** O primeiro ano de teste tem pelo menos 2 anos de treino antes, e o último é t = 2023.
+- **Universo.** O da Parte 2 do estudo E, com AF e EM separados.
+- **Modelos.** A régua (o abandono de t − 1), Ridge(alpha=1.0), Random Forest (300 árvores, `min_samples_leaf=5`),
+  Gradient Boosting (`HistGradientBoostingRegressor`, padrão) e o MLP do professor (média de `SEMENTES_MLP`
+  sementes). Os hiperparâmetros são fixos, sem ajuste.
+- **Preditores.**
+  - Entram sempre o abandono e a reprovação de t − 1 e a variação defasada, mais a localização e a dependência.
+  - Entram também as quatro dimensões da infraestrutura e as colunas do Censo dos grupos escolhidos.
+  - **Saúde e redundância**, medidas só no treino de cada ano e sem olhar o desfecho (regra 7): sai a coluna com
+    menos de 95% de preenchimento ou com mais de 99% dos valores num único valor, e sai a coluna com |r| > 0,90
+    com outra que veio antes. A ordem é fixa: infraestrutura, grupos na ordem da lista, colunas em ordem
+    alfabética.
+  - A imputação e a padronização ficam dentro do `Pipeline`, ajustadas só no treino.
+- **Métricas.** As 20% das escolas com maior previsão são apontadas como de alto risco e comparadas com o
+  `alto_risco_t1`: Recall@20%, Precisão@20% e F1@20%. Há também R² e MAE da previsão do abandono. A tabela mostra
+  a média dos anos previstos e o gráfico mostra cada ano. Não há IC nem veredito: é descritivo.
+
+**Continua valendo** o que está na entrada "Notebook de apresentação (exploratório)": é exploração sobre anos já
+vistos, não decide nada, é a exceção declarada à regra 4, e a trava do 2025 fica no código (o desfecho de 2025
+nunca entra em treino nem em teste).
+
+**Evidência:** `notebooks/05_apresentacao_censo.ipynb` (executado com `ANO_INICIO = 2007`) e
+`testes/test_apoio_apresentacao.py`.
+
+**Acréscimo (Gustavo): colunas mais relevantes de cada modelo.** O notebook mostra, para cada modelo e etapa, a
+importância por permutação de cada coluna de entrada: o quanto o MAE (pp) piora no último ano previsto (teste em
+t = 2023, treino com os anos anteriores) quando a coluna é embaralhada. A conta usa 5 repetições, e no MLP é a
+média das sementes. A tabela mostra as 10 primeiras, e a lista completa, com todas as colunas, fica na variável
+`imp` (regra 7: todas reportadas, inclusive as nulas). É descrição do modelo, não causa, e não escolhe nem tira
+nenhuma coluna.

@@ -47,7 +47,7 @@ Orientador: Prof. Bruno Cesar Barreto Figueiredo.
 
 ## Instalação
 
-Pré-requisitos: **Python 3.12 ou mais recente** (testado em 3.12 e 3.14) e Git. Cerca de 1,5 GB livres se for baixar os zips do INEP.
+Pré-requisitos: **Python 3.12 ou mais recente** (testado em 3.12 e 3.14) e Git. Cerca de 4,5 GB livres se for baixar os zips do INEP.
 
 ```bash
 git clone <endereço-do-repositório> abandono-rr
@@ -60,13 +60,15 @@ pip install -r requirements.txt
 As versões do `requirements.txt` são fixas: são as que geraram os resultados (scikit-learn 1.8.0).
 
 **Dados.** O que o pipeline precisa para rodar já vem no git: o recorte de Roraima de 2007 a 2025 em
-`dados/cache/`, com o sha256 de cada arquivo no `dados/MANIFEST.csv`. Os zips originais do INEP (2019–2025,
-cerca de 1,2 GB) **não** vão para o git. Eles só são necessários para conferir 2019–2025 contra a fonte e
+`dados/cache/`, com o sha256 de cada arquivo no `dados/MANIFEST.csv`. Os zips originais do INEP (2007–2025, 38
+arquivos, cerca de 2,1 GB) **não** vão para o git. Eles só são necessários para conferir os dados contra a fonte e
 para reconstruir o cache:
 
 ```bash
 python -m src.aquisicao --origem-local C:\pasta\com\os\zips   # copia de uma pasta, conferindo o sha256
 python -m src.aquisicao --baixar                              # ou baixa do INEP o que faltar
+python src/estendida/conferir_cache.py                        # refaz o cache a partir dos zips e compara
+python src/estendida/extrair_censo.py --destino PASTA_NOVA    # refaz o cache completo do Censo noutra pasta
 ```
 
 ## Rodar tudo com um comando
@@ -76,8 +78,9 @@ python rodar_tudo.py
 ```
 
 Regera, na ordem: a base 2007–2025 (`saida/base_atual.parquet`), o funil e o desfecho por ano, as réguas, o
-dataset e o dicionário; depois roda todos os testes. Leva cerca de 1 minuto. Sem os zips do INEP, dois testes
-aparecem como **pulados**, com o motivo: a conferência de 2019–2025 com a fonte e a comparação com um backup que
+dataset e o dicionário; depois roda todos os testes. Leva cerca de 1 minuto sem os zips do INEP e cerca de 10
+minutos com eles, porque aí os testes conferem o cache contra os zips. Sem os zips do INEP, dois testes
+aparecem como **pulados**, com o motivo: a conferência dos anos com zip contra a fonte e a comparação com um backup que
 ficou no projeto anterior.
 
 `python rodar_tudo.py --sem-testes` só regera.
@@ -92,9 +95,11 @@ que o estudo de fatores usa. Cada coluna está descrita em
 [`dataset/DICIONARIO.md`](dataset/DICIONARIO.md). A versão do dataset acompanha a do projeto
 ([`CHANGELOG.md`](CHANGELOG.md)).
 
-**Ressalva.** Os anos de 2007 a 2018 vêm só do recorte em `dados/cache/`, conferido contra a fonte do INEP uma
-vez, na máquina do Gustavo; os zips originais desses anos não estão no projeto. Os anos de 2019 a 2025 são
-conferidos célula a célula contra os zips originais.
+**Procedência.** Os 19 anos (2007–2025) do recorte em `dados/cache/` foram conferidos em 2026-11-18 contra os
+zips originais do INEP, baixados do zero: o cache refeito a partir deles é idêntico ao versionado, célula a célula
+(`docs/DECISOES.md`). **Atenção:** nessa data o INEP recusou as conexões do Python (`--baixar` falha com
+`ConnectionResetError`) e aceitou o navegador e o `curl.exe`; os links de cada zip estão em `src/fontes_inep.csv`.
+Baixe-os numa pasta e use `--origem-local`.
 
 ## Onde está cada coisa
 
@@ -102,7 +107,7 @@ conferidos célula a célula contra os zips originais.
 dados/          MANIFEST.csv (hashes) e cache/ (recorte de RR 2007–2025) no git; origem/ fora do git
 dataset/        o dataset versionado e o dicionário
 src/
-  estendida/    pipeline 2007–2025: rendimento, Censo, merge, índices de infraestrutura
+  estendida/    pipeline 2007–2025: 01 rendimento, 02 base longitudinal, 03 grupos de colunas (grupos/)
   avaliacao/    réguas, métricas, bootstrap por escola, Holm, classificação (funções)
   relatorios/   funil e desfecho por ano
   dataset.py    gera o dataset e o dicionário

@@ -687,6 +687,238 @@ def adquirir(
     return resultado
 
 
+# ── Registro de anos novos no manifesto ─────────────────────────────────────
+# A aquisição só obtém o que o manifesto lista, conferindo o sha256 dele. Para
+# um ano entrar no manifesto, o sha256 tem de vir de um download real, uma vez:
+#   1. --registrar ANOS baixa (ou copia) os zips para dados/cache_download/registro/,
+#      fora das pastas imutáveis, e grava a PROPOSTA de linhas em
+#      dados/cache_download/registro/manifesto_proposto.csv; os links novos entram
+#      no fallback estático (src/fontes_inep.csv);
+#   2. depois de revisada, --aplicar-registro acrescenta a proposta ao MANIFEST.csv;
+#   3. a aquisição normal (--origem-local ou --baixar) leva os zips para
+#      dados/origem/, conferindo o hash, como para qualquer outro ano.
+# Registrar não é conferir: o sha256 só garante que o arquivo é o mesmo daqui em
+# diante. A conferência do conteúdo é feita pelo teste 03 (--completo) e por
+# src/estendida/conferir_cache.py, que comparam com o cache versionado.
+PASTA_REGISTRO = CACHE_DOWNLOAD / "registro"
+PROPOSTA_MANIFESTO = PASTA_REGISTRO / "manifesto_proposto.csv"
+CAMPOS_MANIFESTO = ["estagio", "origem", "ano", "tabela", "arquivo", "sha256", "data_download"]
+# Tabela do manifesto → subpasta de dados/origem/ (as mesmas de 2019–2025).
+SUBPASTA_TABELA: dict[str, str] = {"microdados": "censo", "indicador_tx_rend_escolas": "indicadores"}
+_ANO_NOME = re.compile(r"(?<!\d)((?:19|20)\d{2})(?!\d)")
+
+
+def parse_anos(texto: str) -> set[int]:
+    """'2007-2018' → {2007, ..., 2018}; '2007,2010-2011' → {2007, 2010, 2011}."""
+    anos: set[int] = set()
+    for parte in texto.split(","):
+        m = re.fullmatch(r"\s*(\d{4})(?:\s*-\s*(\d{4}))?\s*", parte)
+        if not m:
+            raise ValueError(f"anos inválidos: {parte!r} (use 2007-2018 ou 2007,2008)")
+        inicio, fim = int(m.group(1)), int(m.group(2) or m.group(1))
+        if fim < inicio:
+            raise ValueError(f"intervalo invertido: {parte!r}")
+        anos.update(range(inicio, fim + 1))
+    return anos
+
+
+def ano_do_nome(nome: str) -> int | None:
+    """Ano no nome do zip ('TX_REND_ESCOLAS_2018.zip' → 2018); None se não há
+    exatamente um. O ano vem do nome, não da URL: em 2007–2011 a pasta do
+    servidor é a do ano de publicação (…/2011/…/2007/tx_rendimento_escolas_2007.zip)."""
+    anos = set(_ANO_NOME.findall(nome))
+    return int(anos.pop()) if len(anos) == 1 else None
+
+
+def tabela_do_link(nome: str) -> str | None:
+    """Tabela do manifesto de um zip do INEP, pelo nome: microdados do Censo ou
+    taxas de rendimento por escola; None para o resto. A regra do rendimento é a
+    mesma que src/estendida/01_tx_rend_bruto.mapear_zips_escola usa para achar
+    o zip de cada ano, e os nomes mudam ao longo dos anos
+    (tx_rendimento_escolas_2007.zip, TX_REND_ESCOLAS_2018.zip, tx_rend_escolas_2019.zip)."""
+    n = nome.lower()
+    if n.startswith("microdados_censo_escolar_"):
+        return "microdados"
+    if (("tx_rend" in n or "taxa_rend" in n) and "escola" in n
+            and "brasil" not in n and "municipio" not in n):
+        return "indicador_tx_rend_escolas"
+    return None
+
+
+def escolher_para_registro(links: list[Link], anos: set[int]) -> dict[tuple[int, str], Link]:
+    """{(ano, tabela): Link} dos zips a registrar. Dois arquivos diferentes para
+    o mesmo ano e tabela param tudo: a escolha não pode ser silenciosa."""
+    escolhidos: dict[tuple[int, str], Link] = {}
+    for lk in links:
+        tabela, ano = tabela_do_link(lk.arquivo), ano_do_nome(lk.arquivo)
+        if tabela is None or ano not in anos:
+            continue
+        anterior = escolhidos.setdefault((ano, tabela), lk)
+        if anterior.arquivo != lk.arquivo:
+            raise ErroAquisicao(
+                f"Dois zips para {tabela} {ano}: {anterior.arquivo} ({anterior.url}) e "
+                f"{lk.arquivo} ({lk.url}). Decida à mão qual registrar."
+            )
+    return escolhidos
+
+
+def acrescentar_fontes(links: list[Link], capturado_em: str,
+                       caminho: pathlib.Path = FONTES_ESTATICAS) -> int:
+    """Acrescenta ao fallback estático os links que ele ainda não tem, sem tocar
+    nas linhas existentes (cada uma guarda a própria data de captura). Devolve
+    quantos entraram."""
+    linhas: list[dict] = []
+    if caminho.exists():
+        with caminho.open(encoding="utf-8", newline="") as f:
+            linhas = list(csv.DictReader(f))
+    existentes = {r["arquivo"] for r in linhas}
+    novos = [lk for lk in links if lk.arquivo not in existentes]
+    if not novos:
+        return 0
+    linhas += [{"arquivo": lk.arquivo, "url": lk.url, "pagina": lk.pagina,
+                "atualizado_em": lk.atualizado_em or "", "capturado_em": capturado_em} for lk in novos]
+    linhas.sort(key=lambda r: r["arquivo"])
+    with caminho.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["arquivo", "url", "pagina", "atualizado_em", "capturado_em"],
+                           lineterminator="\n")
+        w.writeheader()
+        w.writerows(linhas)
+    return len(novos)
+
+
+def registrar(
+    anos: set[int], origens_locais: list[pathlib.Path] | None = None, *,
+    baixar_da_rede: bool = False, cliente: ClienteInep | None = None,
+    manifesto: pathlib.Path = MANIFEST, pasta: pathlib.Path = PASTA_REGISTRO,
+    cache: pathlib.Path = CACHE_DOWNLOAD, fontes_estaticas: pathlib.Path = FONTES_ESTATICAS,
+    proposta: pathlib.Path | None = None,
+) -> dict[str, list]:
+    """Obtém para `pasta` os zips de microdados e de rendimento por escola dos
+    `anos` que o manifesto ainda não tem e grava a proposta de linhas.
+
+    Nunca escreve em dados/origem/ nem no MANIFEST.csv. Os links vêm da
+    raspagem do INEP (com `baixar_da_rede`) ou, sem rede, do fallback estático.
+    Um zip já presente em `pasta` (execução anterior interrompida) é reaproveitado.
+    Retorna {"linhas": [linhas propostas], "ja_no_manifesto": [...], "faltando": [...]}.
+    """
+    origens_locais = origens_locais or []
+    proposta = proposta or pasta / PROPOSTA_MANIFESTO.name
+    registrados = {(int(lin["ano"]), lin["tabela"]) for lin in linhas_manifesto(manifesto)}
+    pedidos = {(ano, tabela) for ano in anos for tabela in SUBPASTA_TABELA}
+    resultado: dict[str, list] = {
+        "linhas": [], "ja_no_manifesto": sorted(pedidos & registrados), "faltando": []}
+    pedidos -= registrados
+    if resultado["ja_no_manifesto"]:
+        logger.info("Já no manifesto, nada a registrar: %s", resultado["ja_no_manifesto"])
+    if not pedidos:
+        return resultado
+
+    data = dt.datetime.now().astimezone().date().isoformat()
+    anos_pedidos = {ano for ano, _ in pedidos}
+    raspados: list[Link] = []
+    if baixar_da_rede:
+        cliente = cliente or ClienteInep()
+        raspados = descobrir(cliente, {"tx_rend": anos_pedidos}, cache / "html" / data)
+    # O raspado vale primeiro; o que a raspagem não achou (página fora do ar, bloqueio do
+    # gov.br) vem do fallback estático, como na aquisição normal (consolidar).
+    escolhidos = escolher_para_registro(raspados, anos_pedidos)
+    estaticos = escolher_para_registro(list(ler_fontes_estaticas(fontes_estaticas).values()), anos_pedidos)
+    for chave, lk in estaticos.items():
+        if chave not in escolhidos:
+            if baixar_da_rede:
+                logger.warning("%s %d não achado na raspagem; usando o fallback estático %s",
+                               chave[1], chave[0], lk.url)
+            escolhidos[chave] = lk
+    escolhidos = {k: v for k, v in escolhidos.items() if k in pedidos}
+    for chave in sorted(pedidos - escolhidos.keys()):
+        logger.error("Nenhum link achado para %s %d.", chave[1], chave[0])
+        resultado["faltando"].append(f"{chave[1]} {chave[0]} (sem link)")
+
+    pasta.mkdir(parents=True, exist_ok=True)
+    obtidos: list[Link] = []
+    for (ano, tabela), lk in sorted(escolhidos.items()):
+        destino = pasta / lk.arquivo
+        try:
+            if destino.exists():
+                if not zipfile.is_zipfile(destino):
+                    raise ErroIntegridade(f"{destino} existe e não é um zip válido; apague-o e rode de novo.")
+                logger.info("já em %s: %s", pasta.name, destino.name)
+            else:
+                fonte = next((d / lk.arquivo for d in origens_locais if (d / lk.arquivo).exists()), None)
+                if fonte is not None:
+                    copiar_local(fonte, destino, Referencia(), cache)
+                elif baixar_da_rede:
+                    baixar(cliente, lk.url, destino, Referencia(), cache)  # type: ignore[arg-type]
+                else:
+                    resultado["faltando"].append(lk.arquivo)
+                    continue
+        except (ErroIntegridade, ErroAquisicao) as e:
+            logger.error("Não obtido, %s: %s", lk.arquivo, e)
+            resultado["faltando"].append(lk.arquivo)
+            continue
+        obtidos.append(lk)
+        resultado["linhas"].append({
+            "estagio": "origem", "origem": "inep", "ano": str(ano), "tabela": tabela,
+            "arquivo": f"origem/{SUBPASTA_TABELA[tabela]}/{lk.arquivo}",
+            "sha256": sha256_arquivo(destino), "data_download": data,
+        })
+
+    with proposta.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CAMPOS_MANIFESTO, lineterminator="\n")
+        w.writeheader()
+        w.writerows(resultado["linhas"])
+    novos = acrescentar_fontes(obtidos, data, fontes_estaticas)
+    logger.info("Proposta: %d linha(s) em %s; %d link(s) novo(s) em %s.",
+                len(resultado["linhas"]), proposta, novos, fontes_estaticas.name)
+    if resultado["faltando"]:
+        logger.error("Não registrados (%d): %s", len(resultado["faltando"]), resultado["faltando"])
+    return resultado
+
+
+def aplicar_registro(proposta: pathlib.Path = PROPOSTA_MANIFESTO,
+                     manifesto: pathlib.Path = MANIFEST) -> int:
+    """Acrescenta ao manifesto as linhas da proposta que ele ainda não tem, cada
+    uma logo antes da primeira linha da mesma tabela com ano maior (2007–2018
+    entram antes de 2019). As linhas existentes não mudam. Recusa tudo se um
+    arquivo proposto já está no manifesto com outro sha256. Devolve quantas entraram."""
+    with proposta.open(encoding="utf-8", newline="") as f:
+        novas = list(csv.DictReader(f))
+    with manifesto.open(encoding="utf-8", newline="") as f:
+        leitor = csv.DictReader(f)
+        campos, linhas = leitor.fieldnames, list(leitor)
+    if campos != CAMPOS_MANIFESTO:
+        raise ErroIntegridade(f"Cabeçalho inesperado em {manifesto}: {campos}")
+    por_arquivo = {lin["arquivo"]: lin for lin in linhas}
+    entram = []
+    for nova in novas:
+        atual = por_arquivo.get(nova["arquivo"])
+        if atual is None:
+            entram.append(nova)
+        elif atual["sha256"] != nova["sha256"]:
+            raise ErroIntegridade(
+                f"{nova['arquivo']} já está no manifesto com outro sha256 "
+                f"({atual['sha256']} × proposto {nova['sha256']}); nada foi aplicado.")
+    for nova in sorted(entram, key=lambda r: (r["tabela"], int(r["ano"]))):
+        mesma = [i for i, lin in enumerate(linhas)
+                 if lin["estagio"] == nova["estagio"] and lin["tabela"] == nova["tabela"]]
+        depois = [i for i in mesma if int(linhas[i]["ano"]) > int(nova["ano"])]
+        if depois:
+            pos = depois[0]
+        elif mesma:
+            pos = mesma[-1] + 1
+        else:
+            pos = max((i for i, lin in enumerate(linhas) if lin["estagio"] == nova["estagio"]),
+                      default=len(linhas) - 1) + 1
+        linhas.insert(pos, nova)
+    if entram:
+        with manifesto.open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=CAMPOS_MANIFESTO, lineterminator="\n")
+            w.writeheader()
+            w.writerows(linhas)
+    logger.info("%d linha(s) acrescentada(s) a %s.", len(entram), manifesto)
+    return len(entram)
+
+
 def verificar_manifesto(manifesto: pathlib.Path = MANIFEST, raiz: pathlib.Path = DADOS
                         ) -> tuple[list[str], list[str]]:
     """Confere cada linha do manifesto no disco → (erros, avisos).
@@ -732,7 +964,22 @@ def main() -> None:
                     help="só reexamina a captura de páginas dessa data, sem rede, e regrava src/fontes_inep.csv")
     ap.add_argument("--sobrescrever", action="store_true",
                     help="regrava arquivos extraídos já presentes (CLAUDE.md §3, regra 1)")
+    ap.add_argument("--registrar", metavar="ANOS",
+                    help="obtém os zips de microdados e de rendimento por escola desses anos (ex.: 2007-2018) "
+                         "para dados/cache_download/registro/ e propõe as linhas do manifesto; "
+                         "com --baixar, do INEP; com --origem-local, de uma pasta")
+    ap.add_argument("--aplicar-registro", action="store_true",
+                    help="acrescenta ao MANIFEST.csv a proposta gravada por --registrar")
     args = ap.parse_args()
+
+    if args.registrar:
+        resultado = registrar(parse_anos(args.registrar), args.origem_local, baixar_da_rede=args.baixar)
+        if resultado["faltando"]:
+            raise SystemExit(1)
+        return
+    if args.aplicar_registro:
+        aplicar_registro()
+        return
 
     if args.descobrir_do_cache:
         pasta = HTML_CACHE / args.descobrir_do_cache

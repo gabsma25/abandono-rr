@@ -40,7 +40,7 @@ SUF = {"AF": "FUN_AF", "EM": "MED"}
 CHAVE = ["ANO", "CO_ENTIDADE"]
 F_RENDIMENTO = "INEP, Indicadores Educacionais: taxas de rendimento por escola (tx_rend)"
 F_CENSO = "INEP, Censo Escolar (tabela de escolas)"
-F_PROJETO = "calculada pelo projeto (src/estendida/05_indices_infra.py)"
+F_PROJETO = "calculada pelo projeto (src/estendida/grupos/infraestrutura.py)"
 
 ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheiro", "IDA_despensa",
          "IDA_refeitorio", "IDA_sala_diretoria", "IDA_sala_professor", "IDA_secretaria", "IDP_biblioteca",
@@ -49,7 +49,7 @@ ITENS = ["IIB_agua_potavel", "IIB_energia_rede", "IIB_coleta_lixo", "IIB_banheir
 DESC_ITEM = {"IIB": "infraestrutura básica", "IDA": "dependência administrativa",
              "IDP": "dependência pedagógica", "IEP": "equipamento pedagógico"}
 F_PROP = "calculada pelo projeto (src/dataset.py), só com a própria linha"
-# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/05_indices_infra.DIMENSOES)
+# itens de cada dimensão, na ordem de ITENS (os mesmos de src/estendida/grupos/infraestrutura.DIMENSOES)
 DIM_ITENS = {d: [i.lower() for i in ITENS if i.startswith(d)] for d in DESC_ITEM}
 
 # (coluna, papel, significado, unidade, fonte)
@@ -220,11 +220,12 @@ def dicionario(d):
           f"As `_zano` são gravadas com {CASAS_ZANO} casas decimais, para o arquivo ser o mesmo em qualquer "
           "máquina: elas vêm de contas do numpy cuja última casa muda entre sistemas operacionais."), "",
           "## Ressalva sobre a procedência", "",
-          ("Os dados de 2007 a 2018 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
-          "Eles foram conferidos contra a fonte do INEP uma vez, em 14/10/2026, na máquina do Gustavo "
-          "(`docs/procedencia/relatorio_04_*.md`, §4), e não podem ser reverificados neste projeto, porque os zips "
-          "originais desses anos não estão aqui. Os anos de 2019 a 2025 são conferidos célula a célula contra os "
-          "zips originais em `dados/origem/` pelo teste 03 (`testes/03_validar_censo_pos04.py --completo`)."), ""]
+          ("Os dados de 2007 a 2025 vêm do recorte de Roraima em `dados/cache/` (sha256 no `dados/MANIFEST.csv`). "
+          "Em 18/11/2026, os 38 zips originais do INEP desses anos (microdados do Censo e rendimento por escola, "
+          "registrados no `dados/MANIFEST.csv`) foram baixados do zero, e o cache refeito a partir deles saiu "
+          "idêntico ao versionado nos 19 anos, célula a célula (`src/estendida/conferir_cache.py`; "
+          "`docs/DECISOES.md`, 2026-11-18). Com os zips em `dados/origem/`, o teste 03 "
+          "(`testes/03_validar_censo_pos04.py --completo`) confere o Censo de cada ano contra o original."), ""]
     return "\n".join(L)
 
 

@@ -10,7 +10,39 @@ Mudança de escopo: o projeto passa a estudar os fatores associados ao nível de
 2026-11-14). O dataset ganha as dimensões de infraestrutura em proporção; as 44 colunas da v0.1.0 não mudam.
 Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no dia do merge no `main`.
 
+### Mudado
+- **Pipeline em grupos de colunas** (`docs/DECISOES.md`, 2026-11-19): o `03_censo_features.py`, o
+  `04_merge_features.py` e o `05_indices_infra.py` viram a etapa única `src/estendida/03_grupos.py` e o grupo
+  `src/estendida/grupos/infraestrutura.py`, que lê o cache completo do Censo. Os grupos ligados ficam em
+  `src/estendida/grupos/ligados.txt`; o contrato (só acrescenta, não lê o rendimento, linha a linha) está no
+  `README.md` da pasta e é conferido pelo código. A base, o dataset e os resultados não mudam: a
+  `base_atual.parquet` saiu idêntica byte a byte. Testes em `testes/test_grupos.py`.
+- `src/estendida/conferir_cache.py` confere o cache completo do Censo (todas as tabelas e as contagens
+  nacionais) no lugar do cache de 22 colunas.
+- `01_tx_rend_bruto.py --force` e `--force-year` passam a ser recusados (regravariam `dados/cache/tx_rend/`), e o
+  `99_pipeline.py` perde o `--force`.
+
 ### Adicionado
+- `experimentos/selecao_grupos/01_inventario_colunas.py`: inventário das colunas do Censo de RR, 2007–2025, ano a
+  ano (presença no layout, coleta no Brasil, preenchimento nas escolas em atividade, descrição do dicionário do
+  INEP), com saídas em CSV e um `LEIA_ME.md` para outra pessoa ou IA propor os grupos de colunas; a pasta
+  `saida/` é versionada (`docs/DECISOES.md`, 2026-11-20).
+- **Cache completo do Censo** (`dados/cache/censo_completo/`, gerado uma vez por `src/estendida/extrair_censo.py`):
+  as linhas de Roraima de 2007–2025 com todas as colunas de todas as tabelas de cada zip, como texto, e as
+  contagens nacionais por coluna para a regra de "coletada"; cada arquivo com sha256 no `dados/MANIFEST.csv`.
+  O cache de 22 colunas não muda; `testes/test_cache_censo_completo.py` confere que os dois têm os mesmos valores
+  (`docs/DECISOES.md`, 2026-11-19).
+- `experimentos/levantamento_colunas_censo/`: levantamento das colunas do Censo Escolar 2007–2025 só pelos
+  cabeçalhos dos zips (início de M1/M6), com a matriz coluna × ano e as candidatas; a pasta `saida/` é versionada
+  (`docs/DECISOES.md`, 2026-11-18).
+- **Registro de anos novos no manifesto** (`src/aquisicao.py`, `--registrar ANOS` e `--aplicar-registro`): baixa ou
+  copia os zips de microdados e de rendimento por escola para `dados/cache_download/registro/`, propõe as linhas do
+  `dados/MANIFEST.csv` e acrescenta os links ao `src/fontes_inep.csv`; a proposta revisada entra no manifesto antes
+  das linhas de 2019. Para trazer 2007–2018, que só existiam como cache (`docs/DECISOES.md`, 2026-11-18). Testes em
+  `testes/test_registro.py`.
+- `src/estendida/conferir_cache.py`: refaz numa pasta temporária o cache das etapas 01 e 03 de cada ano com zip e
+  compara com `dados/cache/` célula a célula (`saida/relatorios/conferencia_cache.csv`); testes em
+  `testes/test_conferir_cache.py`.
 - **Dataset `v0.2.0`** (`dataset/escolas_rr_v0.2.0.csv`): cinco colunas novas, `dim_iib_prop`, `dim_ida_prop`,
   `dim_idp_prop`, `dim_iep_prop` (proporção dos itens de cada dimensão que a escola tem, calculada só com a própria
   linha; vazia se faltar item) e `iie_prop` (média simples das quatro). As 44 colunas da v0.1.0 ficam idênticas,
@@ -28,8 +60,17 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `testes/test_atributos.py`; instalação com `--attributes .gitattributes`, ver `CONTRIBUTING.md`).
 - `docs/ROTEIRO.md`: as metas M1–M12 do projeto anterior, cópia literal do arquivo, todas "a revisar".
 - Registro do desvio da regra 12 (pull requests #1 e #2 mergeados sem revisão) no `docs/DECISOES.md`.
+- `experimentos/fatores_2013_2018/`: o código do estudo de fatores (`docs/PROTOCOLO.md`, seção C), com as travas
+  da execução única e a conferência por dados sintéticos (`testes/test_fatores.py`). **Executado uma única vez em
+  2026-11-15**; as saídas estão versionadas em `experimentos/fatores_2013_2018/saida/`.
+  A conferência do código contra o protocolo e as correções estão no `docs/DECISOES.md`, 2026-11-15; a seção D
+  do protocolo ganhou o item da falha técnica no meio da execução.
 
 ### Alterado
+- **Procedência de 2007–2018 conferida:** os 38 zips do INEP de 2007–2025 foram baixados do zero em 2026-11-18, e o
+  cache refeito a partir deles é idêntico ao versionado nos 19 anos (`docs/DECISOES.md`, 2026-11-18); a ressalva do
+  `dataset/DICIONARIO.md` (via `src/dataset.py`) e do `README.md` muda de acordo. O `dados/MANIFEST.csv` ganha as 24
+  linhas de 2007–2018, e o `src/fontes_inep.csv`, os links delas.
 - **A pergunta do projeto muda** (`docs/DECISOES.md`, 2026-11-14): de antecipar as escolas de abandono alto no ano
   seguinte para os fatores estruturais associados ao nível de abandono da escola-ano (Q1–Q4). O `README.md` traz a
   pergunta nova, o que já foi respondido (a Q4) e o que o resultado não é. O artigo da disciplina de Mineração de
@@ -55,6 +96,11 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `OneHotEncoder`. Só texto da seção C do protocolo. O `README.md` pede Python 3.12 ou mais recente.
 
 ### Corrigido
+- `testes/test_fatores.py::test_sem_executar_nada_roda` usa uma pasta temporária: falhava em qualquer clone depois
+  de as saídas do estudo de fatores serem versionadas (`c2b9adb`). Mergeado direto, sem revisão (`docs/DECISOES.md`,
+  2026-11-18).
+- `testes/test_validacoes.py`: a conferência do teste 03 com os zips originais exige os anos que tiverem zip, e não
+  só 2019–2025.
 - **O `rodar_tudo.py` funciona num clone limpo, sem `dados/origem/`** (issue #6): a etapa 01 lê cada ano do
   cache versionado quando não há zips, em vez de parar com `FileNotFoundError`
   (`testes/test_etapa01_sem_origem.py`).
