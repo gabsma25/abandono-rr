@@ -23,6 +23,12 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `99_pipeline.py` perde o `--force`.
 
 ### Adicionado
+- `experimentos/previsao_t1/modelos.py` (issue #18): persistência, Ridge, Random Forest e duas MLPs, com e sem
+  histórico, ajustados só no treino de cada recorte; MAE, RMSE e R² em `metricas.csv` (`docs/DECISOES.md`,
+  2026-11-27). Testes em `testes/test_previsao_t1_modelos.py`.
+- `experimentos/previsao_t1/recortes.py` (issue #16): recortes da previsão de t+1 com janela expansiva, folga de
+  1 ano (o treino só usa desfechos já publicados na hora da previsão) e o teste final (t = 2024 → 2025) trancado
+  (`docs/DECISOES.md`, 2026-11-27). Testes em `testes/test_previsao_t1_recortes.py`.
 - `experimentos/selecao_grupos/01_inventario_colunas.py`: inventário das colunas do Censo de RR, 2007–2025, ano a
   ano (presença no layout, coleta no Brasil, preenchimento nas escolas em atividade, descrição do dicionário do
   INEP), com saídas em CSV e um `LEIA_ME.md` para outra pessoa ou IA propor os grupos de colunas; a pasta
