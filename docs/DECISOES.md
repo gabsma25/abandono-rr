@@ -1072,3 +1072,33 @@ sair desses recortes é exploratório.
 **Evidência.** `testes/test_previsao_t1_recortes.py`: regra de tempo com folga 1 e 0, recortes esperados escritos
 literalmente, teste final ausente e recorte feito à mão com ele recusado, janela expansiva, partição e filtro por
 etapa, mínimo de anos, entrada não modificada, nenhum arquivo aberto, determinismo. Nenhum dado real é lido.
+
+## 2026-11-27 — Modelos da previsão de t+1: persistência, Ridge, Random Forest e duas MLPs (issue #18)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/modelos.py` ajusta, em cada recorte do `recortes.py` (#16) e em
+cada etapa, os algoritmos abaixo, com e sem histórico de abandono, e grava MAE, RMSE e R² (pontos percentuais) em
+`metricas.csv`:
+- **Persistência:** repete o `abandono_tm1` como previsão de t+1 (a régua B1R_lag). Não é ajustada.
+- **Ridge** (`alpha=1.0`) e **Random Forest** (300 árvores, `min_samples_leaf=5`), como no notebook 05.
+- **Duas MLPs:** a do exemplo do professor (50 neurônios, logistic, adam, parada antecipada), como no estudo E, e a
+  compacta da proposta do professor (64 e 32 neurônios, relu, `alpha=1e-3`, parada antecipada).
+- Hiperparâmetros fixos, sem ajuste; o ajuste na validação temporal fica para a versão completa.
+- **Sem histórico** tira `abandono_tm1`, `abandono_tm2` e `variacao_abandono_defasada`. As taxas do próprio ano t
+  (`aprovacao_t`, `reprovacao_t`, `abandono_t`) nunca entram em X.
+- Imputação pela mediana com indicador de ausência, padronização e codificação das categorias ficam no `Pipeline`,
+  ajustadas só no treino de cada recorte.
+- Todos os algoritmos de um recorte × etapa são medidos nas mesmas linhas da validação: as que têm `abandono_tm1`.
+  `supera_persistencia` = 1 quando o MAE do modelo é menor que o da persistência nessas linhas.
+
+**Por quê.** É o desenho pedido na proposta metodológica do professor (persistência e regressão regularizada como
+referência, Random Forest e MLP compacta, com e sem histórico, MAE como métrica principal). As taxas de t ficam de
+fora pela mesma razão da folga de 1 ano (entrada de 2026-11-27 sobre os recortes). A MLP do professor entra porque é
+a referência já usada no projeto; a 64-32 é a que a proposta pede.
+
+**Limitação.** A parada antecipada das MLPs separa 10% do treino por sorteio, misturando os anos do treino. Não
+toca a validação nem o teste final, mas não é uma separação temporal.
+
+**Evidência.** `testes/test_previsao_t1_modelos.py`: preditores corretos com e sem histórico; alterar a validação e
+os anos seguintes não muda o modelo ajustado; imputação pela mediana do treino; mesmas linhas para todos; métricas
+iguais às do sklearn; o efeito plantado nos dados sintéticos aparece; as duas MLPs rodam; o teste final nunca
+aparece; resultado determinístico. Nenhum dado real é lido.
