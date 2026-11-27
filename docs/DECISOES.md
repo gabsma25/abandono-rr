@@ -1048,3 +1048,27 @@ t = 2023, treino com os anos anteriores) quando a coluna é embaralhada. A conta
 média das sementes. A tabela mostra as 10 primeiras, e a lista completa, com todas as colunas, fica na variável
 `imp` (regra 7: todas reportadas, inclusive as nulas). É descrição do modelo, não causa, e não escolhe nem tira
 nenhuma coluna.
+
+## 2026-11-27 — Recortes da previsão de t+1: janela expansiva, folga de 1 ano e teste final trancado (issue #16)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/recortes.py` divide os pares (`pares.csv`, #15) em treino e
+validação por ano:
+- **Folga de 1 ano.** Para validar os pares de `ano` = t_v (desfecho de t_v + 1), o treino só usa pares com
+  `ano_alvo` ≤ t_v − 1, ou seja, `ano` ≤ t_v − 2. `folga=0` existe só como sensibilidade, rotulada como limite
+  superior.
+- **Janela expansiva**, sempre a partir do primeiro ano disponível, com pelo menos 3 anos de treino
+  (`MIN_ANOS_TREINO`). Com t = 2008–2024, os recortes vão de `expansiva_2012` (treino 2008–2010) a `expansiva_2023`
+  (treino 2008–2021). A janela deslizante fica para a versão completa.
+- **Teste final trancado:** o par t = 2024 → desfecho de 2025 sai antes de qualquer conta e nunca aparece em recorte
+  algum; um recorte que o contenha dá erro. Nenhuma função do módulo devolve essas linhas.
+
+**Por quê.** A previsão do abandono de t+1 é feita no começo de t+1, e nesse momento o INEP ainda não publicou o
+rendimento de t: o último desfecho conhecido é o de t − 1. É a mesma razão da régua B1R_lag (`docs/BASELINE.md`,
+seção 1) e da exclusão do dado de t (`docs/PROTOCOLO.md`, 4.1). Treinar com o desfecho de t_v usaria um dado que
+ainda não existia na hora da previsão. O mínimo de 3 anos é o piso da faixa de 3 a 5 anos que o professor deu para a
+janela deslizante, fixado antes de rodar. Os desfechos de 2016–2019 e 2021–2024 já foram vistos (regra 10): o que
+sair desses recortes é exploratório.
+
+**Evidência.** `testes/test_previsao_t1_recortes.py`: regra de tempo com folga 1 e 0, recortes esperados escritos
+literalmente, teste final ausente e recorte feito à mão com ele recusado, janela expansiva, partição e filtro por
+etapa, mínimo de anos, entrada não modificada, nenhum arquivo aberto, determinismo. Nenhum dado real é lido.
