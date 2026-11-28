@@ -23,6 +23,9 @@ Será lançado como 0.2.0 (`src/versao.py`); a data e a tag `v0.2.0` entram no d
   `99_pipeline.py` perde o `--force`.
 
 ### Adicionado
+- `experimentos/previsao_t1/importancias.py` (issue #19): importância por permutação (ΔMAE) na validação de cada
+  recorte, 5 sementes, no formato do `importancias.csv` do contrato; o `modelos.py` passa a tirar o `abandono_tm2`
+  (redundância exata) de X (`docs/DECISOES.md`, 2026-11-27). Testes em `testes/test_previsao_t1_importancias.py`.
 - `experimentos/previsao_t1/modelos.py` (issue #18): persistência, Ridge, Random Forest e duas MLPs, com e sem
   histórico, ajustados só no treino de cada recorte; MAE, RMSE e R² em `metricas.csv` (`docs/DECISOES.md`,
   2026-11-27). Testes em `testes/test_previsao_t1_modelos.py`.

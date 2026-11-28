@@ -1102,3 +1102,25 @@ toca a validação nem o teste final, mas não é uma separação temporal.
 os anos seguintes não muda o modelo ajustado; imputação pela mediana do treino; mesmas linhas para todos; métricas
 iguais às do sklearn; o efeito plantado nos dados sintéticos aparece; as duas MLPs rodam; o teste final nunca
 aparece; resultado determinístico. Nenhum dado real é lido.
+
+## 2026-11-27 — Importância por permutação (ΔMAE) na validação de cada recorte (issue #19)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/importancias.py` mede, para cada modelo do `modelos.py` (#18)
+(algoritmo × histórico × recorte × etapa) e para cada variável que entrou em X, quanto o MAE da validação piora quando
+a variável é embaralhada, com o modelo já ajustado (sem reajuste). São 5 sementes de permutação, uma linha por
+semente, no formato do `importancias.csv` do contrato (#15), com `supera_persistencia` igual ao do `metricas.csv`.
+Todas as variáveis são gravadas, inclusive as de importância nula ou negativa (regra 7). Uma só passada grava o
+`metricas.csv` e o `importancias.csv`, e cada modelo é ajustado uma vez.
+
+**Junto: o `abandono_tm2` sai de X no `modelos.py`.** É `abandono_tm1 − variacao_abandono_defasada` (redundância
+exata, já registrada no `docs/PROTOCOLO.md`, 4.1). Com as três juntas, a importância se reparte de forma arbitrária
+entre elas: nos dados sintéticos, o `abandono_tm2` aparecia no topo no lugar do `abandono_tm1`, que é a variável
+plantada. A exclusão é por redundância entre preditores, não pela relação com o desfecho (regra 7).
+
+**Por quê.** É a importância pedida nas duas propostas do professor (permutação medida pela variação do MAE, em dados
+não usados no ajuste, em cada período de validação). Importância mede o uso da variável pelo modelo, não causa.
+
+**Evidência.** `testes/test_previsao_t1_importancias.py`: formato do contrato; ΔMAE conferido à mão; nos dados
+sintéticos as variáveis plantadas ficam no topo, com e sem histórico, e o ruído perto de zero; com o desfecho
+embaralhado dentro do ano nenhuma variável tem importância clara; métricas iguais às do `modelos.py`; resultado
+determinístico. Nenhum dado real é lido.

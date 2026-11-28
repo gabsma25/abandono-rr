@@ -13,7 +13,9 @@ pontos percentuais, e com a comparação contra a persistência.
 - `mlp_64_32`: a MLP compacta da proposta do professor (64 e 32 neurônios, relu, `alpha=1e-3`, parada antecipada).
 
 **Com e sem histórico.** Com histórico, entram todos os preditores. Sem histórico, saem as colunas de `HISTORICO` (o
-abandono de anos anteriores e a variação dele), para medir o que as outras variáveis acrescentam.
+abandono de anos anteriores e a variação dele), para medir o que as outras variáveis acrescentam. O `abandono_tm2`
+nunca entra: é `abandono_tm1 − variacao_abandono_defasada` (redundância exata, `docs/PROTOCOLO.md`, 4.1), e com as
+três juntas a importância por permutação (#19) se repartiria de forma arbitrária entre elas.
 
 **Nada do futuro entra em X.** Saem sempre a identificação, o alvo e as taxas de rendimento do próprio ano t
 (`aprovacao_t`, `reprovacao_t`, `abandono_t`), que ainda não estão publicadas no começo de t+1
@@ -56,10 +58,13 @@ ALVO = "abandono_t1"
 PERSISTENCIA = "abandono_tm1"
 # Dado do próprio ano t: ainda não publicado no começo de t+1 (PROTOCOLO 4.1). Nunca entra em X.
 TAXAS_DE_T = ("aprovacao_t", "reprovacao_t", "abandono_t")
+# Redundância exata entre preditores: abandono_tm2 = abandono_tm1 − variacao_abandono_defasada (PROTOCOLO 4.1).
+# Com as três juntas, a importância se reparte de forma arbitrária entre elas. Sai o abandono_tm2.
+REDUNDANTES = ("abandono_tm2",)
 # Histórico de abandono: sai dos modelos "sem histórico".
 HISTORICO = ("abandono_tm1", "abandono_tm2", "variacao_abandono_defasada")
 # Colunas do dataset que nunca são preditoras (o contrato do #15 as recusa; aqui também saem por segurança).
-NUNCA_EM_X = IDENTIFICACAO + (ALVO,) + TAXAS_DE_T + ("alto_risco_t1", "co_municipio", "no_municipio",
+NUNCA_EM_X = IDENTIFICACAO + (ALVO,) + TAXAS_DE_T + REDUNDANTES + ("alto_risco_t1", "co_municipio", "no_municipio",
                                                        "janela_segura")
 
 ALGORITMOS = ("ridge", "random_forest", "mlp_professor", "mlp_64_32")

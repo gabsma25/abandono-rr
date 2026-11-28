@@ -1,6 +1,7 @@
 """experimentos/previsao_t1/modelos.py (issue #18, M3a): pipeline só no treino, com e sem histórico, métricas.
 
-  1. preditores: nunca identificação, alvo, taxas de t, _t1 nem _zano; "sem histórico" tira o histórico;
+  1. preditores: nunca identificação, alvo, taxas de t, abandono_tm2 (redundante), _t1 nem _zano; "sem histórico"
+     tira o histórico;
   2. alterar a validação (e os anos depois dela) não muda os parâmetros ajustados;
   3. a imputação usa a mediana do treino, e o ausente não vira 0 antes dela;
   4. todos os algoritmos de um recorte × etapa são medidos nas mesmas linhas (as que têm abandono_tm1);
@@ -59,10 +60,9 @@ def test_preditores():
                          co_municipio="1400100")
     com = M.preditores(extra, historico=True)
     sem = M.preditores(extra, historico=False)
-    assert com == ["abandono_tm1", "abandono_tm2", "variacao_abandono_defasada", "localizacao", "dim_iib_prop",
-                   "ruido"]
+    assert com == ["abandono_tm1", "variacao_abandono_defasada", "localizacao", "dim_iib_prop", "ruido"]
     assert sem == ["localizacao", "dim_iib_prop", "ruido"]
-    for c in ("abandono_t", "aprovacao_t", "reprovacao_t", "abandono_t1", "dim_iib_zano", "alto_risco_t1",
+    for c in ("abandono_t", "abandono_tm2", "aprovacao_t", "reprovacao_t", "abandono_t1", "dim_iib_zano", "alto_risco_t1",
               "co_municipio", "co_entidade", "ano", "ano_alvo", "etapa"):
         assert c not in com
 
