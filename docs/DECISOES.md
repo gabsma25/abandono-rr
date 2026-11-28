@@ -1048,3 +1048,79 @@ t = 2023, treino com os anos anteriores) quando a coluna é embaralhada. A conta
 média das sementes. A tabela mostra as 10 primeiras, e a lista completa, com todas as colunas, fica na variável
 `imp` (regra 7: todas reportadas, inclusive as nulas). É descrição do modelo, não causa, e não escolhe nem tira
 nenhuma coluna.
+
+## 2026-11-27 — Recortes da previsão de t+1: janela expansiva, folga de 1 ano e teste final trancado (issue #16)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/recortes.py` divide os pares (`pares.csv`, #15) em treino e
+validação por ano:
+- **Folga de 1 ano.** Para validar os pares de `ano` = t_v (desfecho de t_v + 1), o treino só usa pares com
+  `ano_alvo` ≤ t_v − 1, ou seja, `ano` ≤ t_v − 2. `folga=0` existe só como sensibilidade, rotulada como limite
+  superior.
+- **Janela expansiva**, sempre a partir do primeiro ano disponível, com pelo menos 3 anos de treino
+  (`MIN_ANOS_TREINO`). Com t = 2008–2024, os recortes vão de `expansiva_2012` (treino 2008–2010) a `expansiva_2023`
+  (treino 2008–2021). A janela deslizante fica para a versão completa.
+- **Teste final trancado:** o par t = 2024 → desfecho de 2025 sai antes de qualquer conta e nunca aparece em recorte
+  algum; um recorte que o contenha dá erro. Nenhuma função do módulo devolve essas linhas.
+
+**Por quê.** A previsão do abandono de t+1 é feita no começo de t+1, e nesse momento o INEP ainda não publicou o
+rendimento de t: o último desfecho conhecido é o de t − 1. É a mesma razão da régua B1R_lag (`docs/BASELINE.md`,
+seção 1) e da exclusão do dado de t (`docs/PROTOCOLO.md`, 4.1). Treinar com o desfecho de t_v usaria um dado que
+ainda não existia na hora da previsão. O mínimo de 3 anos é o piso da faixa de 3 a 5 anos que o professor deu para a
+janela deslizante, fixado antes de rodar. Os desfechos de 2016–2019 e 2021–2024 já foram vistos (regra 10): o que
+sair desses recortes é exploratório.
+
+**Evidência.** `testes/test_previsao_t1_recortes.py`: regra de tempo com folga 1 e 0, recortes esperados escritos
+literalmente, teste final ausente e recorte feito à mão com ele recusado, janela expansiva, partição e filtro por
+etapa, mínimo de anos, entrada não modificada, nenhum arquivo aberto, determinismo. Nenhum dado real é lido.
+
+## 2026-11-27 — Modelos da previsão de t+1: persistência, Ridge, Random Forest e duas MLPs (issue #18)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/modelos.py` ajusta, em cada recorte do `recortes.py` (#16) e em
+cada etapa, os algoritmos abaixo, com e sem histórico de abandono, e grava MAE, RMSE e R² (pontos percentuais) em
+`metricas.csv`:
+- **Persistência:** repete o `abandono_tm1` como previsão de t+1 (a régua B1R_lag). Não é ajustada.
+- **Ridge** (`alpha=1.0`) e **Random Forest** (300 árvores, `min_samples_leaf=5`), como no notebook 05.
+- **Duas MLPs:** a do exemplo do professor (50 neurônios, logistic, adam, parada antecipada), como no estudo E, e a
+  compacta da proposta do professor (64 e 32 neurônios, relu, `alpha=1e-3`, parada antecipada).
+- Hiperparâmetros fixos, sem ajuste; o ajuste na validação temporal fica para a versão completa.
+- **Sem histórico** tira `abandono_tm1`, `abandono_tm2` e `variacao_abandono_defasada`. As taxas do próprio ano t
+  (`aprovacao_t`, `reprovacao_t`, `abandono_t`) nunca entram em X.
+- Imputação pela mediana com indicador de ausência, padronização e codificação das categorias ficam no `Pipeline`,
+  ajustadas só no treino de cada recorte.
+- Todos os algoritmos de um recorte × etapa são medidos nas mesmas linhas da validação: as que têm `abandono_tm1`.
+  `supera_persistencia` = 1 quando o MAE do modelo é menor que o da persistência nessas linhas.
+
+**Por quê.** É o desenho pedido na proposta metodológica do professor (persistência e regressão regularizada como
+referência, Random Forest e MLP compacta, com e sem histórico, MAE como métrica principal). As taxas de t ficam de
+fora pela mesma razão da folga de 1 ano (entrada de 2026-11-27 sobre os recortes). A MLP do professor entra porque é
+a referência já usada no projeto; a 64-32 é a que a proposta pede.
+
+**Limitação.** A parada antecipada das MLPs separa 10% do treino por sorteio, misturando os anos do treino. Não
+toca a validação nem o teste final, mas não é uma separação temporal.
+
+**Evidência.** `testes/test_previsao_t1_modelos.py`: preditores corretos com e sem histórico; alterar a validação e
+os anos seguintes não muda o modelo ajustado; imputação pela mediana do treino; mesmas linhas para todos; métricas
+iguais às do sklearn; o efeito plantado nos dados sintéticos aparece; as duas MLPs rodam; o teste final nunca
+aparece; resultado determinístico. Nenhum dado real é lido.
+
+## 2026-11-27 — Importância por permutação (ΔMAE) na validação de cada recorte (issue #19)
+
+**Decisão (Gustavo).** `experimentos/previsao_t1/importancias.py` mede, para cada modelo do `modelos.py` (#18)
+(algoritmo × histórico × recorte × etapa) e para cada variável que entrou em X, quanto o MAE da validação piora quando
+a variável é embaralhada, com o modelo já ajustado (sem reajuste). São 5 sementes de permutação, uma linha por
+semente, no formato do `importancias.csv` do contrato (#15), com `supera_persistencia` igual ao do `metricas.csv`.
+Todas as variáveis são gravadas, inclusive as de importância nula ou negativa (regra 7). Uma só passada grava o
+`metricas.csv` e o `importancias.csv`, e cada modelo é ajustado uma vez.
+
+**Junto: o `abandono_tm2` sai de X no `modelos.py`.** É `abandono_tm1 − variacao_abandono_defasada` (redundância
+exata, já registrada no `docs/PROTOCOLO.md`, 4.1). Com as três juntas, a importância se reparte de forma arbitrária
+entre elas: nos dados sintéticos, o `abandono_tm2` aparecia no topo no lugar do `abandono_tm1`, que é a variável
+plantada. A exclusão é por redundância entre preditores, não pela relação com o desfecho (regra 7).
+
+**Por quê.** É a importância pedida nas duas propostas do professor (permutação medida pela variação do MAE, em dados
+não usados no ajuste, em cada período de validação). Importância mede o uso da variável pelo modelo, não causa.
+
+**Evidência.** `testes/test_previsao_t1_importancias.py`: formato do contrato; ΔMAE conferido à mão; nos dados
+sintéticos as variáveis plantadas ficam no topo, com e sem histórico, e o ruído perto de zero; com o desfecho
+embaralhado dentro do ano nenhuma variável tem importância clara; métricas iguais às do `modelos.py`; resultado
+determinístico. Nenhum dado real é lido.
